@@ -5,14 +5,17 @@
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do arquivo para inicializar os serviços do Flutter e
-// montar a raiz do HorseLife com o carregamento do Firebase.
+// montar a raiz do HorseLife com o carregamento do Firebase e a tela de login
+// como destino inicial.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 
 import 'app/app.dart';
 import 'core/firebase/firebase_bootstrap.dart';
+import 'features/authentication/presentation/screens/login_screen.dart';
 
+// Ponto de entrada da aplicação.
 void main() {
   // Prepara os serviços do Flutter antes de iniciar as dependências
   // assíncronas.
@@ -22,17 +25,7 @@ void main() {
   runApp(
     HorseLifeApp(
       initializeApp: FirebaseBootstrap.initialize,
-      home: const HorseLifeHome(),
+      home: const LoginScreen(),
     ),
   );
-}
-
-class HorseLifeHome extends StatelessWidget {
-  const HorseLifeHome({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Mantém o ponto inicial da interface disponível após a inicialização.
-    return const Scaffold(body: SizedBox.expand());
-  }
 }
