@@ -10,6 +10,8 @@
 
 import 'package:flutter/material.dart';
 
+// Campo de formulário configurável que preserva a identidade visual do app em
+// diferentes tipos de entrada.
 class AppTextFormField extends StatelessWidget {
   const AppTextFormField({
     required this.controller,
@@ -24,9 +26,11 @@ class AppTextFormField extends StatelessWidget {
     super.key,
   });
 
+  // Cores compartilhadas pela decoração do campo.
   static const _brandGreen = Color(0xFF009373);
   static const _hintColor = Color(0xFF858585);
 
+  // Contrato de conteúdo, comportamento e validação recebido pela tela.
   final TextEditingController controller;
   final String hintText;
   final Iterable<String>? autofillHints;
@@ -37,6 +41,7 @@ class AppTextFormField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
 
+  // Montagem do campo e de seus estados visuais.
   @override
   Widget build(BuildContext context) {
     // Mantém o comportamento do campo configurável sem repetir seu estilo.

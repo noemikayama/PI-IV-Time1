@@ -7,6 +7,8 @@
 // Alteração: Centralização das mensagens de erro apresentadas no login.
 // -----------------------------------------------------------------------------
 
+// Textos apresentados pela camada de interface durante falhas de login.
+// A centralização evita divergências entre telas e testes da autenticação.
 abstract final class AuthenticationErrorMessages {
   static const invalidCredentials = 'E-mail ou senha incorretos';
   static const serverConnection = 'Erro de conexão com o servidor';

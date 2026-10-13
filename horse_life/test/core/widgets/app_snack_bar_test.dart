@@ -13,9 +13,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 
 void main() {
+  // Valida o contrato configurável do componente compartilhado.
   testWidgets('shows a SnackBar with the provided configuration', (
     tester,
   ) async {
+    // Preparação de uma configuração diferente do cenário de erro do login.
     const backgroundColor = Color(0xFF007A33);
 
     await tester.pumpWidget(
@@ -38,9 +40,11 @@ void main() {
       ),
     );
 
+    // Ação que solicita a exibição da SnackBar.
     await tester.tap(find.text('Exibir mensagem'));
     await tester.pumpAndSettle();
 
+    // Verificação dos valores encaminhados ao componente Material.
     final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
     expect(snackBar.backgroundColor, backgroundColor);
     expect(find.byIcon(Icons.check_circle), findsOneWidget);

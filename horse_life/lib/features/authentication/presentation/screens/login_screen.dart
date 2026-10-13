@@ -23,6 +23,9 @@ import '../messages/authentication_error_messages.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
 
+// Tela responsável pela entrada das credenciais e pela apresentação dos
+// estados locais do login. A integração definitiva será conectada quando a
+// callable correspondente existir no backend.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     this.onBack,
@@ -32,6 +35,7 @@ class LoginScreen extends StatefulWidget {
     super.key,
   });
 
+  // Ações externas e contrato temporário da futura operação de login.
   final VoidCallback? onBack;
   final VoidCallback? onForgotPassword;
   final Future<bool> Function(String email, String password)? login;
@@ -42,17 +46,22 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // Configuração visual e limite de espera da operação remota.
   static const _backgroundColor = Color(0xFFFAFAFA);
   static const _errorSnackBarColor = Color(0xFFAA0000);
   static const _loginTimeout = Duration(seconds: 10);
 
+  // Estado e controladores pertencentes ao formulário.
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  // Sinalizadores usados para alternar a senha e proteger contra envios
+  // duplicados.
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
 
+  // Liberação dos recursos criados e mantidos pela tela.
   @override
   void dispose() {
     // Libera os recursos pertencentes ao estado da tela.
@@ -61,6 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Validação local das credenciais antes de qualquer tentativa de envio.
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) return 'Informe seu e-mail.';
@@ -75,6 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
+  // Apresentação padronizada dos erros específicos deste fluxo.
   void _showSnackBar(String message) {
     if (!mounted) return;
 
@@ -86,17 +97,22 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // Submissão assíncrona e tradução dos possíveis resultados em feedback
+  // visual para a pessoa usuária.
   Future<void> _submit() async {
     // Fecha o teclado e impede envio inválido ou duplicado.
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate() || _isSubmitting) return;
 
+    // Enquanto o backend não fornece a callable, a ausência da função é
+    // tratada da mesma forma que uma indisponibilidade do servidor.
     final login = widget.login;
     if (login == null) {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);
       return;
     }
 
+    // Mantém o botão bloqueado até sucesso, falha ou expiração do timeout.
     setState(() => _isSubmitting = true);
     try {
       final isAuthenticated = await login(
@@ -116,6 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Navegação de retorno injetável, com fallback para a pilha atual.
   void _goBack() {
     final onBack = widget.onBack;
     if (onBack != null) {
@@ -125,6 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.maybePop(context);
   }
 
+  // Estrutura responsiva da tela.
   @override
   Widget build(BuildContext context) {
     // Permite rolagem com teclado aberto e preserva a composição em telas
@@ -142,6 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Column(
                   children: [
+                    // Cabeçalho e apresentação do fluxo.
                     AuthHeader(onBack: _goBack),
                     const SizedBox(height: 80),
                     const Text(
@@ -166,6 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 48),
+                    // Formulário de credenciais e ações relacionadas.
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: AutofillGroup(
@@ -174,6 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              // Entrada e validação do e-mail.
                               AppTextFormField(
                                 controller: _emailController,
                                 hintText: 'E-mail',
@@ -183,6 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 validator: _validateEmail,
                               ),
                               const SizedBox(height: 10),
+                              // Entrada da senha e controle de visibilidade.
                               AppTextFormField(
                                 controller: _passwordController,
                                 hintText: 'Senha',
@@ -206,6 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ),
+                              // Ações secundárias do fluxo de autenticação.
                               Align(
                                 alignment: Alignment.centerLeft,
                                 child: AuthLink(
@@ -214,6 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               const SizedBox(height: 20),
+                              // Ação principal, refletindo o estado de envio.
                               GradientButton(
                                 label: 'Entrar',
                                 isLoading: _isSubmitting,

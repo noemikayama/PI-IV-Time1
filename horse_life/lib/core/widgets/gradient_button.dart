@@ -10,6 +10,8 @@
 
 import 'package:flutter/material.dart';
 
+// Botão principal reutilizável, com suporte a ação desabilitada e estado de
+// processamento assíncrono.
 class GradientButton extends StatelessWidget {
   const GradientButton({
     required this.label,
@@ -18,14 +20,17 @@ class GradientButton extends StatelessWidget {
     super.key,
   });
 
+  // Identidade visual aplicada ao fundo do botão.
   static const _gradient = LinearGradient(
     colors: [Color(0xFF009373), Color(0xFF027068)],
   );
 
+  // Conteúdo e estado fornecidos pela tela consumidora.
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
 
+  // Composição visual, semântica e interação por toque.
   @override
   Widget build(BuildContext context) {
     final isEnabled = onPressed != null && !isLoading;

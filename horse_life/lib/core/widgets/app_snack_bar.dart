@@ -10,9 +10,13 @@
 
 import 'package:flutter/material.dart';
 
+// Centraliza a estrutura visual e o comportamento das mensagens temporárias,
+// permitindo que cada situação forneça sua própria cor, ícone e texto.
 abstract final class AppSnackBar {
+  // Aparência compartilhada por todas as SnackBars da aplicação.
   static const borderRadius = BorderRadius.all(Radius.circular(12));
 
+  // Exibe uma nova mensagem e substitui qualquer SnackBar ainda visível.
   static void show(
     BuildContext context, {
     required Color backgroundColor,
@@ -21,6 +25,7 @@ abstract final class AppSnackBar {
   }) {
     final messenger = ScaffoldMessenger.of(context);
 
+    // Composição do conteúdo e dos controles da mensagem.
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(

@@ -15,10 +15,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/app.dart';
 
 void main() {
+  // Cenário 1: inicialização imediata ainda respeita a duração visual mínima.
   // Valida a duração mínima quando o Firebase responde imediatamente.
   testWidgets(
     'keeps the splash visible when Firebase initializes immediately',
     (tester) async {
+      // Preparação da aplicação com uma inicialização bem-sucedida.
       await tester.pumpWidget(
         HorseLifeApp(initializeApp: () async {}, home: const Text('Início')),
       );
@@ -26,6 +28,7 @@ void main() {
       // Mantém o relógio imediatamente antes do limite mínimo.
       await tester.pump(const Duration(milliseconds: 3999));
 
+      // Verificação do estado imediatamente anterior ao limite.
       expect(find.bySemanticsLabel('HorseLife'), findsOneWidget);
       expect(find.bySemanticsLabel('Carregando HorseLife'), findsOneWidget);
       expect(find.text('Início'), findsNothing);
@@ -33,16 +36,18 @@ void main() {
       // Completa os quatro segundos e libera a tela principal.
       await tester.pump(const Duration(milliseconds: 1));
 
+      // Verificação da liberação do conteúdo principal.
       expect(find.text('Início'), findsOneWidget);
       expect(find.bySemanticsLabel('Carregando HorseLife'), findsNothing);
     },
   );
 
-  // Valida que uma inicialização pendente mantém a splash em exibição.
+  // Cenário 2: uma dependência pendente mantém a splash em exibição.
   testWidgets('shows the splash while Firebase initializes', (tester) async {
     // Controla manualmente o instante em que a inicialização termina.
     final initialization = Completer<void>();
 
+    // Preparação com um Future controlado pelo teste.
     await tester.pumpWidget(
       HorseLifeApp(
         initializeApp: () => initialization.future,
@@ -50,6 +55,7 @@ void main() {
       ),
     );
 
+    // Verificação do estado de carregamento.
     expect(find.bySemanticsLabel('HorseLife'), findsOneWidget);
     expect(find.bySemanticsLabel('Carregando HorseLife'), findsOneWidget);
     expect(find.text('Início'), findsNothing);
@@ -60,11 +66,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 4));
 
+    // Verificação da transição após as duas condições serem concluídas.
     expect(find.text('Início'), findsOneWidget);
     expect(find.bySemanticsLabel('Carregando HorseLife'), findsNothing);
   });
 
-  // Valida a mensagem de falha e a recuperação por nova tentativa.
+  // Cenário 3: uma falha oferece recuperação por nova tentativa.
   testWidgets('offers a retry when initialization fails', (tester) async {
     var attempts = 0;
 
@@ -76,11 +83,13 @@ void main() {
       }
     }
 
+    // Execução da primeira tentativa, configurada para falhar.
     await tester.pumpWidget(
       HorseLifeApp(initializeApp: initialize, home: const Text('Início')),
     );
     await tester.pump(const Duration(seconds: 4));
 
+    // Verificação da apresentação do estado de erro.
     expect(
       find.text('Não foi possível conectar ao HorseLife.'),
       findsOneWidget,
@@ -92,6 +101,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 4));
 
+    // Verificação da recuperação e do número de tentativas realizadas.
     expect(attempts, 2);
     expect(find.text('Início'), findsOneWidget);
   });

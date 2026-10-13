@@ -15,6 +15,7 @@ import 'app/app.dart';
 import 'core/firebase/firebase_bootstrap.dart';
 import 'features/authentication/presentation/screens/login_screen.dart';
 
+// Ponto de entrada da aplicação.
 void main() {
   // Prepara os serviços do Flutter antes de iniciar as dependências
   // assíncronas.
