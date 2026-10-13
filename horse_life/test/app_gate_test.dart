@@ -4,13 +4,8 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
-// Alteração: Atualização dos testes para validar a splash durante quatro
-// segundos.
-//
-// Data: 13/10/2026
-// Autor: Noemi Kayama - RA 25004140
-// Alteração: Criação dos testes de duração da splash, carregamento do
-// Firebase e recuperação após falha de inicialização.
+// Alteração: Criação dos testes da splash de quatro segundos, do carregamento
+// do Firebase e da recuperação após falha de inicialização.
 // -----------------------------------------------------------------------------
 
 import 'dart:async';

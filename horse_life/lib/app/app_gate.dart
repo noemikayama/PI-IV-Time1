@@ -4,13 +4,8 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
-// Alteração: Aumento da duração mínima da splash de três para quatro
-// segundos.
-//
-// Data: 13/10/2026
-// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do controle de inicialização do Firebase, com splash
-// de três segundos e tratamento de carregamento, falha e nova tentativa.
+// de quatro segundos e tratamento de carregamento, falha e nova tentativa.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
