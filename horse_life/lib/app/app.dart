@@ -4,6 +4,10 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Aplicação do tema institucional centralizado do HorseLife.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da configuração do MaterialApp e do tema visual do
 // HorseLife, com controle de inicialização pelo AppGate.
 // -----------------------------------------------------------------------------
@@ -11,6 +15,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_gate.dart';
+import 'theme/app_theme.dart';
 
 // Define o contrato usado para inicializar as dependências da aplicação.
 typedef AppInitializer = Future<void> Function();
@@ -31,11 +36,7 @@ class HorseLifeApp extends StatelessWidget {
     return MaterialApp(
       title: 'HorseLife',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF009B7A)),
-        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: AppGate(initializeApp: initializeApp, home: home),
     );
   }
