@@ -4,14 +4,20 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Adaptação das cores de primeiro plano e da tipografia para os
+// valores fornecidos pelo SnackBarTheme e pelo ColorScheme do aplicativo.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da SnackBar reutilizável para diferentes situações, com
 // cor, ícone e mensagem configuráveis, bordas arredondadas e ação de fechar.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 
-// Centraliza a estrutura visual e o comportamento das mensagens temporárias,
-// permitindo que cada situação forneça sua própria cor, ícone e texto.
+// Centraliza o comportamento das mensagens temporárias, permitindo que cada
+// situação forneça cor, ícone e texto sem duplicar a aparência definida no
+// tema global.
 abstract final class AppSnackBar {
   // Aparência compartilhada por todas as SnackBars da aplicação.
   static const borderRadius = BorderRadius.all(Radius.circular(12));
@@ -24,6 +30,10 @@ abstract final class AppSnackBar {
     required String message,
   }) {
     final messenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    final contentTextStyle = theme.snackBarTheme.contentTextStyle;
+    final foregroundColor =
+        contentTextStyle?.color ?? theme.colorScheme.onPrimary;
 
     // Composição do conteúdo e dos controles da mensagem.
     messenger
@@ -31,21 +41,12 @@ abstract final class AppSnackBar {
       ..showSnackBar(
         SnackBar(
           backgroundColor: backgroundColor,
-          behavior: SnackBarBehavior.floating,
-          closeIconColor: Colors.white,
+          closeIconColor: foregroundColor,
           content: Row(
             children: [
-              Icon(icon, color: Colors.white),
+              Icon(icon, color: foregroundColor),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Urbanist',
-                  ),
-                ),
-              ),
+              Expanded(child: Text(message, style: contentTextStyle)),
             ],
           ),
           shape: const RoundedRectangleBorder(borderRadius: borderRadius),

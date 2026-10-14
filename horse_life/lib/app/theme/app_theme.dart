@@ -4,13 +4,16 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição do carregamento dinâmico pela aplicação das famílias
+// locais LeagueSpartan e Urbanist na escala tipográfica central do tema.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do tema claro do HorseLife com paleta, tipografia e
 // estilos globais para controles, campos e mensagens.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import 'app_colors.dart';
 
 // Constrói os temas globais da aplicação a partir dos tokens institucionais.
@@ -31,8 +34,8 @@ abstract final class AppTheme {
     );
 
     // Aplicação das famílias tipográficas sobre a escala definida abaixo.
-    final headingTextTheme = GoogleFonts.leagueSpartanTextTheme(_textTheme);
-    final bodyTextTheme = GoogleFonts.urbanistTextTheme(_textTheme);
+    final headingTextTheme = _textTheme.apply(fontFamily: 'LeagueSpartan');
+    final bodyTextTheme = _textTheme.apply(fontFamily: 'Urbanist');
 
     // Combinação de League Spartan nos títulos e Urbanist nos demais textos.
     final textTheme = TextTheme(
@@ -119,7 +122,7 @@ abstract final class AppTheme {
     );
   }
 
-  // Escala tipográfica base, independente das famílias aplicadas no tema.
+  // Escala tipográfica base; as famílias locais são aplicadas por categoria.
   static const _textTheme = TextTheme(
     displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
     displayMedium: TextStyle(fontSize: 36, fontWeight: FontWeight.w700),

@@ -4,22 +4,24 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção dos estilos locais para herdar fundo, texto e botão do
+// tema institucional da aplicação.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da splash Flutter com a logo completa do HorseLife,
 // mensagem de falha e ação para realizar uma nova tentativa.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 
+// Apresenta a marca durante a inicialização e herda sua aparência do tema.
 class SplashScreen extends StatelessWidget {
   // Cria a variação exibida durante o carregamento normal.
   const SplashScreen({super.key}) : onRetry = null;
 
   // Cria a variação de falha com uma ação de nova tentativa.
   const SplashScreen.failed({required this.onRetry, super.key});
-
-  // Centraliza as cores usadas pelos estados da splash.
-  static const _backgroundColor = Color(0xFFFAFAFA);
-  static const _brandGreen = Color(0xFF009B7A);
 
   final VoidCallback? onRetry;
 
@@ -31,7 +33,6 @@ class SplashScreen extends StatelessWidget {
     // Compõe a logo completa e, quando necessário, os controles de
     // recuperação.
     return Scaffold(
-      backgroundColor: _backgroundColor,
       body: SafeArea(
         child: Semantics(
           container: true,
@@ -58,18 +59,11 @@ class SplashScreen extends StatelessWidget {
                     Text(
                       'Não foi possível conectar ao HorseLife.',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: const Color(0xFF002646),
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                     const SizedBox(height: 16),
                     FilledButton.icon(
                       onPressed: onRetry,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _brandGreen,
-                        foregroundColor: Colors.white,
-                      ),
                       icon: const Icon(Icons.refresh_rounded),
                       label: const Text('Tentar novamente'),
                     ),

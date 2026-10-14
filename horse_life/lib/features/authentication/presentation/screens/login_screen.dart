@@ -4,6 +4,11 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de cores, fontes e estilos locais pelos papéis
+// semânticos de TextTheme, ColorScheme e pelos temas globais de componentes.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da tela de login responsiva com validação, controle de
 // senha, submissão assíncrona, timeout, mensagens centralizadas e tratamento
 // de credenciais incorretas ou falhas de conexão com a SnackBar genérica e
@@ -24,8 +29,9 @@ import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
 
 // Tela responsável pela entrada das credenciais e pela apresentação dos
-// estados locais do login. A integração definitiva será conectada quando a
-// callable correspondente existir no backend.
+// estados locais do login, com aparência herdada do tema institucional. A
+// integração definitiva será conectada quando a callable correspondente
+// existir no backend.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     this.onBack,
@@ -46,9 +52,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Configuração visual e limite de espera da operação remota.
-  static const _backgroundColor = Color(0xFFFAFAFA);
-  static const _errorSnackBarColor = Color(0xFFAA0000);
+  // Limite de espera da operação remota.
   static const _loginTimeout = Duration(seconds: 10);
 
   // Estado e controladores pertencentes ao formulário.
@@ -91,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     AppSnackBar.show(
       context,
-      backgroundColor: _errorSnackBarColor,
+      backgroundColor: Theme.of(context).colorScheme.error,
       icon: Icons.error,
       message: message,
     );
@@ -145,10 +149,11 @@ class _LoginScreenState extends State<LoginScreen> {
   // Estrutura responsiva da tela.
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     // Permite rolagem com teclado aberto e preserva a composição em telas
     // maiores.
     return Scaffold(
-      backgroundColor: _backgroundColor,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -163,26 +168,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Cabeçalho e apresentação do fluxo.
                     AuthHeader(onBack: _goBack),
                     const SizedBox(height: 80),
-                    const Text(
-                      'Login',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Leage Spartan',
-                      ),
-                    ),
+                    Text('Login', style: textTheme.displaySmall),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'É muito bom te ter de volta!\nPronto para mais um?',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        height: 1.25,
-                        fontWeight: FontWeight.w300,
-                        fontFamily: 'Urbanist',
-                      ),
+                      style: textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 48),
                     // Formulário de credenciais e ações relacionadas.
@@ -244,15 +235,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onPressed: _submit,
                               ),
                               const SizedBox(height: 22),
-                              const Text(
+                              Text(
                                 'Ainda não possui uma conta?',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'Urbanist',
-                                ),
+                                style: textTheme.labelLarge,
                               ),
                               const SizedBox(height: 2),
                               Align(
