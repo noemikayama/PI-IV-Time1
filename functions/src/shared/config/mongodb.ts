@@ -8,7 +8,7 @@
 // ----------------------------------------------------------------------------- 
 
 import {MongoClient} from "mongodb";
-import type {Db} from "mongodb";
+import type {Db, ClientSession} from "mongodb";
 import {getEnv} from "./environment";
 
 // Uma única conexão por processo, reutilizada entre invocações quentes.
@@ -46,4 +46,15 @@ export async function closeClient(): Promise<void> {
     // Se a conexão nunca foi estabelecida, não há nada a fechar.
     const client = await pending.catch(() => undefined);
     await client?.close();
+}
+
+// Executa as operações em uma transação (com retentativa de erros transitórios).
+// Cada operação do repository deve receber a 'session' recebida aqui.
+export async function runInTransaction<T>(
+    operation: (session: ClientSession) => Promise<T>
+): Promise<T> {
+    const client = await getClient();
+    return client.withSession((session) =>
+        session.withTransaction(() => operation(session))
+    );
 }

@@ -8,7 +8,7 @@
 // ----------------------------------------------------------------------------- 
 
 import {getDatabase, closeClient} from "./shared/config/mongodb";
- 
+
 async function main() {
     try {
         const db = await getDatabase();
@@ -18,7 +18,7 @@ async function main() {
         await closeClient();
     }
 }
- 
+
 main().catch((err) => {
     console.error(err);
     process.exitCode = 1;

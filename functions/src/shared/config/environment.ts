@@ -13,7 +13,7 @@ import {defineSecret, defineString} from "firebase-functions/params";
 // O URI é tratado como segredo; o nome do banco é um parâmetro de configuração
 // comum, ambos vinculados ao ambiente da Cloud Function.
 // Parâmetros declarados explicitamente para o deploy das Cloud Functions.
-// Funções que usam o secret precisam listá-lo em `secrets: [mongodbUriSecret]`
+// Funções que usam o secret precisam listá-lo em 'secrets: [mongodbUriSecret]'
 export const mongodbUriSecret = defineSecret("MONGODB_URI");
 export const mongodbDbParam = defineString("MONGODB_DB");
 
@@ -29,7 +29,7 @@ function requireValue(name: string, value: string | undefined): string {
     if (!trimmed) {
         throw new Error(`Variável de ambiente ${name} inválida ou não definida.`);
     }
-        
+
     return trimmed;
 }
 
