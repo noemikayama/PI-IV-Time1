@@ -61,6 +61,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/foto_cavalo_tela_inicial.jpg
     - assets/Logo_HorseLife.png
     - assets/Logo_somente_simbolo.png
 

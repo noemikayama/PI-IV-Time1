@@ -136,8 +136,8 @@ abstract final class AppTheme {
     bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
     bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
     bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-    labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-    labelMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+    labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+    labelMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
   );
 }
