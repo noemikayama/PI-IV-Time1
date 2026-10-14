@@ -238,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               Text(
                                 'Ainda não possui uma conta?',
                                 textAlign: TextAlign.center,
-                                style: textTheme.labelLarge,
+                                style: textTheme.labelMedium,
                               ),
                               const SizedBox(height: 2),
                               Align(
