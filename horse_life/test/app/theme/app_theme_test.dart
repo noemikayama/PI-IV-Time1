@@ -15,7 +15,7 @@ import 'package:horse_life/app/theme/app_theme.dart';
 
 void main() {
   // Prepara os serviços mínimos do Flutter exigidos pelo carregamento das
-  // fontes durante os testes unitários do tema.
+  // fontes locais durante os testes unitários do tema.
   TestWidgetsFlutterBinding.ensureInitialized();
 
   // Cenário 1: os tokens preservam os valores definidos pela identidade.

@@ -4,14 +4,19 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Migração do gradiente, conteúdo e indicador de progresso para as
+// cores semânticas e a tipografia fornecidas pelo tema.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do botão reutilizável com gradiente da identidade visual
 // do HorseLife e estado de carregamento.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 
-// Botão principal reutilizável, com suporte a ação desabilitada e estado de
-// processamento assíncrono.
+// Botão principal reutilizável que deriva sua aparência do tema e oferece
+// suporte a ação desabilitada e estado de processamento assíncrono.
 class GradientButton extends StatelessWidget {
   const GradientButton({
     required this.label,
@@ -19,11 +24,6 @@ class GradientButton extends StatelessWidget {
     this.isLoading = false,
     super.key,
   });
-
-  // Identidade visual aplicada ao fundo do botão.
-  static const _gradient = LinearGradient(
-    colors: [Color(0xFF009373), Color(0xFF027068)],
-  );
 
   // Conteúdo e estado fornecidos pela tela consumidora.
   final String label;
@@ -34,6 +34,8 @@ class GradientButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEnabled = onPressed != null && !isLoading;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     // Usa Material sobre o gradiente para preservar feedback de toque.
     return Semantics(
@@ -42,9 +44,11 @@ class GradientButton extends StatelessWidget {
       child: Opacity(
         opacity: isEnabled ? 1 : 0.65,
         child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: _gradient,
-            borderRadius: BorderRadius.all(Radius.circular(32)),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [colorScheme.primary, colorScheme.secondary],
+            ),
+            borderRadius: const BorderRadius.all(Radius.circular(32)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -56,20 +60,17 @@ class GradientButton extends StatelessWidget {
                 height: 60,
                 child: Center(
                   child: isLoading
-                      ? const SizedBox.square(
+                      ? SizedBox.square(
                           dimension: 24,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                             strokeWidth: 2.5,
                           ),
                         )
                       : Text(
                           label,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            fontFamily: 'Urbanist',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.onPrimary,
                           ),
                         ),
                 ),

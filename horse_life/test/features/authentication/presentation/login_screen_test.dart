@@ -4,6 +4,11 @@
 //
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Aplicação do AppTheme.light no ambiente de teste para reproduzir
+// a configuração visual usada pela aplicação.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da tela de login para validar conteúdo,
 // senha, formulário, submissão assíncrona, timeout, falhas de autenticação e
 // conexão, além da configuração, estilo e fechamento da SnackBar genérica.
@@ -13,17 +18,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/core/widgets/app_text_form_field.dart';
 import 'package:horse_life/features/authentication/presentation/screens/login_screen.dart';
 
 void main() {
+  Widget buildApp(Widget home) {
+    return MaterialApp(theme: AppTheme.light, home: home);
+  }
+
   // Cenário 1: conteúdo inicial e alternância da visibilidade da senha.
   testWidgets('shows the login content and toggles password visibility', (
     tester,
   ) async {
     // Preparação da tela sem integração remota.
-    await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
+    await tester.pumpWidget(buildApp(const LoginScreen()));
 
     // Verificação dos elementos essenciais da interface.
     expect(find.text('Login'), findsOneWidget);
@@ -58,8 +68,8 @@ void main() {
 
     // Preparação de um login controlado que captura os valores recebidos.
     await tester.pumpWidget(
-      MaterialApp(
-        home: LoginScreen(
+      buildApp(
+        LoginScreen(
           login: (email, password) async {
             submittedEmail = email;
             submittedPassword = password;
@@ -98,7 +108,7 @@ void main() {
   ) async {
     // Preparação de uma resposta negativa do serviço de login.
     await tester.pumpWidget(
-      MaterialApp(home: LoginScreen(login: (email, password) async => false)),
+      buildApp(LoginScreen(login: (email, password) async => false)),
     );
 
     // Submissão de credenciais preenchidas.
@@ -134,9 +144,7 @@ void main() {
     final serverResponse = Completer<bool>();
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: LoginScreen(login: (email, password) => serverResponse.future),
-      ),
+      buildApp(LoginScreen(login: (email, password) => serverResponse.future)),
     );
 
     // Submissão e verificação do estado de processamento.
@@ -161,8 +169,8 @@ void main() {
   ) async {
     // Preparação de uma função que falha ao processar as credenciais.
     await tester.pumpWidget(
-      MaterialApp(
-        home: LoginScreen(
+      buildApp(
+        LoginScreen(
           login: (email, password) async => throw Exception('Network error'),
         ),
       ),
