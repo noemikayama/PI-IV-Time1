@@ -1,5 +1,13 @@
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 13/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Implementação da estrutura inicial da Home do Responsável,
+// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
+// -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-
 import '../../widgets/home_app_bar.dart';
 import '../../widgets/home_bottom_nav_bar.dart';
 import '../../widgets/guardian_sidebar.dart';

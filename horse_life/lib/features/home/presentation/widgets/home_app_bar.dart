@@ -1,5 +1,14 @@
-import 'package:flutter/material.dart';
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 13/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Implementação da estrutura inicial da Home do Responsável,
+// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
+// -----------------------------------------------------------------------------
 
+import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
