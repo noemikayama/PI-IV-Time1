@@ -10,6 +10,8 @@
 
 import 'package:flutter/material.dart';
 
+// Catálogo central dos tokens de cor usados pelo tema e pelos componentes.
+// A classe não pode ser instanciada porque expõe apenas valores constantes.
 abstract final class AppColors {
   // Paleta principal.
   static const prussianBlue = Color(0xFF002240);
@@ -27,7 +29,8 @@ abstract final class AppColors {
   static const emerald = Color(0xFF5BBA6F);
   static const inferno = Color(0xFFAA0000);
 
-  // Nomes semânticos usados pela interface e independentes da paleta.
+  // Cores semânticas. Esses nomes expressam intenção e evitam que as telas
+  // dependam diretamente do nome visual escolhido na paleta.
   static const success = emerald;
   static const error = inferno;
 }
