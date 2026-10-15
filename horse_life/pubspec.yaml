@@ -33,7 +33,10 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.9
+  firebase_core: ^4.15.0
+  flutter_web_plugins:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +59,40 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/foto_cavalo_tela_inicial.jpg
+    - assets/Logo_HorseLife.png
+    - assets/Logo_somente_simbolo.png
+
+  # Famílias locais usadas pelo AppTheme, sem carregamento em rede.
+  fonts:
+    - family: LeagueSpartan
+      fonts:
+        - asset: assets/google_fonts/LeagueSpartan-Regular.ttf
+          weight: 400
+        - asset: assets/google_fonts/LeagueSpartan-Medium.ttf
+          weight: 500
+        - asset: assets/google_fonts/LeagueSpartan-SemiBold.ttf
+          weight: 600
+        - asset: assets/google_fonts/LeagueSpartan-Bold.ttf
+          weight: 700
+        - asset: assets/google_fonts/LeagueSpartan-ExtraBold.ttf
+          weight: 800
+    - family: Urbanist
+      fonts:
+        - asset: assets/google_fonts/Urbanist-Light.ttf
+          weight: 300
+        - asset: assets/google_fonts/Urbanist-Regular.ttf
+          weight: 400
+        - asset: assets/google_fonts/Urbanist-Medium.ttf
+          weight: 500
+        - asset: assets/google_fonts/Urbanist-SemiBold.ttf
+          weight: 600
+        - asset: assets/google_fonts/Urbanist-Bold.ttf
+          weight: 700
+        - asset: assets/google_fonts/Urbanist-ExtraBold.ttf
+          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:
