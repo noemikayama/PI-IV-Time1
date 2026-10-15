@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do callback reativo onChanged para validação de senha.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Remoção dos estilos locais e adoção de TextTheme, ColorScheme e
@@ -24,6 +28,7 @@ class AppTextFormField extends StatelessWidget {
     this.autofillHints,
     this.keyboardType,
     this.obscureText = false,
+    this.onChanged,
     this.onFieldSubmitted,
     this.suffixIcon,
     this.textInputAction,
@@ -37,6 +42,8 @@ class AppTextFormField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final TextInputType? keyboardType;
   final bool obscureText;
+  // Permite que telas atualizem validações e indicadores enquanto há digitação.
+  final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
   final Widget? suffixIcon;
   final TextInputAction? textInputAction;
@@ -54,6 +61,7 @@ class AppTextFormField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       obscuringCharacter: '•',
+      onChanged: onChanged,
       onFieldSubmitted: onFieldSubmitted,
       textInputAction: textInputAction,
       validator: validator,

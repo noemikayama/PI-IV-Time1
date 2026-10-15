@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ajuste do estilo bodySmall para os textos auxiliares do cadastro.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição do carregamento dinâmico pela aplicação das famílias
@@ -135,7 +139,7 @@ abstract final class AppTheme {
     titleSmall: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
     bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
     bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-    bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+    bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w300),
     labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
     labelMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),

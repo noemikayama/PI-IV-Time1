@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conexão da abertura de conta à seleção de perfil e ao controller
+// injetável do fluxo de cadastro.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da tela inicial do HorseLife com fotografia, sobreposição
@@ -11,13 +16,24 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../application/controllers/registration_controller.dart';
+import '../../data/models/user_type.dart';
 import 'login_screen.dart';
+import 'profile_selection_screen.dart';
 import '../widgets/welcome_action_panel.dart';
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({this.onCreateAccount, super.key});
+  const WelcomeScreen({
+    this.onCreateAccount,
+    this.onUserTypeSelected,
+    this.registrationController,
+    super.key,
+  });
 
+  // Pontos de extensão para testes, seleção de fluxo e futura submissão.
   final VoidCallback? onCreateAccount;
+  final ValueChanged<UserType>? onUserTypeSelected;
+  final RegistrationController? registrationController;
 
   void _openLogin(BuildContext context) {
     // Abre o login diretamente pela camada de apresentação, conforme o padrão
@@ -25,6 +41,19 @@ class WelcomeScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  void _openProfileSelection(BuildContext context) {
+    // Abre a seleção por navegação direta e propaga a dependência estável.
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => ProfileSelectionScreen(
+          onContinue: onUserTypeSelected,
+          registrationController: registrationController,
+        ),
+      ),
     );
   }
 
@@ -64,11 +93,13 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          // Painel de entrada para login ou início do cadastro.
           Align(
             alignment: Alignment.bottomCenter,
             child: WelcomeActionPanel(
               onAccessAccount: () => _openLogin(context),
-              onCreateAccount: onCreateAccount ?? () {},
+              onCreateAccount:
+                  onCreateAccount ?? () => _openProfileSelection(context),
             ),
           ),
         ],
