@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ajuste das dimensões do símbolo nos cabeçalhos de autenticação.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Adoção da cor primária do ColorScheme para a ação de retorno.
@@ -44,8 +48,8 @@ class AuthHeader extends StatelessWidget {
         ),
         Image.asset(
           'assets/Logo_somente_simbolo.png',
-          width: 56,
-          height: 56,
+          width: 50,
+          height: 50,
           fit: BoxFit.contain,
           semanticLabel: 'Símbolo HorseLife',
         ),

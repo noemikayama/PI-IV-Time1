@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ajuste do espaçamento entre o título e a mensagem de boas-vindas.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição de cores, fontes e estilos locais pelos papéis
@@ -169,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     AuthHeader(onBack: _goBack),
                     const SizedBox(height: 80),
                     Text('Login', style: textTheme.displaySmall),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 24),
                     Text(
                       'É muito bom te ter de volta!\nPronto para mais um?',
                       textAlign: TextAlign.center,
