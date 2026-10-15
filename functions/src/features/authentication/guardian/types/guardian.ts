@@ -2,13 +2,26 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Padronização do formato.
+//
+// Data: 14/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Acréscimo dos tipos usados na home.
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Definição dos tipos usados no cadastro de responsáveis.
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
 
 import type {ObjectId} from "mongodb";
 import type {Credentials} from "../../shared";
+import type {
+  StatusRegistroHome,
+  Progresso,
+  RefResumo,
+} from "../../shared/types/home";
 
 export type GuardianRegistrationInput = Credentials;
 
@@ -39,7 +52,37 @@ export type GuardianRegistrationResult = {
     email: string;
 };
 
-export type GuardianProfile = Omit<GuardianDocument, "criadoEm" | "atualizadoEm"> & {
+export type GuardianProfile = Omit<
+  GuardianDocument,
+  "criadoEm" | "atualizadoEm"
+> & {
     criadoEm: string;
     atualizadoEm: string;
 };
+
+export interface TreinoDiaResponsavel {
+    registroId: string;
+    nomeTreino: string; // Cabeçalho do card de treinamento do registro.
+    nomeCavalo: string;
+    nomeTreinador: string;
+    duracaoMinutos: number;
+    nomePlano: string;
+    status: StatusRegistroHome;
+}
+
+export interface HomeResponsavel {
+    tipoConta: "RESPONSAVEL";
+    nome: string;
+    totalCavalos: number; // Usado na sidebar: animais cadastrados.
+    treinosDoDia: TreinoDiaResponsavel[];
+    treinosSemana: Progresso;
+    treinosMes: Progresso;
+    treinosTotal: number; // Treinos REALIZADO + PARCIAL desde sempre.
+    cavalos: RefResumo[]; // Prévia limitada; lista completa em "Mostrar tudo".
+    treinadores: RefResumo[];
+}
+
+export type GuardianHomeSource = Pick<
+    GuardianDocument,
+    "nome" | "situacaoCadastral" | "cavalos"
+>;

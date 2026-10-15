@@ -2,10 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Definição dos tipos de login
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Definição dos tipos de conta, credenciais e reserva de e-mail.
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
+
+import type {Role} from "../../../../shared/constants/roles";
 
 export type AccountType = "RESPONSAVEL" | "TREINADOR";
 
@@ -23,4 +29,21 @@ export type EmailReservation = {
     tipoConta: AccountType;
     usuarioId: string;
     criadoEm: Date;
+};
+
+export type LoginInput = Pick<Credentials, "email" | "senha">;
+
+// Resposta mínima: o necessário para autenticar e escolher a home.
+export type LoginResult = {
+    // Para o app chamar signInWithCustomToken().
+    customToken: string;
+    role: Role;
+    nome: string;
+};
+
+// Conta localizada pelo UID do Firebase, em responsaveis ou treinadores.
+export type AccountLookup = {
+    role: Role;
+    nome: string;
+    active: boolean;
 };

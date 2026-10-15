@@ -2,9 +2,26 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos tipos de login.
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos tipos compartilhados de autenticação inicial.
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
 
-export type {AccountType, Credentials, EmailReservation} from "./account";
+export type {
+  AccountLookup,
+  AccountType,
+  Credentials,
+  EmailReservation,
+  LoginInput,
+  LoginResult,
+} from "./account";
+export type {
+  StatusRegistroHome,
+  RefResumo,
+  Progresso,
+  HomeResult,
+} from "./home";

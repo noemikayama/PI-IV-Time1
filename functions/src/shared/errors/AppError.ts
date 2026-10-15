@@ -4,10 +4,10 @@
 //
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Criação de um erro da aplicação com código e mensagem próprios.
-// ----------------------------------------------------------------------------- 
+// Alteração: Criação de erro próprio da aplicação.
+// -----------------------------------------------------------------------------
 
-// Códigos compatíveis com os códigos de erro das Cloud Functions (HttpsError).
+// Códigos compatíveis com os erros das Cloud Functions (HttpsError).
 export type AppErrorCode =
     | "invalid-argument"
     | "already-exists"
@@ -16,12 +16,17 @@ export type AppErrorCode =
     | "not-found"
     | "internal";
 
+/** Erro de domínio com código compatível com o HttpsError. */
 export class AppError extends Error {
-    readonly code: AppErrorCode;
+  readonly code: AppErrorCode;
 
-    constructor(code: AppErrorCode, message: string) {
-        super(message);
-        this.name = "AppError";
-        this.code = code;
-    }
+  /** Cria o erro com o código e a mensagem informados.
+   * @param {AppErrorCode} code Código do erro.
+   * @param {string} message Mensagem do erro.
+   */
+  constructor(code: AppErrorCode, message: string) {
+    super(message);
+    this.name = "AppError";
+    this.code = code;
+  }
 }

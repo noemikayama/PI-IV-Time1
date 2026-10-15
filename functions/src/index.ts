@@ -4,8 +4,14 @@
 //
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Exportação das funções de cadastro de responsáveis e profissionais.
-// ----------------------------------------------------------------------------- 
+// Alteração: Exportação do cadastro de responsáveis e profissionais.
+// -----------------------------------------------------------------------------
 
-export {registerGuardian, getGuardianProfile} from "./features/authentication/guardian";
-export {registerProfessional, getProfessionalProfile} from "./features/authentication/professional";
+export {
+  registerGuardian,
+  registerProfessional,
+  getGuardianProfile,
+  getProfessionalProfile,
+  login,
+  getHome,
+} from "./features/authentication";

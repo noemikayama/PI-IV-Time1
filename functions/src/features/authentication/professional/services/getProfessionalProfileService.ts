@@ -11,21 +11,24 @@ import {AppError} from "../../../../shared/errors/AppError";
 import {findProfessionalById} from "../repositories/professionalRepository";
 import type {ProfessionalProfile} from "../types";
 
+/** Retorna os dados públicos do perfil do treinador.
+ * @param {string} uid UID do usuário.
+ */
 export async function getProfessionalProfileService(
-    uid: string
+  uid: string
 ): Promise<ProfessionalProfile> {
-    const professional = await findProfessionalById(uid);
+  const professional = await findProfessionalById(uid);
 
-    if (!professional) {
-        throw new AppError("not-found", "Perfil não encontrado.");
-    }
-    if (professional.situacaoProfissional === "INATIVO") {
-        throw new AppError("permission-denied", "Cadastro inativo.");
-    }
-    
-    return {
-        ...professional,
-        criadoEm: professional.criadoEm.toISOString(),
-        atualizadoEm: professional.atualizadoEm.toISOString(),
-    };
+  if (!professional) {
+    throw new AppError("not-found", "Perfil não encontrado.");
+  }
+  if (professional.situacaoProfissional === "INATIVO") {
+    throw new AppError("permission-denied", "Cadastro inativo.");
+  }
+
+  return {
+    ...professional,
+    criadoEm: professional.criadoEm.toISOString(),
+    atualizadoEm: professional.atualizadoEm.toISOString(),
+  };
 }

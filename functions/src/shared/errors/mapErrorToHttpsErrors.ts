@@ -4,20 +4,26 @@
 //
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Desenvolvimente da conversão dos erros da aplicação para erros das 
-// Cloud Functions.
-// ----------------------------------------------------------------------------- 
+// Alteração: Conversão dos erros da aplicação para Cloud Functions.
+// -----------------------------------------------------------------------------
 
 import {logger} from "firebase-functions";
 import {HttpsError} from "firebase-functions/v2/https";
 import {AppError} from "./AppError";
 
 // Converte qualquer erro em HttpsError. Em produção, erros inesperados são
-// registrados apenas com o nome, para não vazar URI, e-mails ou dados pessoais.
-// No emulador local, a mensagem real também é registrada para facilitar o debug.
+// registrados apenas com o nome, sem expor URI, e-mails ou dados pessoais.
+// No emulador local, a mensagem real também é registrada para
+// facilitar o debug.
+/** Converte erros da aplicação em erros compatíveis com o Firebase.
+ * @param {unknown} error Erro recebido.
+ * @return {HttpsError} Erro compatível com callable functions.
+ */
 export function mapErrorToHttpsError(error: unknown): HttpsError {
   if (error instanceof HttpsError) return error;
-  if (error instanceof AppError) return new HttpsError(error.code, error.message);
+  if (error instanceof AppError) {
+    return new HttpsError(error.code, error.message);
+  }
 
   const isEmulator = process.env.FUNCTIONS_EMULATOR === "true";
 
