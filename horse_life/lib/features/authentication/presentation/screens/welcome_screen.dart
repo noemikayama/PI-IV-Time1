@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de ValueChanged<UserType> pelo typedef
+// ProfileSelectionCallback no callback de seleção de perfil.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Conexão da abertura de conta à seleção de perfil e ao controller
@@ -17,7 +22,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../application/controllers/registration_controller.dart';
-import '../../data/models/user_type.dart';
 import 'login_screen.dart';
 import 'profile_selection_screen.dart';
 import '../widgets/welcome_action_panel.dart';
@@ -32,7 +36,7 @@ class WelcomeScreen extends StatelessWidget {
 
   // Pontos de extensão para testes, seleção de fluxo e futura submissão.
   final VoidCallback? onCreateAccount;
-  final ValueChanged<UserType>? onUserTypeSelected;
+  final ProfileSelectionCallback? onUserTypeSelected;
   final RegistrationController? registrationController;
 
   void _openLogin(BuildContext context) {

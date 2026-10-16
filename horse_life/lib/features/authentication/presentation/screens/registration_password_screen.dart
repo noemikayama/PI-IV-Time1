@@ -4,6 +4,10 @@
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Compartilhamento da etapa de senha entre responsável e treinador.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da etapa de senha do cadastro.
 // -----------------------------------------------------------------------------
 
@@ -17,16 +21,20 @@ import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import '../widgets/registration_progress_indicator.dart';
 import 'guardian_confirmation_screen.dart';
+import 'trainer_confirmation_screen.dart';
 
-typedef RegistrationPasswordCallback =
-    void Function(RegistrationDraft registration, String password);
+typedef GuardianPasswordCallback =
+    void Function(GuardianRegistrationDraft registration, String password);
+typedef TrainerPasswordCallback =
+    void Function(TrainerRegistrationDraft registration, String password);
 
-// Terceira etapa do cadastro de responsável, com validação reativa da senha.
+// Etapa compartilhada de senha, com validação reativa dos mesmos requisitos.
 class RegistrationPasswordScreen extends StatefulWidget {
   const RegistrationPasswordScreen({
     required this.registration,
     this.registrationController,
-    this.onContinue,
+    this.onGuardianContinue,
+    this.onTrainerContinue,
     this.onBack,
     super.key,
   });
@@ -34,7 +42,8 @@ class RegistrationPasswordScreen extends StatefulWidget {
   // Dados não sensíveis, dependência de submissão e callbacks do fluxo.
   final RegistrationDraft registration;
   final RegistrationController? registrationController;
-  final RegistrationPasswordCallback? onContinue;
+  final GuardianPasswordCallback? onGuardianContinue;
+  final TrainerPasswordCallback? onTrainerContinue;
   final VoidCallback? onBack;
 
   @override
@@ -111,17 +120,35 @@ class _RegistrationPasswordScreenState
     if (!_formKey.currentState!.validate()) return;
 
     final password = _password;
-    final onContinue = widget.onContinue;
-    if (onContinue != null) {
-      onContinue(_registration, password);
-      return;
+    switch (_registration) {
+      case GuardianRegistrationDraft guardian:
+        final onContinue = widget.onGuardianContinue;
+        if (onContinue != null) {
+          onContinue(guardian, password);
+          _clearPasswords();
+          return;
+        }
+        _openGuardianConfirmation(guardian, password);
+      case TrainerRegistrationDraft trainer:
+        final onContinue = widget.onTrainerContinue;
+        if (onContinue != null) {
+          onContinue(trainer, password);
+          _clearPasswords();
+          return;
+        }
+        _openTrainerConfirmation(trainer, password);
     }
+  }
 
+  void _openGuardianConfirmation(
+    GuardianRegistrationDraft registration,
+    String password,
+  ) {
     Navigator.pushReplacement<void, void>(
       context,
       MaterialPageRoute<void>(
         builder: (confirmationContext) => GuardianConfirmationScreen(
-          registration: _registration,
+          registration: registration,
           password: password,
           registrationController: widget.registrationController,
           onEditPassword: (updatedRegistration) {
@@ -138,9 +165,40 @@ class _RegistrationPasswordScreenState
         ),
       ),
     );
+    _clearPasswords();
+  }
 
+  void _clearPasswords() {
     _passwordController.clear();
     _confirmationController.clear();
+  }
+
+  void _openTrainerConfirmation(
+    TrainerRegistrationDraft registration,
+    String password,
+  ) {
+    Navigator.pushReplacement<void, void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (confirmationContext) => TrainerConfirmationScreen(
+          registration: registration,
+          password: password,
+          registrationController: widget.registrationController,
+          onEditPassword: (updatedRegistration) {
+            Navigator.pushReplacement<void, void>(
+              confirmationContext,
+              MaterialPageRoute<void>(
+                builder: (context) => RegistrationPasswordScreen(
+                  registration: updatedRegistration,
+                  registrationController: widget.registrationController,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    _clearPasswords();
   }
 
   @override
@@ -168,11 +226,17 @@ class _RegistrationPasswordScreenState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Terceiro passo do cadastro de responsável.
-                            const RegistrationProgressIndicator(
-                              configuration:
+                            RegistrationProgressIndicator(
+                              configuration: switch (_registration) {
+                                GuardianRegistrationDraft() =>
                                   RegistrationProgressConfiguration.guardian,
-                              currentStep: 3,
+                                TrainerRegistrationDraft() =>
+                                  RegistrationProgressConfiguration.trainer,
+                              },
+                              currentStep: switch (_registration) {
+                                GuardianRegistrationDraft() => 3,
+                                TrainerRegistrationDraft() => 7,
+                              },
                             ),
                             const SizedBox(height: 52),
                             Text(

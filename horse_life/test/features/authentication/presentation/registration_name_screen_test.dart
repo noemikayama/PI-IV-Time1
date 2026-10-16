@@ -4,6 +4,11 @@
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Verificação da criação dos estados específicos após o nome e da
+// transição para o e-mail no fluxo de treinador com oito passos.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da primeira etapa do cadastro.
 // -----------------------------------------------------------------------------
 
@@ -11,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
+import 'package:horse_life/features/authentication/application/states/registration_draft.dart';
 import 'package:horse_life/features/authentication/presentation/screens/registration_email_screen.dart';
 import 'package:horse_life/features/authentication/presentation/screens/registration_name_screen.dart';
 
@@ -44,17 +50,13 @@ void main() {
     }
   });
 
-  // Configuração independente reservada ao futuro fluxo profissional.
-  testWidgets('supports an independently configured professional progress', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      buildApp(RegistrationNameScreen.professional(totalSteps: 6)),
-    );
+  // Configuração fixa do fluxo profissional.
+  testWidgets('shows the trainer progress with eight steps', (tester) async {
+    await tester.pumpWidget(buildApp(const RegistrationNameScreen.trainer()));
 
-    expect(find.bySemanticsLabel('Etapa 1 de 6'), findsOneWidget);
+    expect(find.bySemanticsLabel('Etapa 1 de 8'), findsOneWidget);
     expect(
-      find.byKey(const Key('registration-progress-segment-6')),
+      find.byKey(const Key('registration-progress-segment-8')),
       findsOneWidget,
     );
   });
@@ -115,5 +117,33 @@ void main() {
     );
     expect(emailScreen.registration.firstName, 'Ana');
     expect(emailScreen.registration.lastName, 'Silva');
+    expect(emailScreen.registration, isA<GuardianRegistrationDraft>());
+  });
+
+  // Transição do treinador para o segundo passo, mantendo a trilha profissional.
+  testWidgets('opens the trainer email step with eight progress steps', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const RegistrationNameScreen.trainer()));
+
+    await tester.enterText(find.byType(TextFormField).first, 'Ana');
+    await tester.enterText(find.byType(TextFormField).last, 'Silva');
+
+    final continueButton = find.byKey(const Key('continue-registration-name'));
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RegistrationEmailScreen), findsOneWidget);
+    expect(find.text('Qual o seu e-mail?'), findsOneWidget);
+    expect(find.bySemanticsLabel('Etapa 2 de 8'), findsOneWidget);
+    expect(
+      find.byKey(const Key('registration-progress-segment-8')),
+      findsOneWidget,
+    );
+    final emailScreen = tester.widget<RegistrationEmailScreen>(
+      find.byType(RegistrationEmailScreen),
+    );
+    expect(emailScreen.registration, isA<TrainerRegistrationDraft>());
   });
 }

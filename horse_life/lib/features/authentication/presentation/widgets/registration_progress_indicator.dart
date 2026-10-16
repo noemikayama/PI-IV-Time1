@@ -4,6 +4,10 @@
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Definição da trilha profissional com oito passos fixos.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do indicador configurável dos fluxos de cadastro.
 // -----------------------------------------------------------------------------
 
@@ -29,10 +33,11 @@ class RegistrationProgressConfiguration {
     totalSteps: 4,
   );
 
-  // O total profissional será informado quando suas etapas forem definidas.
-  const RegistrationProgressConfiguration.professional({
-    required int totalSteps,
-  }) : this._(userType: UserType.professional, totalSteps: totalSteps);
+  // Fluxo profissional definido com os oito passos planejados.
+  static const trainer = RegistrationProgressConfiguration._(
+    userType: UserType.trainer,
+    totalSteps: 8,
+  );
 }
 
 // Exibe o progresso segmentado correspondente ao fluxo selecionado.
@@ -70,7 +75,7 @@ class RegistrationProgressIndicator extends StatelessWidget {
                 ),
               ),
             ),
-            if (index < configuration.totalSteps - 1) const SizedBox(width: 26),
+            if (index < configuration.totalSteps - 1) const SizedBox(width: 10),
           ],
         ],
       ),

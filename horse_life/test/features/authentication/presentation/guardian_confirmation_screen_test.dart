@@ -4,6 +4,10 @@
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Uso do estado específico de responsável na revisão do cadastro.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da confirmação e submissão do cadastro.
 // -----------------------------------------------------------------------------
 
@@ -18,7 +22,7 @@ import 'package:horse_life/features/authentication/presentation/screens/guardian
 
 void main() {
   // Draft de revisão sem armazenamento da senha.
-  const registration = RegistrationDraft(
+  const registration = GuardianRegistrationDraft(
     firstName: 'Ana',
     lastName: 'Silva',
     email: 'ana@email.com',

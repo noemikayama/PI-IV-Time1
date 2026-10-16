@@ -1,3 +1,13 @@
+# RESPONSÁVEL: Noemi Kayama - 25004140
+# -----------------------------------------------------------------------------
+# HISTÓRICO DE ALTERAÇÕES
+#
+# Data: 15/10/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão do seletor nativo de arquivo único para documentos da
+# experiência profissional no Android e iOS.
+# -----------------------------------------------------------------------------
+
 name: horse_life
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
@@ -37,6 +47,8 @@ dependencies:
   firebase_core: ^4.15.0
   flutter_web_plugins:
     sdk: flutter
+  file_selector: ^1.1.0
+  country_state_city: ^0.1.6
 
 dev_dependencies:
   flutter_test:

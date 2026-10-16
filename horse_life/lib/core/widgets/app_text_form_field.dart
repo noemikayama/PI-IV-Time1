@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de ValueChanged<String> pelos typedefs
+// AppTextFormFieldChangedCallback e AppTextFormFieldSubmittedCallback.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Inclusão do callback reativo onChanged para validação de senha.
@@ -18,6 +23,9 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+
+typedef AppTextFormFieldChangedCallback = void Function(String value);
+typedef AppTextFormFieldSubmittedCallback = void Function(String value);
 
 // Campo de formulário configurável que herda a identidade visual do tema em
 // diferentes tipos de entrada.
@@ -43,8 +51,8 @@ class AppTextFormField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool obscureText;
   // Permite que telas atualizem validações e indicadores enquanto há digitação.
-  final ValueChanged<String>? onChanged;
-  final ValueChanged<String>? onFieldSubmitted;
+  final AppTextFormFieldChangedCallback? onChanged;
+  final AppTextFormFieldSubmittedCallback? onFieldSubmitted;
   final Widget? suffixIcon;
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
