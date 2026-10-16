@@ -11,9 +11,12 @@
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
+import '../../data/models/guardian_home_data.dart';
 
 class GuardianSidebar extends StatefulWidget {
-  const GuardianSidebar({required this.onLogout, super.key});
+  const GuardianSidebar({required this.onLogout, this.homeFuture, super.key});
+
+  final Future<GuardianHomeData>? homeFuture;
 
   final Future<void> Function() onLogout;
 
@@ -86,14 +89,17 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '<Usuário>',
+                        FutureBuilder<GuardianHomeData>(
+                          future: widget.homeFuture,
+                          builder: (context, snapshot) => Text(
+                          snapshot.data?.guardianName ?? '<Usuário>',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: Colors.white,
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
+                          ),
                           ),
                         ),
 
@@ -105,11 +111,14 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                           ),
                         ),
 
-                        Text(
-                          'Animais registrados: 0',
+                        FutureBuilder<GuardianHomeData>(
+                          future: widget.homeFuture,
+                          builder: (context, snapshot) => Text(
+                          'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.white,
                             fontSize: 14,
+                          ),
                           ),
                         ),
                       ],
