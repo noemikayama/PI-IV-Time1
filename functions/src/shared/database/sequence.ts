@@ -27,7 +27,7 @@ export async function nextCode(
   const db = await getDatabase();
 
   const counter = await db
-    .collection<Counter>(COLLECTIONS.contadores)
+    .collection<Counter>(COLLECTIONS.Contadores)
     .findOneAndUpdate(
       {_id: sequenceName},
       {$inc: {seq: 1}},

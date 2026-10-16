@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Renomeação da nomenclatura para trainer.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos mappers da home.
@@ -11,7 +15,7 @@
 // Alteração: Exportação dos recursos compartilhados de autenticação.
 // -----------------------------------------------------------------------------
 
-// Interface pública do que é compartilhado entre guardian e professional.
+// Interface pública do que é compartilhado entre guardian e trainer.
 export {
   createAuthAccount,
   deleteAuthAccount,

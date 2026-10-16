@@ -28,7 +28,7 @@ export async function reserveEmail(
 
   try {
     await db
-      .collection<EmailReservation>(COLLECTIONS.emails)
+      .collection<EmailReservation>(COLLECTIONS.Emails)
       .insertOne(reservation, {session});
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {

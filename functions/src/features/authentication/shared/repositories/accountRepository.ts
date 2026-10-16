@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Renomeação da nomenclatura para trainer.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Busca da conta pelo UID do Firebase para o login.
@@ -11,12 +15,12 @@ import {getDatabase} from "../../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../../shared/constants/collections";
 import {ROLES} from "../../../../shared/constants/roles";
 import type {GuardianDocument} from "../../guardian/types";
-import type {ProfessionalDocument} from "../../professional/types";
+import type {TrainerDocument} from "../../trainer/types";
 import type {AccountLookup} from "../types";
 
 type GuardianAccount = Pick<GuardianDocument, "nome" | "situacaoCadastral">;
-type ProfessionalAccount = Pick<
-    ProfessionalDocument,
+type TrainerAccount = Pick<
+    TrainerDocument,
     "nome" | "situacaoProfissional"
 >;
 
@@ -28,16 +32,16 @@ export async function findAccountByUid(
 ): Promise<AccountLookup | null> {
   const db = await getDatabase();
 
-  const [guardian, professional] = await Promise.all([
+  const [guardian, trainer] = await Promise.all([
     db
-      .collection<GuardianDocument>(COLLECTIONS.responsaveis)
+      .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
       .findOne<GuardianAccount>(
         {_id: uid},
         {projection: {nome: 1, situacaoCadastral: 1}}
       ),
     db
-      .collection<ProfessionalDocument>(COLLECTIONS.treinadores)
-      .findOne<ProfessionalAccount>(
+      .collection<TrainerDocument>(COLLECTIONS.Treinadores)
+      .findOne<TrainerAccount>(
         {_id: uid},
         {projection: {nome: 1, situacaoProfissional: 1}}
       ),
@@ -50,11 +54,11 @@ export async function findAccountByUid(
       active: guardian.situacaoCadastral === "ATIVO",
     };
   }
-  if (professional) {
+  if (trainer) {
     return {
-      role: ROLES.professional,
-      nome: professional.nome,
-      active: professional.situacaoProfissional !== "INATIVO",
+      role: ROLES.trainer,
+      nome: trainer.nome,
+      active: trainer.situacaoProfissional !== "INATIVO",
     };
   }
   return null;

@@ -24,7 +24,7 @@ export async function findTrainersOfHorses(
 
   const db = await getDatabase();
   return db
-    .collection(COLLECTIONS.cavalos)
+    .collection(COLLECTIONS.Cavalos)
     .aggregate<HorseTrainerRef>([
       {$match: {_id: {$in: horseIds}}},
       {$unwind: "$treinadores"},

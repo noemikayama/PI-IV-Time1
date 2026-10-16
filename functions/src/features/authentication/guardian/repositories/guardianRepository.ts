@@ -32,10 +32,10 @@ export async function insertGuardian(
   session: ClientSession
 ): Promise<number> {
   const db = await getDatabase();
-  const codigo = await nextCode(COLLECTIONS.responsaveis, session);
+  const codigo = await nextCode(COLLECTIONS.Responsaveis, session);
 
   await db
-    .collection<GuardianDocument>(COLLECTIONS.responsaveis)
+    .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
     .insertOne({...guardian, codigo}, {session});
 
   return codigo;
@@ -49,7 +49,7 @@ export async function findGuardianById(
 ): Promise<GuardianDocument | null> {
   const db = await getDatabase();
   return db
-    .collection<GuardianDocument>(COLLECTIONS.responsaveis)
+    .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
     .findOne({_id: uid});
 }
 
@@ -61,7 +61,7 @@ export async function findGuardianHomeSource(
 ): Promise<GuardianHomeSource | null> {
   const db = await getDatabase();
   return db
-    .collection<GuardianDocument>(COLLECTIONS.responsaveis)
+    .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
     .findOne<GuardianHomeSource>(
       {_id: uid},
       {projection: {nome: 1, situacaoCadastral: 1, cavalos: 1}}

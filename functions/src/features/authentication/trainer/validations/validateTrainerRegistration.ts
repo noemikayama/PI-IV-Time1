@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Renomeação da nomenclatura para trainer.
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação dos dados enviados no cadastro de treinadores.
@@ -9,7 +13,7 @@
 
 import {AppError} from "../../../../shared/errors/AppError";
 import {asRecord, parseCredentials} from "../../shared";
-import type {ProfessionalRegistrationInput, ServiceRegion} from "../types";
+import type {TrainerRegistrationInput, ServiceRegion} from "../types";
 
 /** Cria um erro de argumento inválido com a mensagem informada.
  * @param {string} message Mensagem do erro.
@@ -73,11 +77,11 @@ function parseRegioes(value: unknown): ServiceRegion[] {
 
 /** Valida e normaliza os dados do cadastro de treinador.
  * @param {unknown} data Dados recebidos pelo endpoint.
- * @return {ProfessionalRegistrationInput} Dados validados e normalizados.
+ * @return {TrainerRegistrationInput} Dados validados e normalizados.
  */
-export function validateProfessionalRegistration(
+export function validateTrainerRegistration(
   data: unknown
-): ProfessionalRegistrationInput {
+): TrainerRegistrationInput {
   const record = asRecord(data);
   return {
     ...parseCredentials(record),

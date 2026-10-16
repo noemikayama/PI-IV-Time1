@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Renomeação da nomenclatura para trainer.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Consultas de registros de treino para a home.
@@ -35,7 +39,7 @@ const DAY_PROJECTION = {
 /** Retorna a coleção de registros de treino. */
 async function getCollection() {
   const db = await getDatabase();
-  return db.collection(COLLECTIONS.registrosTreino);
+  return db.collection(COLLECTIONS.RegistrosTreino);
 }
 
 /** Cria os estágios de agregação das execuções de um período.
@@ -87,10 +91,10 @@ export const findDayRecordsByHorses = (
   day: DatePeriod
 ) => findDayRecords({"cavalo._id": {$in: horseIds}}, day);
 
-export const findDayRecordsByProfessional = (
-  professionalId: string,
+export const findDayRecordsByTrainer = (
+  trainerId: string,
   day: DatePeriod
-) => findDayRecords({"treinador._id": professionalId}, day);
+) => findDayRecords({"treinador._id": trainerId}, day);
 
 /** Conta as execuções dos cavalos na semana, no mês e desde sempre.
  * @param {ObjectId[]} horseIds IDs dos cavalos.
@@ -127,17 +131,17 @@ export async function countHorseExecutions(
 }
 
 /** Conta as execuções do treinador no período informado.
- * @param {string} professionalId UID do treinador.
+ * @param {string} trainerId UID do treinador.
  * @param {DatePeriod} period Período da consulta.
  */
-export async function countProfessionalExecutions(
-  professionalId: string,
+export async function countTrainerExecutions(
+  trainerId: string,
   period: DatePeriod
 ): Promise<ExecutionCount> {
   const records = await getCollection();
   const row = await records
     .aggregate([
-      {$match: {"treinador._id": professionalId, ...NOT_CANCELED}},
+      {$match: {"treinador._id": trainerId, ...NOT_CANCELED}},
       ...groupExecutions("dataPlanejada", period),
     ])
     .next();
@@ -145,11 +149,11 @@ export async function countProfessionalExecutions(
 }
 
 /** Conta registros executados e aqueles que incluem feedback.
- * @param {string} professionalId UID do treinador.
+ * @param {string} trainerId UID do treinador.
  * @param {DatePeriod} period Período da consulta.
  */
-export async function countProfessionalFeedbacks(
-  professionalId: string,
+export async function countTrainerFeedbacks(
+  trainerId: string,
   period: DatePeriod
 ): Promise<FeedbackCount> {
   const records = await getCollection();
@@ -157,7 +161,7 @@ export async function countProfessionalFeedbacks(
     .aggregate([
       {
         $match: {
-          "treinador._id": professionalId,
+          "treinador._id": trainerId,
           "status": {$in: EXECUTED_STATUSES},
           "dataExecucao": {$gte: period.start, $lt: period.end},
         },

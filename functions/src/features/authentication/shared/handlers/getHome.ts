@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Renomeação da nomenclatura para trainer.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Padronização do formato e tipos importados por ../types.
@@ -25,8 +29,8 @@ import {
 } from "../../../../shared/middleware/requireAuthentication";
 import {getGuardianHome} from "../../guardian/services/getHomeService";
 import {
-  getProfessionalHome,
-} from "../../professional/services/professionalHomeService";
+  getTrainerHome,
+} from "../../trainer/services/trainerHomeService";
 import type {HomeResult} from "../types";
 
 // Atende os dois perfis, então usa requireAuthentication e escolhe a home
@@ -40,8 +44,8 @@ export const getHome = onCall(
       switch (user.role) {
       case ROLES.guardian:
         return await getGuardianHome(user.uid);
-      case ROLES.professional:
-        return await getProfessionalHome(user.uid);
+      case ROLES.trainer:
+        return await getTrainerHome(user.uid);
       default:
         throw new AppError(
           "permission-denied",

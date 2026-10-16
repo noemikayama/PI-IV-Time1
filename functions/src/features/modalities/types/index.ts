@@ -2,10 +2,9 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 13/10/2026
+// Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Exportação da função de cadastro de profissionais.
+// Alteração: Exportação dos tipos de modalidade.
 // -----------------------------------------------------------------------------
 
-export {registerProfessional} from "./handlers/registerProfessional";
-export {getProfessionalProfile} from "./handlers/getProfessionalProfile";
+export type {Modality, ModalityDocument} from "./modality";

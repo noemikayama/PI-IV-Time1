@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Renomeação da nomenclatura para trainer.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Padronização do formato e imports pelos index.ts das features.
@@ -13,26 +17,26 @@
 
 import {AppError} from "../../../../shared/errors/AppError";
 import {getPeriods} from "../../../../shared/utils/dates";
-import {countActiveExercisesByProfessional} from "../../../exercises";
+import {countActiveExercisesByTrainer} from "../../../exercises";
 import {
-  countProfessionalExecutions,
-  countProfessionalFeedbacks,
-  findDayRecordsByProfessional,
+  countTrainerExecutions,
+  countTrainerFeedbacks,
+  findDayRecordsByTrainer,
 } from "../../../training";
 import {HOME_LIST_LIMIT, toProgress, toRef} from "../../shared";
 import {
-  findProfessionalHomeSource,
-} from "../repositories/professionalRepository";
+  findTrainerHomeSource,
+} from "../repositories/trainerRepository";
 import type {HomeTreinador} from "../types";
 
 /** Monta os dados da home do treinador.
  * @param {string} uid UID do usuário.
  */
-export async function getProfessionalHome(
+export async function getTrainerHome(
   uid: string
 ): Promise<HomeTreinador> {
-  const professional = await findProfessionalHomeSource(uid);
-  if (!professional || professional.situacaoProfissional === "INATIVO") {
+  const trainer = await findTrainerHomeSource(uid);
+  if (!trainer || trainer.situacaoProfissional === "INATIVO") {
     throw new AppError("permission-denied", "Conta inativa ou inexistente.");
   }
 
@@ -40,16 +44,16 @@ export async function getProfessionalHome(
 
   const [todayRecords, weekExecutions, weekFeedbacks, totalExercises] =
         await Promise.all([
-          findDayRecordsByProfessional(uid, periods.day),
-          countProfessionalExecutions(uid, periods.week),
-          countProfessionalFeedbacks(uid, periods.week),
-          countActiveExercisesByProfessional(uid),
+          findDayRecordsByTrainer(uid, periods.day),
+          countTrainerExecutions(uid, periods.week),
+          countTrainerFeedbacks(uid, periods.week),
+          countActiveExercisesByTrainer(uid),
         ]);
 
   return {
     tipoConta: "TREINADOR",
-    nome: professional.nome,
-    totalCavalos: professional.cavalos.length,
+    nome: trainer.nome,
+    totalCavalos: trainer.cavalos.length,
     treinosDoDia: todayRecords.map((record) => ({
       registroId: String(record._id),
       nomeTreino: record.treinamento?.titulo ?? "",
@@ -63,7 +67,7 @@ export async function getProfessionalHome(
     ),
     treinosSemana: toProgress(weekExecutions.executed, weekExecutions.total),
     totalExercicios: totalExercises,
-    cavalos: professional.cavalos.slice(0, HOME_LIST_LIMIT).map(toRef),
-    clientes: professional.clientes.slice(0, HOME_LIST_LIMIT).map(toRef),
+    cavalos: trainer.cavalos.slice(0, HOME_LIST_LIMIT).map(toRef),
+    clientes: trainer.clientes.slice(0, HOME_LIST_LIMIT).map(toRef),
   };
 }
