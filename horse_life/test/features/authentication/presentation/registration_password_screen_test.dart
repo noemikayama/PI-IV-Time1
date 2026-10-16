@@ -4,6 +4,10 @@
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Uso do estado específico de responsável nos testes de senha.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da etapa de senha do cadastro.
 // -----------------------------------------------------------------------------
 
@@ -13,13 +17,20 @@ import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/features/authentication/application/states/registration_draft.dart';
 import 'package:horse_life/features/authentication/presentation/screens/guardian_confirmation_screen.dart';
 import 'package:horse_life/features/authentication/presentation/screens/registration_password_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/trainer_confirmation_screen.dart';
 
 void main() {
   // Draft não sensível usado em todos os cenários da senha.
-  const initialRegistration = RegistrationDraft(
+  const initialRegistration = GuardianRegistrationDraft(
     firstName: 'Ana',
     lastName: 'Silva',
     email: 'ana@email.com',
+  );
+  const trainerRegistration = TrainerRegistrationDraft(
+    firstName: 'Bruno',
+    lastName: 'Lima',
+    email: 'bruno@email.com',
+    sport: 'Salto',
   );
 
   // Montagem isolada com o tema institucional.
@@ -82,18 +93,83 @@ void main() {
     );
   });
 
+  testWidgets('uses the same password screen as trainer step seven', (
+    tester,
+  ) async {
+    TrainerRegistrationDraft? receivedRegistration;
+    String? receivedPassword;
+
+    await tester.pumpWidget(
+      buildApp(
+        RegistrationPasswordScreen(
+          registration: trainerRegistration,
+          onTrainerContinue: (registration, password) {
+            receivedRegistration = registration;
+            receivedPassword = password;
+          },
+        ),
+      ),
+    );
+
+    expect(find.bySemanticsLabel('Etapa 7 de 8'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, 'Senha@123');
+    await tester.enterText(find.byType(TextFormField).last, 'Senha@123');
+    final continueButton = find.byKey(
+      const Key('continue-registration-password'),
+    );
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    await tester.pump();
+
+    expect(receivedRegistration, same(trainerRegistration));
+    expect(receivedRegistration?.sport, 'Salto');
+    expect(receivedPassword, 'Senha@123');
+    expect(find.byType(GuardianConfirmationScreen), findsNothing);
+    expect(
+      tester
+          .widget<TextFormField>(find.byType(TextFormField).first)
+          .controller
+          ?.text,
+      isEmpty,
+    );
+  });
+
+  testWidgets('opens the exclusive trainer confirmation by default', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildApp(
+        const RegistrationPasswordScreen(registration: trainerRegistration),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextFormField).first, 'Senha@123');
+    await tester.enterText(find.byType(TextFormField).last, 'Senha@123');
+    final continueButton = find.byKey(
+      const Key('continue-registration-password'),
+    );
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TrainerConfirmationScreen), findsOneWidget);
+    expect(find.byType(GuardianConfirmationScreen), findsNothing);
+    expect(find.bySemanticsLabel('Etapa 8 de 8'), findsOneWidget);
+  });
+
   // Bloqueio da divergência e entrega separada da senha válida.
   testWidgets('blocks mismatched confirmation and passes an exact match', (
     tester,
   ) async {
-    RegistrationDraft? receivedRegistration;
+    GuardianRegistrationDraft? receivedRegistration;
     String? receivedPassword;
 
     await tester.pumpWidget(
       buildApp(
         RegistrationPasswordScreen(
           registration: initialRegistration,
-          onContinue: (registration, password) {
+          onGuardianContinue: (registration, password) {
             receivedRegistration = registration;
             receivedPassword = password;
           },

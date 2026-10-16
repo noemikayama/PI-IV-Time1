@@ -2,6 +2,17 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de ValueChanged<RegistrationDraft> pelo typedef
+// RegistrationEmailCallback no callback de continuidade do cadastro.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Compartilhamento da etapa com o fluxo de treinador, com progresso
+// e próxima etapa definidos pelo tipo concreto do cadastro, direcionamento para
+// a seleção de modalidade e padronização da dependência profissional para sport.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da etapa de e-mail do cadastro de responsável.
@@ -12,15 +23,21 @@ import 'package:flutter/material.dart';
 import '../../../../core/widgets/app_text_form_field.dart';
 import '../../application/controllers/registration_controller.dart';
 import '../../application/states/registration_draft.dart';
+import '../../data/repositories/training_sport_repository.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import '../widgets/registration_progress_indicator.dart';
 import 'registration_password_screen.dart';
+import 'training_sport_screen.dart';
 
-// Segunda etapa do cadastro de responsável, dedicada ao meio de contato.
+typedef RegistrationEmailCallback =
+    void Function(RegistrationDraft registration);
+
+// Segunda etapa compartilhada dos cadastros, dedicada ao meio de contato.
 class RegistrationEmailScreen extends StatefulWidget {
   const RegistrationEmailScreen({
     required this.registration,
+    this.sportRepository = const LocalTrainingSportRepository(),
     this.registrationController,
     this.onContinue,
     this.onBack,
@@ -29,8 +46,9 @@ class RegistrationEmailScreen extends StatefulWidget {
 
   // Dados recebidos da etapa anterior e dependências do fluxo.
   final RegistrationDraft registration;
+  final TrainingSportRepository sportRepository;
   final RegistrationController? registrationController;
-  final ValueChanged<RegistrationDraft>? onContinue;
+  final RegistrationEmailCallback? onContinue;
   final VoidCallback? onBack;
 
   @override
@@ -75,12 +93,12 @@ class _RegistrationEmailScreenState extends State<RegistrationEmailScreen> {
     Navigator.maybePop(context);
   }
 
-  // Acrescenta o e-mail ao draft ou abre a etapa de senha preservando o fluxo.
+  // Acrescenta o e-mail e abre a próxima etapa correspondente ao perfil.
   void _continue() {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
-    final updatedRegistration = widget.registration.copyWith(
+    final updatedRegistration = widget.registration.copyWithContact(
       email: _emailController.text.trim(),
     );
     final onContinue = widget.onContinue;
@@ -90,14 +108,21 @@ class _RegistrationEmailScreenState extends State<RegistrationEmailScreen> {
       return;
     }
 
+    final nextScreen = switch (updatedRegistration) {
+      GuardianRegistrationDraft guardian => RegistrationPasswordScreen(
+        registration: guardian,
+        registrationController: widget.registrationController,
+      ),
+      TrainerRegistrationDraft trainer => TrainingSportScreen(
+        registration: trainer,
+        sportRepository: widget.sportRepository,
+        registrationController: widget.registrationController,
+      ),
+    };
+
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => RegistrationPasswordScreen(
-          registration: updatedRegistration,
-          registrationController: widget.registrationController,
-        ),
-      ),
+      MaterialPageRoute<void>(builder: (context) => nextScreen),
     );
   }
 
@@ -126,10 +151,14 @@ class _RegistrationEmailScreenState extends State<RegistrationEmailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Segundo passo do cadastro de responsável.
-                            const RegistrationProgressIndicator(
-                              configuration:
+                            // Segundo passo do fluxo de cadastro selecionado.
+                            RegistrationProgressIndicator(
+                              configuration: switch (widget.registration) {
+                                GuardianRegistrationDraft() =>
                                   RegistrationProgressConfiguration.guardian,
+                                TrainerRegistrationDraft() =>
+                                  RegistrationProgressConfiguration.trainer,
+                              },
                               currentStep: 2,
                             ),
                             const SizedBox(height: 52),

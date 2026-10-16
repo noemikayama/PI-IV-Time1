@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de ValueChanged pelos typedefs
+// ProfileSelectionCallback e _ProfileDropdownChanged.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão da navegação do perfil treinador para a etapa de nome,
+// configurada com oito passos de progresso.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da seleção de perfil que antecede os fluxos de cadastro.
@@ -17,6 +27,9 @@ import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import 'registration_name_screen.dart';
 
+typedef ProfileSelectionCallback = void Function(UserType userType);
+typedef _ProfileDropdownChanged = void Function(UserType? userType);
+
 // Coleta o perfil e entrega um valor tipado ao coordenador do cadastro.
 class ProfileSelectionScreen extends StatefulWidget {
   const ProfileSelectionScreen({
@@ -27,7 +40,7 @@ class ProfileSelectionScreen extends StatefulWidget {
   });
 
   // Contratos opcionais para testes, coordenação externa e futura submissão.
-  final ValueChanged<UserType>? onContinue;
+  final ProfileSelectionCallback? onContinue;
   final VoidCallback? onBack;
   final RegistrationController? registrationController;
 
@@ -49,7 +62,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
     Navigator.maybePop(context);
   }
 
-  // Entrega o tipo ao coordenador ou inicia o fluxo padrão de responsável.
+  // Entrega o tipo ao coordenador ou inicia o fluxo padrão correspondente.
   void _continue() {
     final onContinue = widget.onContinue;
     if (onContinue != null) {
@@ -57,16 +70,19 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
       return;
     }
 
-    if (_selectedType == UserType.guardian) {
-      Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-          builder: (context) => RegistrationNameScreen.guardian(
-            registrationController: widget.registrationController,
-          ),
-        ),
-      );
-    }
+    final nameScreen = switch (_selectedType) {
+      UserType.guardian => RegistrationNameScreen.guardian(
+        registrationController: widget.registrationController,
+      ),
+      UserType.trainer => RegistrationNameScreen.trainer(
+        registrationController: widget.registrationController,
+      ),
+    };
+
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (context) => nameScreen),
+    );
   }
 
   @override
@@ -166,7 +182,7 @@ class _ProfileDropdown extends StatelessWidget {
   const _ProfileDropdown({required this.value, required this.onChanged});
 
   final UserType value;
-  final ValueChanged<UserType?> onChanged;
+  final _ProfileDropdownChanged onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -205,7 +221,7 @@ class _ProfileDropdown extends StatelessWidget {
           // O menu é deliberadamente limitado aos dois fluxos suportados.
           items: [
             _buildMenuItem(type: UserType.guardian, label: 'Responsável'),
-            _buildMenuItem(type: UserType.professional, label: 'Treinador'),
+            _buildMenuItem(type: UserType.trainer, label: 'Treinador'),
           ],
           onChanged: onChanged,
         ),

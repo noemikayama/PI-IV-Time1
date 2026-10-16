@@ -12,6 +12,6 @@ enum UserType {
   // Responsável por animais ou atleta.
   guardian,
 
-  // Profissional responsável pelos treinos.
-  professional,
+  // Treinador responsável pelos treinos.
+  trainer,
 }

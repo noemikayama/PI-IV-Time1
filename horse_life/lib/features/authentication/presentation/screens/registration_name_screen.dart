@@ -4,6 +4,12 @@
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Criação do estado específico do perfil selecionado e encadeamento
+// do primeiro passo do treinador à etapa de e-mail, preservando a configuração
+// de oito passos.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da primeira etapa de identificação do cadastro.
 // -----------------------------------------------------------------------------
 
@@ -31,16 +37,13 @@ class RegistrationNameScreen extends StatefulWidget {
   }) : userType = UserType.guardian,
        progressConfiguration = RegistrationProgressConfiguration.guardian;
 
-  RegistrationNameScreen.professional({
-    required int totalSteps,
+  const RegistrationNameScreen.trainer({
     this.onContinue,
     this.onBack,
     this.registrationController,
     super.key,
-  }) : userType = UserType.professional,
-       progressConfiguration = RegistrationProgressConfiguration.professional(
-         totalSteps: totalSteps,
-       );
+  }) : userType = UserType.trainer,
+       progressConfiguration = RegistrationProgressConfiguration.trainer;
 
   // Tipo, progresso e dependências definidos pelo coordenador do fluxo.
   final UserType userType;
@@ -84,7 +87,7 @@ class _RegistrationNameScreenState extends State<RegistrationNameScreen> {
     Navigator.maybePop(context);
   }
 
-  // Normaliza os nomes e cria o draft inicial do cadastro de responsável.
+  // Normaliza os nomes e cria o draft inicial do fluxo selecionado.
   void _continue() {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
@@ -98,20 +101,26 @@ class _RegistrationNameScreenState extends State<RegistrationNameScreen> {
       return;
     }
 
-    if (widget.userType == UserType.guardian) {
-      Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-          builder: (context) => RegistrationEmailScreen(
-            registration: RegistrationDraft(
-              firstName: firstName,
-              lastName: lastName,
-            ),
-            registrationController: widget.registrationController,
-          ),
+    final registration = switch (widget.userType) {
+      UserType.guardian => GuardianRegistrationDraft(
+        firstName: firstName,
+        lastName: lastName,
+      ),
+      UserType.trainer => TrainerRegistrationDraft(
+        firstName: firstName,
+        lastName: lastName,
+      ),
+    };
+
+    Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => RegistrationEmailScreen(
+          registration: registration,
+          registrationController: widget.registrationController,
         ),
-      );
-    }
+      ),
+    );
   }
 
   @override
@@ -156,7 +165,7 @@ class _RegistrationNameScreenState extends State<RegistrationNameScreen> {
                             ),
                             const SizedBox(height: 24),
                             Text(
-                              'Informe como quer quer ser\nchamado(a).',
+                              'Informe como quer ser\nchamado(a).',
                               textAlign: TextAlign.center,
                               style: textTheme.headlineSmall?.copyWith(
                                 fontSize: 22,

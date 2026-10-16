@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de ValueChanged<GuardianRegistrationDraft> pelo
+// typedef GuardianPasswordEditRequested na solicitação de edição da senha.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Restrição da confirmação ao estado de responsável.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da revisão editável, tratamento transitório da senha e
@@ -21,6 +30,9 @@ import '../widgets/auth_next_button.dart';
 import '../widgets/editable_review_field.dart';
 import '../widgets/registration_progress_indicator.dart';
 
+typedef GuardianPasswordEditRequested =
+    void Function(GuardianRegistrationDraft registration);
+
 // Última etapa do cadastro. A senha é mantida somente durante esta rota e
 // entregue diretamente ao controller no momento da submissão.
 class GuardianConfirmationScreen extends StatefulWidget {
@@ -35,12 +47,12 @@ class GuardianConfirmationScreen extends StatefulWidget {
   });
 
   // Entrada do fluxo, dependências opcionais e efeitos externos da tela.
-  final RegistrationDraft registration;
+  final GuardianRegistrationDraft registration;
   final String password;
   final RegistrationController? registrationController;
   final VoidCallback? onCreated;
   final VoidCallback? onBack;
-  final ValueChanged<RegistrationDraft>? onEditPassword;
+  final GuardianPasswordEditRequested? onEditPassword;
 
   @override
   State<GuardianConfirmationScreen> createState() =>
@@ -160,7 +172,7 @@ class _GuardianConfirmationScreenState
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
-    final updatedRegistration = widget.registration.copyWith(
+    final updatedRegistration = widget.registration.copyWithContact(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
@@ -190,7 +202,7 @@ class _GuardianConfirmationScreenState
     setState(() => _isSubmitting = true);
     try {
       await controller.createAccount(
-        registration: widget.registration.copyWith(
+        registration: widget.registration.copyWithContact(
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           email: _emailController.text.trim(),

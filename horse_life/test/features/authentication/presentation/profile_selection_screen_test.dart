@@ -4,6 +4,11 @@
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da navegação do treinador para a etapa de nome com oito
+// passos de progresso.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da seleção e propagação do tipo de usuário.
 // -----------------------------------------------------------------------------
 
@@ -60,7 +65,7 @@ void main() {
     await tester.ensureVisible(continueButton);
     await tester.tap(continueButton);
 
-    expect(receivedType, UserType.professional);
+    expect(receivedType, UserType.trainer);
   });
 
   // Valor inicial adotado para o fluxo de responsável.
@@ -94,5 +99,30 @@ void main() {
     expect(find.byType(RegistrationNameScreen), findsOneWidget);
     expect(find.text('Como você se chama?'), findsOneWidget);
     expect(find.bySemanticsLabel('Etapa 1 de 4'), findsOneWidget);
+  });
+
+  // Navegação padrão para o primeiro dos oito passos do treinador.
+  testWidgets('opens the trainer registration with eight progress steps', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const ProfileSelectionScreen()));
+
+    await tester.tap(find.byKey(const Key('profile-dropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Treinador').last);
+    await tester.pumpAndSettle();
+
+    final continueButton = find.byKey(const Key('continue-profile-selection'));
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RegistrationNameScreen), findsOneWidget);
+    expect(find.text('Como você se chama?'), findsOneWidget);
+    expect(find.bySemanticsLabel('Etapa 1 de 8'), findsOneWidget);
+    expect(
+      find.byKey(const Key('registration-progress-segment-8')),
+      findsOneWidget,
+    );
   });
 }

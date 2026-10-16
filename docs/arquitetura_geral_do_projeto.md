@@ -193,7 +193,7 @@ lib/
         └── presentation/
             ├── screens/
             │   ├── guardian/
-            │   └── professional/
+            │   └── trainer/
             └── widgets/
 ```
 
@@ -508,7 +508,7 @@ Screens são páginas completas. Elas:
 - descartam recursos em `dispose()`.
 
 Use `guardian` no código para representar o **responsável pelo animal** e
-`professional` para o **profissional**.
+`trainer` para o **treinador**.
 
 Separe telas de responsável e profissional quando o comportamento realmente
 for diferente:
@@ -516,7 +516,7 @@ for diferente:
 ```text
 screens/
 ├── guardian/
-├── professional/
+├── trainer/
 └── shared_profile_screen.dart
 ```
 
@@ -677,8 +677,8 @@ App
     ├── LoginScreen
     ├── GuardianShell
     │   └── GuardianFeatureScreen
-    └── ProfessionalShell
-        └── ProfessionalFeatureScreen
+    └── TrainerShell
+        └── TrainerFeatureScreen
 ```
 
 O `AppGate` pode escutar a sessão, carregar os claims e chamar `setState()`.
@@ -726,7 +726,7 @@ features/authentication/
 Exemplo conceitual:
 
 ```dart
-enum UserType { guardian, professional }
+enum UserType { guardian, trainer }
 
 class UserClaims {
   const UserClaims({
@@ -772,14 +772,14 @@ final class SessionFailure extends SessionState {
 O `SessionController` coordena autenticação, leitura do token e parsing. O
 `AppGate`, como dono do `SessionState`, aguarda o controller e publica a
 mudança com `setState()`. A partir de `SignedIn`, ele escolhe
-`GuardianShell` ou `ProfessionalShell` pelo `UserType`.
+`GuardianShell` ou `TrainerShell` pelo `UserType`.
 
 Decisões de acesso devem permanecer como funções puras na camada de aplicação,
 por exemplo:
 
 ```dart
-bool canOpenProfessionalArea(UserClaims claims) =>
-    claims.userType == UserType.professional;
+bool canOpenTrainerArea(UserClaims claims) =>
+    claims.userType == UserType.trainer;
 ```
 
 Isso permite testar o fluxo sem `BuildContext` e sem Firebase. As telas podem
@@ -1217,7 +1217,7 @@ functions/
 │       │   │   ├── validations/
 │       │   │   ├── types/
 │       │   │   └── index.ts
-│       │   ├── professional/
+│       │   ├── trainer/
 │       │   │   ├── handlers/
 │       │   │   ├── services/
 │       │   │   ├── repositories/
@@ -1350,7 +1350,7 @@ Exemplos:
 
 ```text
 repositories/guardianRepository.ts
-repositories/professionalRepository.ts
+repositories/trainerRepository.ts
 repositories/horseRepository.ts
 repositories/exerciseRepository.ts
 repositories/trainingRepository.ts
@@ -1417,7 +1417,7 @@ validations/validateGuardianRegistration.ts
 types/guardian.ts
 ```
 
-#### `features/authentication/professional/`
+#### `features/authentication/trainer/`
 
 Responsável pelo cadastro e pelo perfil dos profissionais:
 
@@ -1426,22 +1426,22 @@ Responsável pelo cadastro e pelo perfil dos profissionais:
 - armazenar especialidade e registro profissional;
 - consultar e atualizar o próprio perfil;
 - controlar aprovação cadastral, quando aplicável;
-- atribuir ou validar a role `professional`.
+- atribuir ou validar a role `trainer`.
 
 Exemplo:
 
 ```text
-handlers/registerProfessional.ts
-services/registerProfessionalService.ts
-repositories/professionalRepository.ts
-validations/validateProfessionalRegistration.ts
-types/professional.ts
+handlers/registerTrainer.ts
+services/registerTrainerService.ts
+repositories/trainerRepository.ts
+validations/validateTrainerRegistration.ts
+types/trainer.ts
 ```
 
 #### `features/authentication/shared/`
 
 Contém apenas o que é compartilhado entre os módulos `guardian` e
-`professional`, como a criação de credenciais no Firebase Authentication ou um
+`trainer`, como a criação de credenciais no Firebase Authentication ou um
 tipo comum de identidade autenticada.
 
 Esse diretório não substitui o `shared` global. Código usado por outras features
@@ -1538,7 +1538,7 @@ handler que a utiliza.
 Contém valores técnicos estáveis e reutilizados:
 
 - `collections.ts`: nomes das collections do MongoDB;
-- `roles.ts`: roles como `guardian`, `professional` e `admin`;
+- `roles.ts`: roles como `guardian`, `trainer` e `admin`;
 - `storagePaths.ts`: prefixos de diretórios do Cloud Storage.
 
 Não devem ser colocados aqui segredos, textos de interface ou regras de negócio
@@ -1668,7 +1668,7 @@ Exemplo conceitual:
 
 ```ts
 export {registerGuardian} from "./features/authentication/guardian";
-export {registerProfessional} from "./features/authentication/professional";
+export {registerTrainer} from "./features/authentication/trainer";
 export {createHorse, listHorses} from "./features/horses";
 export {createExercise, listExercises} from "./features/exercises";
 export {createTraining, finishTraining} from "./features/training";
@@ -1678,7 +1678,7 @@ Os nomes públicos devem deixar a ação e o contexto explícitos:
 
 ```text
 registerGuardian
-registerProfessional
+registerTrainer
 createHorse
 listHorses
 createExercise
@@ -1720,7 +1720,7 @@ features/training/types/trainingNote.ts
 
 ```text
 guardians
-professionals
+trainers
 horses
 exercises
 trainings
