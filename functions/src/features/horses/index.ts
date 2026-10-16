@@ -1,0 +1,11 @@
+// RESPONSÁVEL: Miguel Afonso Castro de Almeida - 25016044
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 15/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Interface pública da feature de cavalos.
+// -----------------------------------------------------------------------------
+
+export {findTrainersOfHorses} from "./repositories/horseRepository";
+export type {HorseTrainerRef} from "./types/horse";
