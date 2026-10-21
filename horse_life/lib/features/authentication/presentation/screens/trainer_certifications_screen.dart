@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Aplicação dos limites de 10 certificações e 10 MB por PDF,
+// preservando a leitura dos arquivos para o envio após a criação da conta.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da quinta etapa do treinador para adicionar, listar e
@@ -37,12 +42,12 @@ const _certificationTypeGroup = XTypeGroup(
   uniformTypeIdentifiers: ['com.adobe.pdf'],
 );
 
-// Permite selecionar vários PDFs de uma vez e repetir a operação sem limite.
+// Permite selecionar vários PDFs de uma vez.
 Future<List<XFile>> pickTrainerCertificationDocuments() {
   return openFiles(acceptedTypeGroups: const [_certificationTypeGroup]);
 }
 
-// Quinta etapa do treinador; as certificações são opcionais e ilimitadas.
+// Quinta etapa do treinador; as certificações são opcionais e limitadas.
 class TrainerCertificationsScreen extends StatefulWidget {
   const TrainerCertificationsScreen({
     required this.registration,
@@ -102,6 +107,17 @@ class _TrainerCertificationsScreenState
   // Filtra PDFs, lê seus metadados e acrescenta todos os resultados válidos.
   Future<void> _pickDocuments() async {
     if (_isPicking) return;
+    final availableSlots =
+        TrainerDocumentLimits.maximumCertifications - _documents.length;
+    if (availableSlots <= 0) {
+      AppSnackBar.show(
+        context,
+        backgroundColor: AppColors.error,
+        icon: Icons.error_outline_rounded,
+        message: 'Você pode adicionar no máximo 10 certificações.',
+      );
+      return;
+    }
     setState(() => _isPicking = true);
 
     try {
@@ -111,14 +127,23 @@ class _TrainerCertificationsScreenState
       // A extensão é revalidada porque plataformas podem ignorar o filtro nativo.
       final validFiles = files
           .where((file) => file.name.toLowerCase().endsWith('.pdf'))
+          .take(availableSlots)
           .toList(growable: false);
 
-      if (validFiles.length != files.length) {
+      if (files.any((file) => !file.name.toLowerCase().endsWith('.pdf'))) {
         AppSnackBar.show(
           context,
           backgroundColor: AppColors.error,
           icon: Icons.error_outline_rounded,
           message: 'Somente arquivos no formato PDF foram adicionados.',
+        );
+      }
+      if (files.length > availableSlots) {
+        AppSnackBar.show(
+          context,
+          backgroundColor: AppColors.error,
+          icon: Icons.error_outline_rounded,
+          message: 'Somente 10 certificações podem ser adicionadas.',
         );
       }
 
@@ -127,8 +152,23 @@ class _TrainerCertificationsScreenState
         for (final file in validFiles) _createCertificationDocument(file),
       ]);
 
-      if (!mounted || newDocuments.isEmpty) return;
-      setState(() => _documents.addAll(newDocuments));
+      final acceptedDocuments = newDocuments
+          .where(
+            (document) =>
+                TrainerDocumentLimits.acceptsSize(document.sizeInBytes),
+          )
+          .toList(growable: false);
+      if (acceptedDocuments.length != newDocuments.length && mounted) {
+        AppSnackBar.show(
+          context,
+          backgroundColor: AppColors.error,
+          icon: Icons.error_outline_rounded,
+          message: 'Somente PDFs de até 10 MB foram adicionados.',
+        );
+      }
+
+      if (!mounted || acceptedDocuments.isEmpty) return;
+      setState(() => _documents.addAll(acceptedDocuments));
     } on Object {
       if (!mounted) return;
       AppSnackBar.show(
@@ -149,6 +189,7 @@ class _TrainerCertificationsScreenState
       path: file.path,
       sizeInBytes: await file.length(),
       mimeType: file.mimeType,
+      readBytes: file.readAsBytes,
     );
   }
 

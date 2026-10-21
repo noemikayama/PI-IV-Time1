@@ -6,6 +6,9 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da submissão com uma sessão autenticada tipada,
 // tratamento das falhas do repositório e fechamento da rota após o sucesso.
+// Alteração: Direcionamento do retorno para a tela de boas-vindas, delegação
+// da abertura do cadastro à RegistrationFlowRoute e remoção do controller de
+// cadastro da interface da tela, com suporte a avisos de cadastros parciais.
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -35,8 +38,10 @@ import '../../../../core/widgets/gradient_button.dart';
 import '../../application/states/login_session.dart';
 import '../../data/repositories/login_repository.dart';
 import '../messages/authentication_error_messages.dart';
+import '../routes/registration_flow_route.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
+import 'welcome_screen.dart';
 
 typedef LoginOperation =
     Future<LoginSession> Function(String email, String password);
@@ -48,15 +53,15 @@ class LoginScreen extends StatefulWidget {
     this.onBack,
     this.onForgotPassword,
     this.login,
-    this.onSignUp,
+    this.initialErrorMessage,
     super.key,
   });
 
   // Ações externas e contratos injetáveis do fluxo de login.
-  final VoidCallback? onBack;
+  final VoidCallback? onBack; 
   final VoidCallback? onForgotPassword;
   final LoginOperation? login;
-  final VoidCallback? onSignUp;
+  final String? initialErrorMessage;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -75,6 +80,18 @@ class _LoginScreenState extends State<LoginScreen> {
   // duplicados.
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
+  bool _didShowInitialError = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final initialErrorMessage = widget.initialErrorMessage;
+    if (_didShowInitialError || initialErrorMessage == null) return;
+    _didShowInitialError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showSnackBar(initialErrorMessage);
+    });
+  }
 
   // Liberação dos recursos criados e mantidos pela tela.
   @override
@@ -148,14 +165,23 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Navegação de retorno injetável, com fallback para a pilha atual.
+  // Reutiliza a tela anterior ou recria o início quando o login é a raiz.
   void _goBack() {
     final onBack = widget.onBack;
     if (onBack != null) {
       onBack();
       return;
     }
-    Navigator.maybePop(context);
+
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+
+    navigator.pushReplacement<void, void>(
+      MaterialPageRoute<void>(builder: (context) => const WelcomeScreen()),
+    );
   }
 
   // Estrutura responsiva da tela.
@@ -256,7 +282,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               Align(
                                 child: AuthLink(
                                   label: 'Cadastre-se',
-                                  onPressed: widget.onSignUp ?? () {},
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    RegistrationFlowRoute.build(),
+                                  ),
                                 ),
                               ),
                             ],

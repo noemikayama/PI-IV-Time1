@@ -6,6 +6,8 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Abertura do fluxo integrado de login, deixando o estado da
 // autenticação e o redirecionamento sob responsabilidade do AppGate.
+// Alteração: Adoção da RegistrationFlowRoute e remoção do controller de
+// cadastro da interface da tela.
 //
 // Data: 16/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -28,36 +30,31 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../application/controllers/registration_controller.dart';
 import '../routes/login_flow_route.dart';
-import 'profile_selection_screen.dart';
+import '../routes/registration_flow_route.dart';
 import '../widgets/welcome_action_panel.dart';
+import 'login_screen.dart';
+import 'profile_selection_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({
     this.onCreateAccount,
     this.onUserTypeSelected,
-    this.registrationController,
     super.key,
   });
 
   // Pontos de extensão para testes, seleção de fluxo e futura submissão.
   final VoidCallback? onCreateAccount;
   final ProfileSelectionCallback? onUserTypeSelected;
-  final RegistrationController? registrationController;
 
   void _openLogin(BuildContext context) {
     Navigator.push<void>(context, LoginFlowRoute.build());
   }
 
   void _openProfileSelection(BuildContext context) {
-    // Abre a seleção por navegação direta e propaga a dependência estável.
+    // Delega a composição e a abertura ao módulo do fluxo de cadastro.
     Navigator.push(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => ProfileSelectionScreen(
-          onContinue: onUserTypeSelected,
-          registrationController: registrationController,
-        ),
-      ),
+      RegistrationFlowRoute.build(onContinue: onUserTypeSelected),
     );
   }
 

@@ -29,6 +29,8 @@ import 'package:horse_life/core/widgets/app_text_form_field.dart';
 import 'package:horse_life/features/authentication/application/states/login_session.dart';
 import 'package:horse_life/features/authentication/data/repositories/login_repository.dart';
 import 'package:horse_life/features/authentication/presentation/screens/login_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/profile_selection_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/welcome_screen.dart';
 
 void main() {
   const session = LoginSession(
@@ -72,6 +74,46 @@ void main() {
         .last;
     expect(passwordField.obscureText, isFalse);
     expect(find.byTooltip('Ocultar senha'), findsOneWidget);
+  });
+
+  testWidgets('returns to the welcome screen from the back button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const LoginScreen()));
+
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(WelcomeScreen), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
+  });
+
+  testWidgets(
+    'pops the login when the welcome screen is already in the stack',
+    (tester) async {
+      await tester.pumpWidget(buildApp(const WelcomeScreen()));
+
+      await tester.tap(find.text('Acessar conta'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Voltar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WelcomeScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+    },
+  );
+
+  testWidgets('opens profile selection from the sign-up action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const LoginScreen()));
+
+    await tester.ensureVisible(find.text('Cadastre-se'));
+    await tester.tap(find.text('Cadastre-se'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSelectionScreen), findsOneWidget);
+    expect(find.text('Seleção de perfil'), findsOneWidget);
   });
 
   // Cenário 2: validação local e encaminhamento normalizado das credenciais.

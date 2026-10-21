@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Validação do limite de 10 MB e preservação da leitura do PDF
+// para o envio posterior ao cadastro da conta.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da quarta etapa do treinador para anexar um único
@@ -98,11 +103,24 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
         return;
       }
 
+      final sizeInBytes = await file.length();
+      if (!TrainerDocumentLimits.acceptsSize(sizeInBytes)) {
+        if (!mounted) return;
+        AppSnackBar.show(
+          context,
+          backgroundColor: AppColors.error,
+          icon: Icons.error_outline_rounded,
+          message: 'Selecione um PDF de até 10 MB.',
+        );
+        return;
+      }
+
       final document = TrainerDocument(
         name: file.name,
         path: file.path,
-        sizeInBytes: await file.length(),
+        sizeInBytes: sizeInBytes,
         mimeType: file.mimeType,
+        readBytes: file.readAsBytes,
       );
 
       if (!mounted) return;

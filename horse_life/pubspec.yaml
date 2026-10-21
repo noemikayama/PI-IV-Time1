@@ -5,7 +5,8 @@
 # Data: 20/10/2026
 # Autor: Noemi Kayama - RA 25004140
 # Alteração: Inclusão do Cloud Functions e do Firebase Authentication para o
-# login integrado e a criação da sessão autenticada.
+# login integrado e a criação da sessão autenticada e autenticação temporária 
+# do profissional e do cliente HTTP para envio dos PDFs ao Storage.
 #
 # Data: 15/10/2026
 # Autor: Noemi Kayama - RA 25004140
@@ -56,6 +57,7 @@ dependencies:
     sdk: flutter
   file_selector: ^1.1.0
   country_state_city: ^0.1.6
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

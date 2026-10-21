@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração da submissão profissional, tratamento de falhas
+// anteriores e posteriores à criação da conta e navegação para o login.
+//
 // Data: 16/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição de ValueChanged<TrainerRegistrationDraft> pelo
@@ -21,11 +26,13 @@ import '../../application/controllers/registration_controller.dart';
 import '../../application/states/registration_draft.dart';
 import '../../application/states/trainer_document.dart';
 import '../../application/states/trainer_service_area.dart';
+import '../../data/repositories/registration_repository.dart';
 import '../messages/authentication_error_messages.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import '../widgets/editable_review_field.dart';
 import '../widgets/registration_progress_indicator.dart';
+import 'login_screen.dart';
 
 typedef TrainerPasswordEditRequested =
     void Function(TrainerRegistrationDraft registration);
@@ -214,7 +221,15 @@ class _TrainerConfirmationScreenState extends State<TrainerConfirmationScreen> {
       );
       _passwordController.clear();
       if (!mounted) return;
-      widget.onCreated?.call();
+      _finishRegistration();
+    } on RegistrationFailure catch (error) {
+      if (!mounted) return;
+      if (error.accountCreated) {
+        _passwordController.clear();
+        _finishRegistration(initialErrorMessage: error.message);
+      } else {
+        _showError(error.message);
+      }
     } catch (_) {
       if (mounted) _showConnectionError();
     } finally {
@@ -222,13 +237,32 @@ class _TrainerConfirmationScreenState extends State<TrainerConfirmationScreen> {
     }
   }
 
-  // Expõe de forma explícita a indisponibilidade do backend ainda não integrado.
+  // Apresenta uma mensagem estável para falhas inesperadas de comunicação.
   void _showConnectionError() {
+    _showError(AuthenticationErrorMessages.serverConnection);
+  }
+
+  void _showError(String message) {
     AppSnackBar.show(
       context,
       backgroundColor: Theme.of(context).colorScheme.error,
       icon: Icons.error,
-      message: AuthenticationErrorMessages.serverConnection,
+      message: message,
+    );
+  }
+
+  void _finishRegistration({String? initialErrorMessage}) {
+    final onCreated = widget.onCreated;
+    if (onCreated != null) {
+      onCreated();
+      return;
+    }
+    Navigator.of(context).pushAndRemoveUntil<void>(
+      MaterialPageRoute<void>(
+        builder: (context) =>
+            LoginScreen(initialErrorMessage: initialErrorMessage),
+      ),
+      (route) => false,
     );
   }
 
