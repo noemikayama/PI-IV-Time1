@@ -4,9 +4,9 @@
 #
 # Data: 20/10/2026
 # Autor: Noemi Kayama - RA 25004140
-# Alteração: Inclusão do Cloud Functions para os cadastros, do Firebase Auth
-# para autenticação temporária do profissional e do cliente HTTP para envio dos
-# PDFs ao Storage.
+# Alteração: Inclusão do Cloud Functions e do Firebase Authentication para o
+# login integrado e a criação da sessão autenticada e autenticação temporária 
+# do profissional e do cliente HTTP para envio dos PDFs ao Storage.
 #
 # Data: 15/10/2026
 # Autor: Noemi Kayama - RA 25004140

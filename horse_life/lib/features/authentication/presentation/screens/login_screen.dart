@@ -4,6 +4,8 @@
 //
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração da submissão com uma sessão autenticada tipada,
+// tratamento das falhas do repositório e fechamento da rota após o sucesso.
 // Alteração: Direcionamento do retorno para a tela de boas-vindas, delegação
 // da abertura do cadastro à RegistrationFlowRoute e remoção do controller de
 // cadastro da interface da tela, com suporte a avisos de cadastros parciais.
@@ -28,19 +30,24 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/app_text_form_field.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import '../../application/states/login_session.dart';
+import '../../data/repositories/login_repository.dart';
 import '../messages/authentication_error_messages.dart';
 import '../routes/registration_flow_route.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
 import 'welcome_screen.dart';
 
+typedef LoginOperation =
+    Future<LoginSession> Function(String email, String password);
+
 // Tela responsável pela entrada das credenciais e pela apresentação dos
-// estados locais do login, com aparência herdada do tema institucional. A
-// operação de autenticação continua recebida por um contrato injetável.
+// estados locais do login, com aparência herdada do tema institucional.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     this.onBack,
@@ -50,10 +57,10 @@ class LoginScreen extends StatefulWidget {
     super.key,
   });
 
-  // Ações externas e contrato injetável da operação de login.
-  final VoidCallback? onBack;
+  // Ações externas e contratos injetáveis do fluxo de login.
+  final VoidCallback? onBack; 
   final VoidCallback? onForgotPassword;
-  final Future<bool> Function(String email, String password)? login;
+  final LoginOperation? login;
   final String? initialErrorMessage;
 
   @override
@@ -129,8 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate() || _isSubmitting) return;
 
-    // A ausência de uma operação configurada é tratada como indisponibilidade
-    // do servidor.
+    // A ausência de uma operação configurada é tratada como indisponibilidade.
     final login = widget.login;
     if (login == null) {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);
@@ -140,14 +146,16 @@ class _LoginScreenState extends State<LoginScreen> {
     // Mantém o botão bloqueado até sucesso, falha ou expiração do timeout.
     setState(() => _isSubmitting = true);
     try {
-      final isAuthenticated = await login(
+      await login(
         _emailController.text.trim(),
         _passwordController.text,
       ).timeout(_loginTimeout);
-
-      if (!isAuthenticated) {
-        _showSnackBar(AuthenticationErrorMessages.invalidCredentials);
-      }
+      _passwordController.clear();
+      TextInput.finishAutofillContext();
+      if (!mounted) return;
+      Navigator.maybePop(context);
+    } on LoginFailure catch (error) {
+      _showSnackBar(error.message);
     } on TimeoutException {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);
     } catch (_) {

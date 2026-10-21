@@ -4,6 +4,8 @@
 //
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Abertura do fluxo integrado de login, deixando o estado da
+// autenticação e o redirecionamento sob responsabilidade do AppGate.
 // Alteração: Adoção da RegistrationFlowRoute e remoção do controller de
 // cadastro da interface da tela.
 //
@@ -26,6 +28,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../application/controllers/registration_controller.dart';
+import '../routes/login_flow_route.dart';
 import '../routes/registration_flow_route.dart';
 import '../widgets/welcome_action_panel.dart';
 import 'login_screen.dart';
@@ -43,12 +47,7 @@ class WelcomeScreen extends StatelessWidget {
   final ProfileSelectionCallback? onUserTypeSelected;
 
   void _openLogin(BuildContext context) {
-    // Abre o login diretamente pela camada de apresentação, conforme o padrão
-    // de navegação definido para o projeto.
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
-    );
+    Navigator.push<void>(context, LoginFlowRoute.build());
   }
 
   void _openProfileSelection(BuildContext context) {
