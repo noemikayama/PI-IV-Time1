@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Direcionamento do retorno para a tela de boas-vindas, delegação
+// da abertura do cadastro à RegistrationFlowRoute e remoção do controller de
+// cadastro da interface da tela.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ajuste do espaçamento entre o título e a mensagem de boas-vindas.
@@ -29,8 +35,10 @@ import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/app_text_form_field.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../messages/authentication_error_messages.dart';
+import '../routes/registration_flow_route.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
+import 'welcome_screen.dart';
 
 // Tela responsável pela entrada das credenciais e pela apresentação dos
 // estados locais do login, com aparência herdada do tema institucional. A
@@ -41,7 +49,6 @@ class LoginScreen extends StatefulWidget {
     this.onBack,
     this.onForgotPassword,
     this.login,
-    this.onSignUp,
     super.key,
   });
 
@@ -49,7 +56,6 @@ class LoginScreen extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback? onForgotPassword;
   final Future<bool> Function(String email, String password)? login;
-  final VoidCallback? onSignUp;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -140,14 +146,23 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Navegação de retorno injetável, com fallback para a pilha atual.
+  // Reutiliza a tela anterior ou recria o início quando o login é a raiz.
   void _goBack() {
     final onBack = widget.onBack;
     if (onBack != null) {
       onBack();
       return;
     }
-    Navigator.maybePop(context);
+
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+
+    navigator.pushReplacement<void, void>(
+      MaterialPageRoute<void>(builder: (context) => const WelcomeScreen()),
+    );
   }
 
   // Estrutura responsiva da tela.
@@ -248,7 +263,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               Align(
                                 child: AuthLink(
                                   label: 'Cadastre-se',
-                                  onPressed: widget.onSignUp ?? () {},
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    RegistrationFlowRoute.build(),
+                                  ),
                                 ),
                               ),
                             ],

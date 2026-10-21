@@ -2,6 +2,11 @@
 # -----------------------------------------------------------------------------
 # HISTÓRICO DE ALTERAÇÕES
 #
+# Data: 20/10/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão do Cloud Functions para integrar o cadastro do
+# responsável à callable do Firebase.
+#
 # Data: 15/10/2026
 # Autor: Noemi Kayama - RA 25004140
 # Alteração: Inclusão do seletor nativo de arquivo único para documentos da
@@ -44,6 +49,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.9
+  cloud_functions: ^6.4.0
   firebase_core: ^4.15.0
   flutter_web_plugins:
     sdk: flutter

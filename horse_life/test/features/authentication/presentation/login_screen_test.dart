@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura do retorno para a tela de boas-vindas e da abertura
+// da seleção de perfil pela ação de cadastro.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Aplicação do AppTheme.light no ambiente de teste para reproduzir
@@ -22,6 +27,8 @@ import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/core/widgets/app_text_form_field.dart';
 import 'package:horse_life/features/authentication/presentation/screens/login_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/profile_selection_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/welcome_screen.dart';
 
 void main() {
   Widget buildApp(Widget home) {
@@ -59,6 +66,46 @@ void main() {
         .last;
     expect(passwordField.obscureText, isFalse);
     expect(find.byTooltip('Ocultar senha'), findsOneWidget);
+  });
+
+  testWidgets('returns to the welcome screen from the back button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const LoginScreen()));
+
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(WelcomeScreen), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
+  });
+
+  testWidgets(
+    'pops the login when the welcome screen is already in the stack',
+    (tester) async {
+      await tester.pumpWidget(buildApp(const WelcomeScreen()));
+
+      await tester.tap(find.text('Acessar conta'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Voltar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WelcomeScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+    },
+  );
+
+  testWidgets('opens profile selection from the sign-up action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const LoginScreen()));
+
+    await tester.ensureVisible(find.text('Cadastre-se'));
+    await tester.tap(find.text('Cadastre-se'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSelectionScreen), findsOneWidget);
+    expect(find.text('Seleção de perfil'), findsOneWidget);
   });
 
   // Cenário 2: validação local e encaminhamento normalizado das credenciais.

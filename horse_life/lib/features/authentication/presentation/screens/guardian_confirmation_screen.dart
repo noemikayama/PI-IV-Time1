@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração da submissão com tratamento de falhas tipadas,
+// navegação para o login após a criação da conta e encerramento do repasse
+// do controller ao sair do fluxo de cadastro.
+//
 // Data: 16/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição de ValueChanged<GuardianRegistrationDraft> pelo
@@ -24,11 +30,13 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
 import '../../application/controllers/registration_controller.dart';
 import '../../application/states/registration_draft.dart';
+import '../../data/repositories/registration_repository.dart';
 import '../messages/authentication_error_messages.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import '../widgets/editable_review_field.dart';
 import '../widgets/registration_progress_indicator.dart';
+import 'login_screen.dart';
 
 typedef GuardianPasswordEditRequested =
     void Function(GuardianRegistrationDraft registration);
@@ -186,8 +194,8 @@ class _GuardianConfirmationScreenState
     Navigator.maybePop(context);
   }
 
-  // Entrega dados e senha separadamente ao controller injetado. Na ausência de
-  // implementação, informa indisponibilidade sem simular integração Firebase.
+  // Entrega dados e senha separadamente ao controller injetado. Na ausência da
+  // dependência, informa indisponibilidade sem tentar uma chamada remota.
   Future<void> _createAccount() async {
     if (_isSubmitting) return;
     FocusScope.of(context).unfocus();
@@ -211,7 +219,17 @@ class _GuardianConfirmationScreenState
       );
       _passwordController.clear();
       if (!mounted) return;
-      widget.onCreated?.call();
+      final onCreated = widget.onCreated;
+      if (onCreated != null) {
+        onCreated();
+      } else {
+        Navigator.of(context).pushAndRemoveUntil<void>(
+          MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    } on RegistrationFailure catch (error) {
+      if (mounted) _showError(error.message);
     } catch (_) {
       if (mounted) _showConnectionError();
     } finally {
@@ -220,11 +238,15 @@ class _GuardianConfirmationScreenState
   }
 
   void _showConnectionError() {
+    _showError(AuthenticationErrorMessages.serverConnection);
+  }
+
+  void _showError(String message) {
     AppSnackBar.show(
       context,
       backgroundColor: Theme.of(context).colorScheme.error,
       icon: Icons.error,
-      message: AuthenticationErrorMessages.serverConnection,
+      message: message,
     );
   }
 
