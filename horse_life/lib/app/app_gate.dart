@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Observação da sessão persistente para alternar entre o conteúdo
+// público e a home, com encerramento pelo repositório de autenticação.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do controle de inicialização do Firebase, com splash
@@ -10,15 +15,24 @@
 
 import 'package:flutter/material.dart';
 
+import '../features/authentication/application/states/login_session.dart';
+import '../features/authentication/data/repositories/authentication_session_repository.dart';
+import '../features/home/presentation/screens/home_screen.dart';
 import '../features/splash/presentation/screens/splash_screen.dart';
 
 // Porta de entrada visual que protege o restante do aplicativo enquanto as
 // dependências obrigatórias são inicializadas.
 class AppGate extends StatefulWidget {
-  const AppGate({required this.initializeApp, required this.home, super.key});
+  const AppGate({
+    required this.initializeApp,
+    required this.home,
+    this.sessionRepository,
+    super.key,
+  });
 
   final Future<void> Function() initializeApp;
   final Widget home;
+  final AuthenticationSessionRepository? sessionRepository;
 
   @override
   State<AppGate> createState() => _AppGateState();
@@ -31,6 +45,7 @@ class _AppGateState extends State<AppGate> {
 
   // Estado assíncrono acompanhado pelo FutureBuilder.
   late Future<void> _initialization;
+  Stream<LoginSession?>? _session;
 
   // Ciclo de vida e inicialização.
   @override
@@ -54,6 +69,7 @@ class _AppGateState extends State<AppGate> {
   void _retry() {
     // Reinicia o fluxo e notifica a interface após uma falha de conexão.
     setState(() {
+      _session = null;
       _initialization = _initialize();
     });
   }
@@ -75,9 +91,29 @@ class _AppGateState extends State<AppGate> {
           return SplashScreen.failed(onRetry: _retry);
         }
 
-        // Libera a tela principal somente depois da inicialização
-        // bem-sucedida.
-        return widget.home;
+        return _buildSessionGate();
+      },
+    );
+  }
+
+  Widget _buildSessionGate() {
+    final repository = widget.sessionRepository;
+    if (repository == null) return widget.home;
+
+    _session ??= repository.watchSession();
+    return StreamBuilder<LoginSession?>(
+      stream: _session,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+        if (snapshot.hasError) {
+          return SplashScreen.failed(onRetry: _retry);
+        }
+
+        final session = snapshot.data;
+        if (session == null) return widget.home;
+        return HomeScreen(signOut: repository.signOut);
       },
     );
   }

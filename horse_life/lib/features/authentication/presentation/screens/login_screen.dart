@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração da submissão com uma sessão autenticada tipada,
+// tratamento das falhas do repositório e fechamento da rota após o sucesso.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ajuste do espaçamento entre o título e a mensagem de boas-vindas.
@@ -17,25 +22,27 @@
 // senha, submissão assíncrona, timeout, mensagens centralizadas e tratamento
 // de credenciais incorretas ou falhas de conexão com a SnackBar genérica e
 // reutilizável da aplicação.
-// Futuramente, haverá no backend uma callable chamada `login`; como ela ainda
-// não existe, este código deverá ser reajustado quando a Function for criada.
 // -----------------------------------------------------------------------------
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/app_text_form_field.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import '../../application/states/login_session.dart';
+import '../../data/repositories/login_repository.dart';
 import '../messages/authentication_error_messages.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
 
+typedef LoginOperation =
+    Future<LoginSession> Function(String email, String password);
+
 // Tela responsável pela entrada das credenciais e pela apresentação dos
-// estados locais do login, com aparência herdada do tema institucional. A
-// integração definitiva será conectada quando a callable correspondente
-// existir no backend.
+// estados locais do login, com aparência herdada do tema institucional.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     this.onBack,
@@ -45,10 +52,10 @@ class LoginScreen extends StatefulWidget {
     super.key,
   });
 
-  // Ações externas e contrato temporário da futura operação de login.
+  // Ações externas e contratos injetáveis do fluxo de login.
   final VoidCallback? onBack;
   final VoidCallback? onForgotPassword;
-  final Future<bool> Function(String email, String password)? login;
+  final LoginOperation? login;
   final VoidCallback? onSignUp;
 
   @override
@@ -112,8 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate() || _isSubmitting) return;
 
-    // Enquanto o backend não fornece a callable, a ausência da função é
-    // tratada da mesma forma que uma indisponibilidade do servidor.
+    // A ausência de uma operação configurada é tratada como indisponibilidade.
     final login = widget.login;
     if (login == null) {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);
@@ -123,14 +129,16 @@ class _LoginScreenState extends State<LoginScreen> {
     // Mantém o botão bloqueado até sucesso, falha ou expiração do timeout.
     setState(() => _isSubmitting = true);
     try {
-      final isAuthenticated = await login(
+      await login(
         _emailController.text.trim(),
         _passwordController.text,
       ).timeout(_loginTimeout);
-
-      if (!isAuthenticated) {
-        _showSnackBar(AuthenticationErrorMessages.invalidCredentials);
-      }
+      _passwordController.clear();
+      TextInput.finishAutofillContext();
+      if (!mounted) return;
+      Navigator.maybePop(context);
+    } on LoginFailure catch (error) {
+      _showSnackBar(error.message);
     } on TimeoutException {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);
     } catch (_) {

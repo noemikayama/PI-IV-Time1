@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Adaptação dos cenários ao contrato de sessão tipada, às falhas
+// do repositório e à limpeza da senha após autenticação.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Aplicação do AppTheme.light no ambiente de teste para reproduzir
@@ -21,9 +26,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/core/widgets/app_text_form_field.dart';
+import 'package:horse_life/features/authentication/application/states/login_session.dart';
+import 'package:horse_life/features/authentication/data/repositories/login_repository.dart';
 import 'package:horse_life/features/authentication/presentation/screens/login_screen.dart';
 
 void main() {
+  const session = LoginSession(
+    uid: 'guardian-uid',
+    name: 'Ana Silva',
+    role: AuthenticationRole.guardian,
+  );
+
   Widget buildApp(Widget home) {
     return MaterialApp(theme: AppTheme.light, home: home);
   }
@@ -73,7 +86,7 @@ void main() {
           login: (email, password) async {
             submittedEmail = email;
             submittedPassword = password;
-            return true;
+            return session;
           },
         ),
       ),
@@ -108,7 +121,12 @@ void main() {
   ) async {
     // Preparação de uma resposta negativa do serviço de login.
     await tester.pumpWidget(
-      buildApp(LoginScreen(login: (email, password) async => false)),
+      buildApp(
+        LoginScreen(
+          login: (email, password) async =>
+              throw const LoginFailure.invalidCredentials(),
+        ),
+      ),
     );
 
     // Submissão de credenciais preenchidas.
@@ -141,7 +159,7 @@ void main() {
     tester,
   ) async {
     // Future propositalmente pendente para simular o servidor sem resposta.
-    final serverResponse = Completer<bool>();
+    final serverResponse = Completer<LoginSession>();
 
     await tester.pumpWidget(
       buildApp(LoginScreen(login: (email, password) => serverResponse.future)),
@@ -184,5 +202,23 @@ void main() {
     await tester.pump();
 
     expect(find.text('Erro de conexão com o servidor'), findsOneWidget);
+  });
+
+  testWidgets('clears the password after a successful login', (tester) async {
+    await tester.pumpWidget(
+      buildApp(LoginScreen(login: (email, password) async => session)),
+    );
+
+    await tester.enterText(find.byType(TextFormField).first, 'user@test.com');
+    await tester.enterText(find.byType(TextFormField).last, 'secret');
+    await tester.ensureVisible(find.text('Entrar'));
+    await tester.tap(find.text('Entrar'));
+    await tester.pump();
+
+    final passwordField = tester.widget<TextFormField>(
+      find.byType(TextFormField).last,
+    );
+    expect(passwordField.controller?.text, isEmpty);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

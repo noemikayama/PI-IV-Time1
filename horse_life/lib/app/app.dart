@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do repositório opcional de sessão na composição do gate.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Aplicação do tema institucional centralizado do HorseLife.
@@ -14,6 +18,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../features/authentication/data/repositories/authentication_session_repository.dart';
 import 'app_gate.dart';
 import 'theme/app_theme.dart';
 
@@ -26,12 +31,14 @@ class HorseLifeApp extends StatelessWidget {
   const HorseLifeApp({
     required this.initializeApp,
     required this.home,
+    this.sessionRepository,
     super.key,
   });
 
   // Dependências recebidas de fora para manter a raiz configurável e testável.
   final AppInitializer initializeApp;
   final Widget home;
+  final AuthenticationSessionRepository? sessionRepository;
 
   // Configuração global do MaterialApp.
   @override
@@ -41,7 +48,11 @@ class HorseLifeApp extends StatelessWidget {
       title: 'HorseLife',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: AppGate(initializeApp: initializeApp, home: home),
+      home: AppGate(
+        initializeApp: initializeApp,
+        home: home,
+        sessionRepository: sessionRepository,
+      ),
     );
   }
 }

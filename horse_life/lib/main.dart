@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ativação da restauração da sessão Firebase na composição do app.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Definição da tela inicial de boas-vindas como destino liberado
@@ -18,6 +22,7 @@ import 'package:flutter/material.dart';
 
 import 'app/app.dart';
 import 'core/firebase/firebase_bootstrap.dart';
+import 'features/authentication/data/repositories/firebase_authentication_session_repository.dart';
 import 'features/authentication/presentation/screens/welcome_screen.dart';
 
 // Ponto de entrada da aplicação.
@@ -31,6 +36,7 @@ void main() {
     HorseLifeApp(
       initializeApp: FirebaseBootstrap.initialize,
       home: const WelcomeScreen(),
+      sessionRepository: const FirebaseAuthenticationSessionRepository(),
     ),
   );
 }
