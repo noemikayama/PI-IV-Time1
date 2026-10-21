@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ajuste do dropdown para quebrar modalidades longas entre palavras
+// e adaptar a altura dos itens sem causar overflow.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da terceira etapa do treinador para carregamento e seleção
@@ -247,6 +252,7 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
           value: _selectedSport,
           isExpanded: true,
           borderRadius: const BorderRadius.all(Radius.circular(18)),
+          menuMaxHeight: 320,
           dropdownColor: Colors.white,
           icon: const Icon(
             Icons.keyboard_arrow_down_rounded,
@@ -257,18 +263,25 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
             color: AppColors.text,
             fontSize: 20,
           ),
+          itemHeight: null,
           selectedItemBuilder: (context) => [
             for (final sport in _sports)
-              Align(alignment: Alignment.centerLeft, child: Text(sport)),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(sport, softWrap: true),
+              ),
           ],
           items: [
             for (final sport in _sports)
               DropdownMenuItem<String>(
                 value: sport,
                 child: Container(
-                  height: 52,
+                  constraints: const BoxConstraints(minHeight: 52),
                   alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: sport == _selectedSport
                         ? AppColors.seaGreen
@@ -285,12 +298,15 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
                         ),
                         const SizedBox(width: 12),
                       ],
-                      Text(
-                        sport,
-                        style: TextStyle(
-                          color: sport == _selectedSport
-                              ? Colors.white
-                              : AppColors.text,
+                      Expanded(
+                        child: Text(
+                          sport,
+                          softWrap: true,
+                          style: TextStyle(
+                            color: sport == _selectedSport
+                                ? Colors.white
+                                : AppColors.text,
+                          ),
                         ),
                       ),
                     ],

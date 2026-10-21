@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da navegação após o cadastro e das falhas anteriores
+// e posteriores à criação da conta profissional.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura da revisão, remoções e submissão final do treinador.
@@ -15,6 +20,7 @@ import 'package:horse_life/features/authentication/application/states/registrati
 import 'package:horse_life/features/authentication/application/states/trainer_document.dart';
 import 'package:horse_life/features/authentication/application/states/trainer_service_area.dart';
 import 'package:horse_life/features/authentication/data/repositories/registration_repository.dart';
+import 'package:horse_life/features/authentication/presentation/screens/login_screen.dart';
 import 'package:horse_life/features/authentication/presentation/screens/trainer_confirmation_screen.dart';
 
 void main() {
@@ -189,18 +195,106 @@ void main() {
     expect(repository.receivedPassword, 'Senha@123');
     expect(wasCreated, isTrue);
   });
+
+  testWidgets('opens login after a successful default submission', (
+    tester,
+  ) async {
+    final repository = _FakeRegistrationRepository();
+
+    await tester.pumpWidget(
+      buildApp(
+        TrainerConfirmationScreen(
+          registration: registration,
+          password: 'Senha@123',
+          registrationController: RegistrationController(repository),
+        ),
+      ),
+    );
+
+    final createButton = find.byKey(
+      const Key('create-trainer-registration-account'),
+    );
+    await tester.ensureVisible(createButton);
+    await tester.tap(createButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.byType(TrainerConfirmationScreen), findsNothing);
+  });
+
+  testWidgets('keeps the review open when account creation fails', (
+    tester,
+  ) async {
+    final repository = _FakeRegistrationRepository(
+      failure: const RegistrationFailure('E-mail já cadastrado.'),
+    );
+
+    await tester.pumpWidget(
+      buildApp(
+        TrainerConfirmationScreen(
+          registration: registration,
+          password: 'Senha@123',
+          registrationController: RegistrationController(repository),
+        ),
+      ),
+    );
+
+    final createButton = find.byKey(
+      const Key('create-trainer-registration-account'),
+    );
+    await tester.ensureVisible(createButton);
+    await tester.tap(createButton);
+    await tester.pump();
+
+    expect(find.text('E-mail já cadastrado.'), findsOneWidget);
+    expect(find.byType(TrainerConfirmationScreen), findsOneWidget);
+  });
+
+  testWidgets('opens login with a warning after a partial registration', (
+    tester,
+  ) async {
+    const warning =
+        'Sua conta foi criada, mas não foi possível enviar os documentos.';
+    final repository = _FakeRegistrationRepository(
+      failure: const RegistrationFailure(warning, accountCreated: true),
+    );
+
+    await tester.pumpWidget(
+      buildApp(
+        TrainerConfirmationScreen(
+          registration: registration,
+          password: 'Senha@123',
+          registrationController: RegistrationController(repository),
+        ),
+      ),
+    );
+
+    final createButton = find.byKey(
+      const Key('create-trainer-registration-account'),
+    );
+    await tester.ensureVisible(createButton);
+    await tester.tap(createButton);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(find.text(warning), findsOneWidget);
+  });
 }
 
 // Espião simples que captura os argumentos enviados pelo controller.
 class _FakeRegistrationRepository implements RegistrationRepository {
+  _FakeRegistrationRepository({this.failure});
+
   RegistrationDraft? receivedRegistration;
   String? receivedPassword;
+  final RegistrationFailure? failure;
 
   @override
   Future<void> createAccount({
     required RegistrationDraft registration,
     required String password,
   }) async {
+    if (failure case final failure?) throw failure;
     receivedRegistration = registration;
     receivedPassword = password;
   }
