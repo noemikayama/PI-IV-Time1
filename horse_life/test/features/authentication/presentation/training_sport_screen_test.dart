@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da quebra de linha de modalidades longas em telas
+// estreitas, tanto no campo selecionado quanto no menu aberto.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da seleção dinâmica de modalidade do treinador.
@@ -99,6 +104,33 @@ void main() {
     expect(receivedRegistration?.firstName, 'Ana');
     expect(receivedRegistration?.email, 'ana@email.com');
     expect(receivedRegistration?.sport, 'Salto');
+  });
+
+  testWidgets('wraps long sport names without overflow', (tester) async {
+    const longSport =
+        'Equitação de trabalho com treinamento especializado avançado';
+    await tester.binding.setSurfaceSize(const Size(320, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      buildApp(
+        const TrainingSportScreen(
+          registration: registration,
+          sportRepository: _FakeTrainingSportRepository([longSport, 'Salto']),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    final dropdown = find.byKey(const Key('training-sport-dropdown'));
+    await tester.ensureVisible(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+
+    expect(find.text(longSport), findsWidgets);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('opens the trainer experience step after the sport', (

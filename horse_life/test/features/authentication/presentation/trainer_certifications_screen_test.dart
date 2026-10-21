@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura do limite de dez certificações profissionais.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura da etapa de certificações, incluindo múltiplos PDFs,
@@ -61,7 +65,7 @@ void main() {
   });
 
   // Inclusões sucessivas e limite visual com rolagem a partir do quarto item.
-  testWidgets('adds unlimited PDFs and shows no more than three at once', (
+  testWidgets('adds PDFs and shows no more than three at once', (
     tester,
   ) async {
     var selection = [pdf('certificado_1.pdf'), pdf('certificado_2.pdf')];
@@ -94,6 +98,44 @@ void main() {
       find.descendant(of: list, matching: find.byType(ListView)),
     );
     expect(listView.controller?.position.maxScrollExtent, greaterThan(0));
+  });
+
+  testWidgets('limits the registration to ten certifications', (tester) async {
+    TrainerRegistrationDraft? receivedRegistration;
+
+    await tester.pumpWidget(
+      buildApp(
+        TrainerCertificationsScreen(
+          registration: registration,
+          filePicker: () async => [
+            for (var index = 1; index <= 11; index++)
+              pdf('certificado_$index.pdf'),
+          ],
+          onContinue: (updatedRegistration) {
+            receivedRegistration = updatedRegistration;
+          },
+        ),
+      ),
+    );
+
+    final picker = find.byKey(const Key('pick-trainer-certification-files'));
+    await tester.ensureVisible(picker);
+    await tester.tap(picker);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Somente 10 certificações podem ser adicionadas.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    final continueButton = find.byKey(
+      const Key('continue-trainer-certifications'),
+    );
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+
+    expect(receivedRegistration?.trainerCertificationDocuments, hasLength(10));
   });
 
   // Remoção individual e preservação dos metadados do documento restante.

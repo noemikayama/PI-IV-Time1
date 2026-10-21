@@ -4,7 +4,8 @@
 //
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
-// Alteração: Inclusão da falha tipada apresentada pela confirmação.
+// Alteração: Inclusão da falha tipada apresentada pela confirmação e da
+// identificação de erros ocorridos depois da criação da conta.
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -26,10 +27,12 @@ abstract interface class RegistrationRepository {
 // Erro seguro para apresentação na interface, sem expor detalhes internos da
 // infraestrutura Firebase.
 final class RegistrationFailure implements Exception {
-  const RegistrationFailure(this.message);
+  const RegistrationFailure(this.message, {this.accountCreated = false});
 
   const RegistrationFailure.connection()
-    : message = 'Erro de conexão com o servidor';
+    : message = 'Erro de conexão com o servidor',
+      accountCreated = false;
 
   final String message;
+  final bool accountCreated;
 }

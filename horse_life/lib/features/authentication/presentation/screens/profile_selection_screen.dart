@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Resolução do controller correspondente ao perfil escolhido.
+//
 // Data: 16/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição de ValueChanged pelos typedefs
@@ -23,11 +27,14 @@ import 'package:horse_life/features/authentication/presentation/widgets/profile_
 import '../../../../app/theme/app_colors.dart';
 import '../../application/controllers/registration_controller.dart';
 import '../../data/models/user_type.dart';
+import '../../data/repositories/training_sport_repository.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import 'registration_name_screen.dart';
 
 typedef ProfileSelectionCallback = void Function(UserType userType);
+typedef RegistrationControllerResolver =
+    RegistrationController Function(UserType userType);
 typedef _ProfileDropdownChanged = void Function(UserType? userType);
 
 // Coleta o perfil e entrega um valor tipado ao coordenador do cadastro.
@@ -36,6 +43,8 @@ class ProfileSelectionScreen extends StatefulWidget {
     this.onContinue,
     this.onBack,
     this.registrationController,
+    this.registrationControllerFor,
+    this.trainerSportRepository,
     super.key,
   });
 
@@ -43,6 +52,8 @@ class ProfileSelectionScreen extends StatefulWidget {
   final ProfileSelectionCallback? onContinue;
   final VoidCallback? onBack;
   final RegistrationController? registrationController;
+  final RegistrationControllerResolver? registrationControllerFor;
+  final TrainingSportRepository? trainerSportRepository;
 
   @override
   State<ProfileSelectionScreen> createState() => _ProfileSelectionScreenState();
@@ -70,12 +81,18 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
       return;
     }
 
+    final registrationController =
+        widget.registrationControllerFor?.call(_selectedType) ??
+        widget.registrationController;
     final nameScreen = switch (_selectedType) {
       UserType.guardian => RegistrationNameScreen.guardian(
-        registrationController: widget.registrationController,
+        registrationController: registrationController,
       ),
       UserType.trainer => RegistrationNameScreen.trainer(
-        registrationController: widget.registrationController,
+        registrationController: registrationController,
+        sportRepository:
+            widget.trainerSportRepository ??
+            const LocalTrainingSportRepository(),
       ),
     };
 

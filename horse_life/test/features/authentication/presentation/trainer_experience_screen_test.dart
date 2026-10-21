@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da preservação dos bytes do PDF para o upload.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da etapa de documento profissional único, com
@@ -110,6 +114,7 @@ void main() {
     final document = receivedRegistration?.trainerExperienceDocument;
     expect(document?.name, 'curriculo.pdf');
     expect(document?.sizeInBytes, 3);
+    expect(await document?.loadBytes(), Uint8List.fromList([1, 2, 3]));
     expect(receivedRegistration?.sport, 'Salto');
   });
 

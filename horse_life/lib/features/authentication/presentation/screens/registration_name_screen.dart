@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Propagação da fonte remota de modalidades no fluxo profissional.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do estado específico do perfil selecionado e encadeamento
@@ -19,6 +23,7 @@ import '../../../../core/widgets/app_text_form_field.dart';
 import '../../application/controllers/registration_controller.dart';
 import '../../application/states/registration_draft.dart';
 import '../../data/models/user_type.dart';
+import '../../data/repositories/training_sport_repository.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import '../widgets/registration_progress_indicator.dart';
@@ -35,12 +40,14 @@ class RegistrationNameScreen extends StatefulWidget {
     this.registrationController,
     super.key,
   }) : userType = UserType.guardian,
+       sportRepository = const LocalTrainingSportRepository(),
        progressConfiguration = RegistrationProgressConfiguration.guardian;
 
   const RegistrationNameScreen.trainer({
     this.onContinue,
     this.onBack,
     this.registrationController,
+    this.sportRepository = const LocalTrainingSportRepository(),
     super.key,
   }) : userType = UserType.trainer,
        progressConfiguration = RegistrationProgressConfiguration.trainer;
@@ -49,6 +56,7 @@ class RegistrationNameScreen extends StatefulWidget {
   final UserType userType;
   final RegistrationProgressConfiguration progressConfiguration;
   final RegistrationController? registrationController;
+  final TrainingSportRepository sportRepository;
   final RegistrationNameCallback? onContinue;
   final VoidCallback? onBack;
 
@@ -118,6 +126,7 @@ class _RegistrationNameScreenState extends State<RegistrationNameScreen> {
         builder: (context) => RegistrationEmailScreen(
           registration: registration,
           registrationController: widget.registrationController,
+          sportRepository: widget.sportRepository,
         ),
       ),
     );

@@ -6,7 +6,7 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Direcionamento do retorno para a tela de boas-vindas, delegação
 // da abertura do cadastro à RegistrationFlowRoute e remoção do controller de
-// cadastro da interface da tela.
+// cadastro da interface da tela, com suporte a avisos de cadastros parciais.
 //
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -23,8 +23,6 @@
 // senha, submissão assíncrona, timeout, mensagens centralizadas e tratamento
 // de credenciais incorretas ou falhas de conexão com a SnackBar genérica e
 // reutilizável da aplicação.
-// Futuramente, haverá no backend uma callable chamada `login`; como ela ainda
-// não existe, este código deverá ser reajustado quando a Function for criada.
 // -----------------------------------------------------------------------------
 
 import 'dart:async';
@@ -42,20 +40,21 @@ import 'welcome_screen.dart';
 
 // Tela responsável pela entrada das credenciais e pela apresentação dos
 // estados locais do login, com aparência herdada do tema institucional. A
-// integração definitiva será conectada quando a callable correspondente
-// existir no backend.
+// operação de autenticação continua recebida por um contrato injetável.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     this.onBack,
     this.onForgotPassword,
     this.login,
+    this.initialErrorMessage,
     super.key,
   });
 
-  // Ações externas e contrato temporário da futura operação de login.
+  // Ações externas e contrato injetável da operação de login.
   final VoidCallback? onBack;
   final VoidCallback? onForgotPassword;
   final Future<bool> Function(String email, String password)? login;
+  final String? initialErrorMessage;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -74,6 +73,18 @@ class _LoginScreenState extends State<LoginScreen> {
   // duplicados.
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
+  bool _didShowInitialError = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final initialErrorMessage = widget.initialErrorMessage;
+    if (_didShowInitialError || initialErrorMessage == null) return;
+    _didShowInitialError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showSnackBar(initialErrorMessage);
+    });
+  }
 
   // Liberação dos recursos criados e mantidos pela tela.
   @override
@@ -118,8 +129,8 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate() || _isSubmitting) return;
 
-    // Enquanto o backend não fornece a callable, a ausência da função é
-    // tratada da mesma forma que uma indisponibilidade do servidor.
+    // A ausência de uma operação configurada é tratada como indisponibilidade
+    // do servidor.
     final login = widget.login;
     if (login == null) {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);

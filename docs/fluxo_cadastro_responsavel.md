@@ -7,10 +7,10 @@ cadastro de um responsável até a chamada da Firebase Callable Function
 ## Visão geral
 
 ```text
-main.dart
-  ↓ injeta Controller + Repository
-WelcomeScreen
-  ↓ repassa o controller
+WelcomeScreen ou LoginScreen
+  ↓ abre a rota de cadastro
+RegistrationFlowRoute
+  ↓ escolhe Controller + Repository pelo perfil
 ProfileSelectionScreen
   ↓ Responsável
 RegistrationNameScreen
@@ -34,21 +34,20 @@ isso, uma busca por `httpsCallable('registerGuardian')` não encontra a chamada.
 
 ## 1. Criação e injeção das dependências
 
-O ponto inicial está em `horse_life/lib/main.dart`:
+O ponto de composição está em `registration_flow_route.dart`:
 
 ```dart
-home: const WelcomeScreen(
-  registrationController: RegistrationController(
-    FirebaseGuardianRegistrationRepository(),
-  ),
-),
+final guardianController = RegistrationController(
+  FirebaseGuardianRegistrationRepository(),
+);
 ```
 
 Nesse ponto são criados:
 
 - `FirebaseGuardianRegistrationRepository`, que conhece o Firebase;
 - `RegistrationController`, que conecta as telas ao repositório;
-- `WelcomeScreen`, que recebe o controller e inicia o fluxo visual.
+- `ProfileSelectionScreen`, que recebe um resolvedor e escolhe o controller de
+  acordo com o perfil selecionado.
 
 A criação do repositório não chama o Firebase imediatamente. A chamada remota
 só acontece na confirmação final do cadastro, depois que o `AppGate` conclui a
@@ -58,13 +57,14 @@ inicialização do Firebase.
 
 O mesmo `registrationController` é repassado entre as telas:
 
-1. `welcome_screen.dart` abre a seleção de perfil;
-2. `profile_selection_screen.dart` abre o cadastro de responsável;
-3. `registration_name_screen.dart` coleta nome e sobrenome;
-4. `registration_email_screen.dart` adiciona o e-mail;
-5. `registration_password_screen.dart` mantém a senha temporariamente e abre a
+1. `welcome_screen.dart` ou `login_screen.dart` abre a rota de cadastro;
+2. `registration_flow_route.dart` compõe os adapters e abre a seleção;
+3. `profile_selection_screen.dart` abre o cadastro de responsável;
+4. `registration_name_screen.dart` coleta nome e sobrenome;
+5. `registration_email_screen.dart` adiciona o e-mail;
+6. `registration_password_screen.dart` mantém a senha temporariamente e abre a
    confirmação;
-6. `guardian_confirmation_screen.dart` realiza o envio.
+7. `guardian_confirmation_screen.dart` realiza o envio.
 
 As informações não sensíveis são transportadas por um
 `GuardianRegistrationDraft`. A senha é passada separadamente para não ser
@@ -95,7 +95,7 @@ await controller.createAccount(
 ## 4. Passagem pelo controller
 
 O `RegistrationController` não conhece Firebase e não serializa os dados. Ele
-somente encaminha a operação ao repositório configurado em `main.dart`:
+somente encaminha a operação ao repositório configurado na rota:
 
 ```dart
 Future<void> createAccount({
@@ -220,10 +220,9 @@ na interface.
 
 | Responsabilidade | Arquivo |
 | --- | --- |
-| Montagem das dependências | `horse_life/lib/main.dart` |
+| Montagem das dependências | `horse_life/lib/features/authentication/presentation/routes/registration_flow_route.dart` |
 | Estado do cadastro | `horse_life/lib/features/authentication/application/states/registration_draft.dart` |
 | Coordenação da submissão | `horse_life/lib/features/authentication/application/controllers/registration_controller.dart` |
 | Contrato do repositório | `horse_life/lib/features/authentication/data/repositories/registration_repository.dart` |
 | Integração com a callable | `horse_life/lib/features/authentication/data/repositories/firebase_guardian_registration_repository.dart` |
 | Confirmação e envio | `horse_life/lib/features/authentication/presentation/screens/guardian_confirmation_screen.dart` |
-
