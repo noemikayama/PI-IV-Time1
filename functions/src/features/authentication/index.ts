@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da recuperação de senha.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -20,3 +24,6 @@ export {createTrainerAttachmentUpload} from "./trainer";
 export {removeTrainerAttachment} from "./trainer";
 export {login} from "./shared/handlers/login";
 export {getHome} from "./shared/handlers/getHome";
+export {
+  requestPasswordReset,
+} from "./shared/handlers/requestPasswordReset";
