@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipos da edição das modalidades do responsável.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Padronização do formato.
@@ -42,6 +46,10 @@ export type GuardianDocument = {
     criadoEm: Date;
     atualizadoEm: Date;
 };
+
+// Vínculo com a coleção 'modalidades': _id referencia a modalidade e
+// 'codigo'/'nome' são cópia do catálogo no momento da gravação.
+export type GuardianModality = GuardianDocument["modalidades"][number];
 
 // Dados enviados ao repository; o 'codigo' é gerado na própria inserção.
 export type NewGuardian = Omit<GuardianDocument, "codigo">;
@@ -86,3 +94,13 @@ export type GuardianHomeSource = Pick<
     GuardianDocument,
     "nome" | "situacaoCadastral" | "cavalos"
 >;
+
+// IDs únicos, já convertidos para ObjectId, na ordem informada.
+export type UpdateGuardianModalitiesInput = {
+    modalidadeIds: ObjectId[];
+};
+
+// Formato enviado ao app: o ObjectId vira string.
+export type UpdateGuardianModalitiesResult = {
+    modalidades: {id: string; codigo: number; nome: string}[];
+};
