@@ -9,11 +9,13 @@
 
 // A coleção 'emails' garante e-mail único entre perfis.
 // Índices: o próprio _id (o e-mail em minúsculo).
-import {MongoServerError} from "mongodb";
 import type {ClientSession} from "mongodb";
 import {getDatabase} from "../../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../../shared/constants/collections";
 import {AppError} from "../../../../shared/errors/AppError";
+import {
+  isDuplicateKeyError,
+} from "../../../../shared/errors/isDuplicateKeyError";
 import type {EmailReservation} from "../types";
 
 /** Reserva um e-mail durante o cadastro dentro da transação.
@@ -31,7 +33,7 @@ export async function reserveEmail(
       .collection<EmailReservation>(COLLECTIONS.Emails)
       .insertOne(reservation, {session});
   } catch (error) {
-    if (error instanceof MongoServerError && error.code === 11000) {
+    if (isDuplicateKeyError(error)) {
       throw new AppError("already-exists", "E-mail já cadastrado.");
     }
     throw error;

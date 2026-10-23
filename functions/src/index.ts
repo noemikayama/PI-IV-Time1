@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro, da edição e da consulta de cavalos.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -25,3 +29,8 @@ export {
 export {
   getModalities,
 } from "./features/modalities";
+export {
+  registerHorse,
+  updateHorse,
+  getHorse,
+} from "./features/horses";

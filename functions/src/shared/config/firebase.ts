@@ -15,9 +15,9 @@ import {getStorage} from "firebase-admin/storage";
 // A reutilização evita erros de inicialização duplicada.
 export const apps = getApps();
 
-export const app = apps.length > 0
-    ? apps[0]
-    : initializeApp();
+export const app = apps.length > 0 ?
+  apps[0] :
+  initializeApp();
 
 // Os serviços compartilham a instância inicializada acima e as credenciais
 // configuradas para o ambiente de execução do Firebase.
