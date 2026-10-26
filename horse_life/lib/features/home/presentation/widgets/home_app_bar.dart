@@ -7,10 +7,22 @@
 // Alteração: Implementação da estrutura inicial da Home do Responsável,
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
-
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+// -----------------------------------------------------------------------------
+//
+// Data: 25/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração do GuardianRepository e dos modelos com as Cloud
+// Functions; documentação das responsabilidades e lógicas principais,
+// preservando o comportamento anterior da interface.
+// -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 
+/// Cabeçalho institucional com ação para abrir o Drawer da Screen.
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HomeAppBar({super.key});
 

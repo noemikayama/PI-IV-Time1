@@ -7,10 +7,22 @@
 // Alteração: Implementação da estrutura inicial da Home do Responsável,
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
-
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+// -----------------------------------------------------------------------------
+//
+// Data: 25/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração do GuardianRepository e dos modelos com as Cloud
+// Functions; documentação das responsabilidades e lógicas principais,
+// preservando o comportamento anterior da interface.
+// -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 
+/// Barra inferior controlada pela Screen; recebe índice ativo e callback de seleção.
 class HomeBottomNavBar extends StatelessWidget {
   const HomeBottomNavBar({
     required this.selectedIndex,

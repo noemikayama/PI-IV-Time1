@@ -1,33 +1,30 @@
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+// Data: 25/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Ponto de entrada isolado para testar o cenário normal da Home.
+// -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-
-import 'app/theme/app_theme.dart';
-import 'features/home/presentation/screens/guardian/guardian_home_screen.dart';
+import '../app/theme/app_theme.dart';
+import '../features/home/presentation/screens/guardian/guardian_home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  runApp(const HorseLifeTestApp());
+  runApp(const GuardianPreviewApp());
 }
 
-class HorseLifeTestApp extends StatelessWidget {
-  const HorseLifeTestApp({super.key});
-
-  // Simulação de logout para o ambiente de testes.
-  Future<void> _handleTestLogout() async {
-    debugPrint('Logout simulado no ambiente de testes.');
-  }
+class GuardianPreviewApp extends StatelessWidget {
+  const GuardianPreviewApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'HorseLife - Teste',
-      debugShowCheckedModeBanner: false,
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light,
+    home: GuardianHomeScreen(mockScenario: 'normal', onLogout: _previewLogout),
+  );
+}
 
-      // Utiliza o tema oficial do projeto.
-      theme: AppTheme.light,
-
-      // Tela inicial do Responsável.
-      home: GuardianHomeScreen(onLogout: _handleTestLogout),
-    );
-  }
+Future<void> _previewLogout() async {
+  debugPrint('Logout simulado no teste da Home.');
 }

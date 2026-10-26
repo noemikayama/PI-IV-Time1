@@ -1,7 +1,23 @@
+// RESPONSÁVEL PELA ATUALIZAÇÃO: Gabriela Sichiroli Ferrari - 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão e padronização dos componentes e dados simulados da Home do Responsável, preservando a integração existente.
+// -----------------------------------------------------------------------------
+//
+// Data: 25/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração do GuardianRepository e dos modelos com as Cloud
+// Functions; documentação das responsabilidades e lógicas principais,
+// preservando o comportamento anterior da interface.
+// -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 
 /// Estado vazio visual comum aos cards da Home.
+/// Apresenta mensagens de ausência de dados sem duplicar layout nos cards.
 class GuardianEmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -36,8 +52,14 @@ class GuardianEmptyState extends StatelessWidget {
             children: [
               Icon(icon, size: 24, color: AppColors.text),
               const SizedBox(width: 10),
-              Expanded(child: Text(title,
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),

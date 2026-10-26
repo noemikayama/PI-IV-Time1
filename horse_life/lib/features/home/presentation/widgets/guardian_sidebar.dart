@@ -7,12 +7,24 @@
 // Alteração: Implementação da estrutura inicial da Home do Responsável,
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
-
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+// -----------------------------------------------------------------------------
+//
+// Data: 25/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração do GuardianRepository e dos modelos com as Cloud
+// Functions; documentação das responsabilidades e lógicas principais,
+// preservando o comportamento anterior da interface.
+// -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
 import '../../data/models/guardian_home_data.dart';
 
+/// Menu lateral que compartilha a Future da Home e mantém o fluxo de logout recebido por callback.
 class GuardianSidebar extends StatefulWidget {
   const GuardianSidebar({required this.onLogout, this.homeFuture, super.key});
 
@@ -89,17 +101,18 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Reutiliza a mesma Future da Home, evitando uma segunda chamada ao servidor.
                         FutureBuilder<GuardianHomeData>(
                           future: widget.homeFuture,
                           builder: (context, snapshot) => Text(
-                          snapshot.data?.guardianName ?? '<Usuário>',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                          ),
+                            snapshot.data?.guardianName ?? '<Usuário>',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
 
@@ -114,11 +127,11 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                         FutureBuilder<GuardianHomeData>(
                           future: widget.homeFuture,
                           builder: (context, snapshot) => Text(
-                          'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
+                            'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],

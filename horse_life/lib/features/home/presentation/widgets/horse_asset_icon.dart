@@ -1,6 +1,22 @@
+// RESPONSÁVEL PELA ATUALIZAÇÃO: Gabriela Sichiroli Ferrari - 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão e padronização dos componentes e dados simulados da Home do Responsável, preservando a integração existente.
+// -----------------------------------------------------------------------------
+//
+// Data: 25/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração do GuardianRepository e dos modelos com as Cloud
+// Functions; documentação das responsabilidades e lógicas principais,
+// preservando o comportamento anterior da interface.
+// -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 
 // Asset oficial que já é utilizado no menu inferior do HorseLife.
+/// Centraliza o uso do asset de cavalo e oferece um ícone alternativo caso falhe o carregamento.
 class HorseAssetIcon extends StatelessWidget {
   final double size;
   const HorseAssetIcon({super.key, this.size = 28});
