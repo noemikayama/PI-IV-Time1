@@ -16,7 +16,7 @@
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 import '../../data/models/professional_home_data.dart';
 import 'professional_daily_training_card.dart';
 import 'professional_list_card.dart';

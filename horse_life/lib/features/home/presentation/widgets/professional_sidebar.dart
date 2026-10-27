@@ -15,8 +15,8 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../core/widgets/app_snack_bar.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import '../../data/models/professional_home_data.dart';
 
 class ProfessionalSidebar extends StatefulWidget {

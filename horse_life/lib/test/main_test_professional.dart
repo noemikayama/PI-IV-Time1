@@ -7,7 +7,7 @@
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import '../app/theme/app_theme.dart';
-import '../features/home/presentation/screens/professional/professional_home_screen.dart';
+import '../features/home/presentation/screens/trainer/professional_home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,13 +19,13 @@ class ProfessionalPreviewApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        home: ProfessionalHomeScreen(
-          mockScenario: 'normal',
-          onLogout: _previewLogout,
-        ),
-      );
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.light,
+    home: ProfessionalHomeScreen(
+      mockScenario: 'normal',
+      onLogout: _previewLogout,
+    ),
+  );
 }
 
 Future<void> _previewLogout() async {

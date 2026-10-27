@@ -15,7 +15,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 import '../../data/models/professional_home_data.dart';
 import 'home_empty_state.dart';
 import 'home_section_card.dart';

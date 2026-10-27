@@ -14,7 +14,7 @@
 // preservando o comportamento anterior da interface.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 
 /// Estrutura visual reutilizável para as seções da Home.
 class GuardianSectionCard extends StatelessWidget {

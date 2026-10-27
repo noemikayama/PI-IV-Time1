@@ -14,7 +14,7 @@
 // preservando o comportamento anterior da interface.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 
 /// Estado vazio visual comum aos cards da Home.
 /// Apresenta mensagens de ausência de dados sem duplicar layout nos cards.

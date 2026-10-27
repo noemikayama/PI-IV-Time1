@@ -14,10 +14,15 @@
 // com Firebase por padrão e cenários mock explícitos para testes.
 // -----------------------------------------------------------------------------
 
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Movido para screens/trainer conforme arquitetura e injeção de HomeLoader.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import '../../../data/models/professional_home_data.dart';
-import '../../../data/services/mock_professional_home_service.dart';
-import '../../../data/services/professional_home_service.dart';
+import '../../../application/controllers/home_loader.dart';
+import '../../../home_composition.dart';
 import '../../../data/repositories/professional_repository.dart';
 import '../../widgets/home_app_bar.dart';
 import '../../widgets/home_bottom_nav_bar.dart';
@@ -29,6 +34,7 @@ class ProfessionalHomeScreen extends StatefulWidget {
     super.key,
     required this.onLogout,
     this.mockScenario,
+    this.loader,
     this.repository,
     this.onViewTraining,
     this.onSelectHorse,
@@ -41,6 +47,8 @@ class ProfessionalHomeScreen extends StatefulWidget {
 
   /// null: Firebase real; 'normal', 'empty' ou 'error': Mock API.
   final String? mockScenario;
+  /// Preferencialmente injetado pela raiz do aplicativo.
+  final HomeLoader<ProfessionalHomeData>? loader;
   /// Injeção opcional de repositório (por exemplo, em testes).
   final ProfessionalRepository? repository;
   final Future<void> Function() onLogout;
@@ -60,21 +68,22 @@ class _ProfessionalHomeScreenState extends State<ProfessionalHomeScreen> {
   late Future<ProfessionalHomeData> _homeFuture;
   int _selectedIndex = 0;
 
-  /// A sidebar e o conteúdo consomem a mesma Future; não duplica getHome.
-  Future<ProfessionalHomeData> _fetchHome() {
-    if (widget.mockScenario != null) {
-      return const MockProfessionalHomeService().fetchHome(
-        scenario: widget.mockScenario!,
-      );
-    }
-    return ProfessionalHomeService(
-      widget.repository ?? FirebaseProfessionalRepository(),
-    ).fetchHome();
+  late HomeLoader<ProfessionalHomeData> _loader;
+
+  /// A sidebar e o conteúdo usam uma única Future, evitando chamadas duplicadas.
+  Future<ProfessionalHomeData> _fetchHome() => _loader.fetchHome();
+
+  void _configureLoader() {
+    _loader = widget.loader ?? HomeComposition.professional(
+      mockScenario: widget.mockScenario,
+      repository: widget.repository,
+    );
   }
 
   @override
   void initState() {
     super.initState();
+    _configureLoader();
     _homeFuture = _fetchHome();
   }
 
@@ -84,7 +93,9 @@ class _ProfessionalHomeScreenState extends State<ProfessionalHomeScreen> {
   void didUpdateWidget(covariant ProfessionalHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.mockScenario != oldWidget.mockScenario ||
-        widget.repository != oldWidget.repository) {
+        widget.repository != oldWidget.repository ||
+        widget.loader != oldWidget.loader) {
+      _configureLoader();
       _homeFuture = _fetchHome();
     }
   }

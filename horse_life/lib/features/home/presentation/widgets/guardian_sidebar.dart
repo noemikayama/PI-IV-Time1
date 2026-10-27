@@ -20,8 +20,8 @@
 // preservando o comportamento anterior da interface.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../core/widgets/app_snack_bar.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import '../../data/models/guardian_home_data.dart';
 
 /// Menu lateral que compartilha a Future da Home e mantém o fluxo de logout recebido por callback.
@@ -102,17 +102,17 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Reutiliza a mesma Future da Home, evitando uma segunda chamada ao servidor.
-                        FutureBuilder<GuardianHomeData>(
+              FutureBuilder<GuardianHomeData>(
                           future: widget.homeFuture,
                           builder: (context, snapshot) => Text(
-                            snapshot.data?.guardianName ?? '<Usuário>',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          snapshot.data?.guardianName ?? '<Usuário>',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
                           ),
                         ),
 
@@ -127,11 +127,11 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                         FutureBuilder<GuardianHomeData>(
                           future: widget.homeFuture,
                           builder: (context, snapshot) => Text(
-                            'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
+                          'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
                           ),
                         ),
                       ],

@@ -16,7 +16,7 @@
 // Professional, preservando os contratos e visuais de ambos os perfis.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 
 /// Estrutura visual reutilizável para as seções da Home.
 class HomeSectionCard extends StatelessWidget {

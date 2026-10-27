@@ -14,7 +14,7 @@
 // preservando o comportamento anterior da interface.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 import '../../data/models/guardian_home_data.dart';
 import 'guardian_section_card.dart';
 import 'horse_asset_icon.dart';

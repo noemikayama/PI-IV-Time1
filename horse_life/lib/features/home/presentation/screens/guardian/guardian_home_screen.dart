@@ -19,21 +19,27 @@
 // Functions; documentação das responsabilidades e lógicas principais,
 // preservando o comportamento anterior da interface.
 // -----------------------------------------------------------------------------
+
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Injeção de HomeLoader; acesso a Firebase saiu da screen.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import '../../widgets/home_app_bar.dart';
 import '../../widgets/home_bottom_nav_bar.dart';
 import '../../widgets/guardian_sidebar.dart';
 import '../../widgets/guardian_home_content.dart';
 import '../../../data/models/guardian_home_data.dart';
-import '../../../data/services/mock_guardian_home_service.dart';
-import '../../../data/services/guardian_home_service.dart';
-import '../../../data/repositories/guardian_repository.dart';
+import '../../../application/controllers/home_loader.dart';
+import '../../../home_composition.dart';
 
 /// Coordena fonte de dados, estado de navegação e compartilhamento da Future entre corpo e sidebar.
 class GuardianHomeScreen extends StatefulWidget {
   const GuardianHomeScreen({
     required this.onLogout,
     this.mockScenario,
+    this.loader,
     this.onRegisterHorse,
     super.key,
   });
@@ -41,6 +47,9 @@ class GuardianHomeScreen extends StatefulWidget {
   // Informe normal, empty ou completed apenas em testes.
   // Null ativa as Cloud Functions reais.
   final String? mockScenario;
+
+  /// Dependência injetada pela raiz. Se ausente, aplica composição legada.
+  final HomeLoader<GuardianHomeData>? loader;
 
   // Navegação futura para o cadastro de cavalos.
   final VoidCallback? onRegisterHorse;
@@ -58,13 +67,13 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   int _selectedIndex = 0;
   late Future<GuardianHomeData> _homeFuture;
 
-  Future<GuardianHomeData> _fetchHome() {
-    if (widget.mockScenario != null) {
-      return const MockGuardianHomeService().fetchHome(
-        scenario: widget.mockScenario!,
-      );
-    }
-    return GuardianHomeService(FirebaseGuardianRepository()).fetchHome();
+  late HomeLoader<GuardianHomeData> _loader;
+
+  Future<GuardianHomeData> _fetchHome() => _loader.fetchHome();
+
+  void _configureLoader() {
+    _loader = widget.loader ??
+        HomeComposition.guardian(mockScenario: widget.mockScenario);
   }
 
   void _retryHome() {
@@ -74,13 +83,16 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   @override
   void initState() {
     super.initState();
+    _configureLoader();
     _homeFuture = _fetchHome();
   }
 
   @override
   void didUpdateWidget(covariant GuardianHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.mockScenario != widget.mockScenario) {
+    if (oldWidget.mockScenario != widget.mockScenario ||
+        oldWidget.loader != widget.loader) {
+      _configureLoader();
       _homeFuture = _fetchHome();
     }
   }

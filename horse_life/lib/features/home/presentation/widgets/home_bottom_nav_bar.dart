@@ -20,7 +20,7 @@
 // preservando o comportamento anterior da interface.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 
 /// Barra inferior controlada pela Screen; recebe índice ativo e callback de seleção.
 class HomeBottomNavBar extends StatelessWidget {

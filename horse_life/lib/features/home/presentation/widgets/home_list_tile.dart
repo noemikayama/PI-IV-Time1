@@ -17,7 +17,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../../../app/theme/app_colors.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 import 'horse_asset_icon.dart';
 
 enum HomeListTileDensity { spacious, compact }
