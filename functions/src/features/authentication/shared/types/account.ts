@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Definição dos tipos de recuperação de senha.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Definição dos tipos de login
@@ -39,6 +43,13 @@ export type LoginResult = {
     customToken: string;
     role: Role;
     nome: string;
+};
+
+export type PasswordResetInput = Pick<Credentials, "email">;
+
+// Resposta sempre genérica: não revela se o e-mail possui conta.
+export type PasswordResetResult = {
+    mensagem: string;
 };
 
 // Conta localizada pelo UID do Firebase, em responsaveis ou treinadores.
