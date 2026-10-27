@@ -18,6 +18,13 @@
 // dados comuns e remoção das mídias e regiões previamente adicionadas.
 // -----------------------------------------------------------------------------
 
+//
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Conecta o login pós-cadastro ao LoginFlowRoute, mantendo
+// a mensagem de erro inicial e a autenticação efetiva.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -32,7 +39,7 @@ import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import '../widgets/editable_review_field.dart';
 import '../widgets/registration_progress_indicator.dart';
-import 'login_screen.dart';
+import '../routes/login_flow_route.dart';
 
 typedef TrainerPasswordEditRequested =
     void Function(TrainerRegistrationDraft registration);
@@ -258,10 +265,7 @@ class _TrainerConfirmationScreenState extends State<TrainerConfirmationScreen> {
       return;
     }
     Navigator.of(context).pushAndRemoveUntil<void>(
-      MaterialPageRoute<void>(
-        builder: (context) =>
-            LoginScreen(initialErrorMessage: initialErrorMessage),
-      ),
+      LoginFlowRoute.build(initialErrorMessage: initialErrorMessage),
       (route) => false,
     );
   }

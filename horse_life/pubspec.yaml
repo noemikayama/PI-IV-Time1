@@ -85,7 +85,8 @@ flutter:
     - assets/foto_cavalo_tela_inicial.jpg
     - assets/Logo_HorseLife.png
     - assets/Logo_somente_simbolo.png
-
+    - assets/black-head-horse.png
+    
   # Famílias locais usadas pelo AppTheme, sem carregamento em rede.
   fonts:
     - family: LeagueSpartan
