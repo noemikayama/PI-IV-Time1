@@ -44,6 +44,8 @@ export async function findModalityById(
   return db
     .collection<ModalityDocument>(COLLECTIONS.Modalidades)
     .findOne({_id: id});
+}
+
 /** Busca as modalidades cadastradas entre os IDs informados.
  * IDs sem cadastro simplesmente não aparecem no resultado.
  * @param {ObjectId[]} ids IDs das modalidades.
