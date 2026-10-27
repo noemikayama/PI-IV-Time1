@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Busca de uma modalidade pelo _id (cadastro de cavalos).
+//
 // Data: 21/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Consulta de modalidades por ID (somente leitura).
@@ -30,6 +34,16 @@ export async function findAllModalities(): Promise<ModalityDocument[]> {
     .toArray();
 }
 
+/** Busca uma modalidade pelo _id.
+ * @param {ObjectId} id _id da modalidade.
+ */
+export async function findModalityById(
+  id: ObjectId
+): Promise<ModalityDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<ModalityDocument>(COLLECTIONS.Modalidades)
+    .findOne({_id: id});
 /** Busca as modalidades cadastradas entre os IDs informados.
  * IDs sem cadastro simplesmente não aparecem no resultado.
  * @param {ObjectId[]} ids IDs das modalidades.
