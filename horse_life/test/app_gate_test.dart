@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da restauração da sessão, abertura da home e retorno ao
+// conteúdo público depois do logout.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da splash de quatro segundos, do carregamento
@@ -13,6 +18,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/app.dart';
+import 'package:horse_life/features/authentication/application/states/login_session.dart';
+import 'package:horse_life/features/authentication/data/repositories/authentication_session_repository.dart';
+import 'package:horse_life/features/home/presentation/screens/home_screen.dart';
 
 void main() {
   // Cenário 1: inicialização imediata ainda respeita a duração visual mínima.
@@ -105,4 +113,82 @@ void main() {
     expect(attempts, 2);
     expect(find.text('Início'), findsOneWidget);
   });
+
+  testWidgets('restores an authenticated session and opens the home', (
+    tester,
+  ) async {
+    final repository = _FakeSessionRepository();
+    addTearDown(repository.dispose);
+
+    await tester.pumpWidget(
+      HorseLifeApp(
+        initializeApp: () async {},
+        home: const Text('Boas-vindas'),
+        sessionRepository: repository,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 4));
+
+    repository.emit(
+      const LoginSession(
+        uid: 'guardian-uid',
+        name: 'Ana Silva',
+        role: AuthenticationRole.guardian,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.text('Sair'), findsOneWidget);
+    expect(find.text('Boas-vindas'), findsNothing);
+  });
+
+  testWidgets('returns to the public content after signing out', (
+    tester,
+  ) async {
+    final repository = _FakeSessionRepository();
+    addTearDown(repository.dispose);
+
+    await tester.pumpWidget(
+      HorseLifeApp(
+        initializeApp: () async {},
+        home: const Text('Boas-vindas'),
+        sessionRepository: repository,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 4));
+    repository.emit(
+      const LoginSession(
+        uid: 'trainer-uid',
+        name: 'Bruno Lima',
+        role: AuthenticationRole.trainer,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('sign-out-button')));
+    await tester.pumpAndSettle();
+
+    expect(repository.signOutCalls, 1);
+    expect(find.text('Boas-vindas'), findsOneWidget);
+    expect(find.byType(HomeScreen), findsNothing);
+  });
+}
+
+final class _FakeSessionRepository implements AuthenticationSessionRepository {
+  final _controller = StreamController<LoginSession?>();
+  var signOutCalls = 0;
+
+  void emit(LoginSession? session) => _controller.add(session);
+
+  void dispose() => _controller.close();
+
+  @override
+  Stream<LoginSession?> watchSession() => _controller.stream;
+
+  @override
+  Future<void> signOut() async {
+    signOutCalls++;
+    emit(null);
+  }
 }

@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ajuste do estilo bodySmall para os textos auxiliares do cadastro.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição do carregamento dinâmico pela aplicação das famílias
+// locais LeagueSpartan e Urbanist na escala tipográfica central do tema.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do tema claro do HorseLife com paleta, tipografia e
@@ -9,8 +18,6 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import 'app_colors.dart';
 
 // Constrói os temas globais da aplicação a partir dos tokens institucionais.
@@ -31,8 +38,8 @@ abstract final class AppTheme {
     );
 
     // Aplicação das famílias tipográficas sobre a escala definida abaixo.
-    final headingTextTheme = GoogleFonts.leagueSpartanTextTheme(_textTheme);
-    final bodyTextTheme = GoogleFonts.urbanistTextTheme(_textTheme);
+    final headingTextTheme = _textTheme.apply(fontFamily: 'LeagueSpartan');
+    final bodyTextTheme = _textTheme.apply(fontFamily: 'Urbanist');
 
     // Combinação de League Spartan nos títulos e Urbanist nos demais textos.
     final textTheme = TextTheme(
@@ -119,7 +126,7 @@ abstract final class AppTheme {
     );
   }
 
-  // Escala tipográfica base, independente das famílias aplicadas no tema.
+  // Escala tipográfica base; as famílias locais são aplicadas por categoria.
   static const _textTheme = TextTheme(
     displayLarge: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
     displayMedium: TextStyle(fontSize: 36, fontWeight: FontWeight.w700),
@@ -132,9 +139,9 @@ abstract final class AppTheme {
     titleSmall: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
     bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
     bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-    bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-    labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-    labelMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+    bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w300),
+    labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+    labelMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     labelSmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
   );
 }

@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Adaptação dos cenários ao contrato de sessão tipada, às falhas
+// do repositório e à limpeza da senha após autenticação.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Aplicação do AppTheme.light no ambiente de teste para reproduzir
+// a configuração visual usada pela aplicação.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos testes da tela de login para validar conteúdo,
@@ -13,17 +23,32 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/core/widgets/app_text_form_field.dart';
+import 'package:horse_life/features/authentication/application/states/login_session.dart';
+import 'package:horse_life/features/authentication/data/repositories/login_repository.dart';
 import 'package:horse_life/features/authentication/presentation/screens/login_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/profile_selection_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/welcome_screen.dart';
 
 void main() {
+  const session = LoginSession(
+    uid: 'guardian-uid',
+    name: 'Ana Silva',
+    role: AuthenticationRole.guardian,
+  );
+
+  Widget buildApp(Widget home) {
+    return MaterialApp(theme: AppTheme.light, home: home);
+  }
+
   // Cenário 1: conteúdo inicial e alternância da visibilidade da senha.
   testWidgets('shows the login content and toggles password visibility', (
     tester,
   ) async {
     // Preparação da tela sem integração remota.
-    await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
+    await tester.pumpWidget(buildApp(const LoginScreen()));
 
     // Verificação dos elementos essenciais da interface.
     expect(find.text('Login'), findsOneWidget);
@@ -51,6 +76,46 @@ void main() {
     expect(find.byTooltip('Ocultar senha'), findsOneWidget);
   });
 
+  testWidgets('returns to the welcome screen from the back button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const LoginScreen()));
+
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(WelcomeScreen), findsOneWidget);
+    expect(find.byType(LoginScreen), findsNothing);
+  });
+
+  testWidgets(
+    'pops the login when the welcome screen is already in the stack',
+    (tester) async {
+      await tester.pumpWidget(buildApp(const WelcomeScreen()));
+
+      await tester.tap(find.text('Acessar conta'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Voltar'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WelcomeScreen), findsOneWidget);
+      expect(find.byType(LoginScreen), findsNothing);
+    },
+  );
+
+  testWidgets('opens profile selection from the sign-up action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const LoginScreen()));
+
+    await tester.ensureVisible(find.text('Cadastre-se'));
+    await tester.tap(find.text('Cadastre-se'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSelectionScreen), findsOneWidget);
+    expect(find.text('Seleção de perfil'), findsOneWidget);
+  });
+
   // Cenário 2: validação local e encaminhamento normalizado das credenciais.
   testWidgets('validates and submits normalized credentials', (tester) async {
     String? submittedEmail;
@@ -58,12 +123,12 @@ void main() {
 
     // Preparação de um login controlado que captura os valores recebidos.
     await tester.pumpWidget(
-      MaterialApp(
-        home: LoginScreen(
+      buildApp(
+        LoginScreen(
           login: (email, password) async {
             submittedEmail = email;
             submittedPassword = password;
-            return true;
+            return session;
           },
         ),
       ),
@@ -98,7 +163,12 @@ void main() {
   ) async {
     // Preparação de uma resposta negativa do serviço de login.
     await tester.pumpWidget(
-      MaterialApp(home: LoginScreen(login: (email, password) async => false)),
+      buildApp(
+        LoginScreen(
+          login: (email, password) async =>
+              throw const LoginFailure.invalidCredentials(),
+        ),
+      ),
     );
 
     // Submissão de credenciais preenchidas.
@@ -131,12 +201,10 @@ void main() {
     tester,
   ) async {
     // Future propositalmente pendente para simular o servidor sem resposta.
-    final serverResponse = Completer<bool>();
+    final serverResponse = Completer<LoginSession>();
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: LoginScreen(login: (email, password) => serverResponse.future),
-      ),
+      buildApp(LoginScreen(login: (email, password) => serverResponse.future)),
     );
 
     // Submissão e verificação do estado de processamento.
@@ -161,8 +229,8 @@ void main() {
   ) async {
     // Preparação de uma função que falha ao processar as credenciais.
     await tester.pumpWidget(
-      MaterialApp(
-        home: LoginScreen(
+      buildApp(
+        LoginScreen(
           login: (email, password) async => throw Exception('Network error'),
         ),
       ),
@@ -176,5 +244,23 @@ void main() {
     await tester.pump();
 
     expect(find.text('Erro de conexão com o servidor'), findsOneWidget);
+  });
+
+  testWidgets('clears the password after a successful login', (tester) async {
+    await tester.pumpWidget(
+      buildApp(LoginScreen(login: (email, password) async => session)),
+    );
+
+    await tester.enterText(find.byType(TextFormField).first, 'user@test.com');
+    await tester.enterText(find.byType(TextFormField).last, 'secret');
+    await tester.ensureVisible(find.text('Entrar'));
+    await tester.tap(find.text('Entrar'));
+    await tester.pump();
+
+    final passwordField = tester.widget<TextFormField>(
+      find.byType(TextFormField).last,
+    );
+    expect(passwordField.controller?.text, isEmpty);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 }

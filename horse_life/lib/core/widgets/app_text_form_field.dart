@@ -2,6 +2,20 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 16/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de ValueChanged<String> pelos typedefs
+// AppTextFormFieldChangedCallback e AppTextFormFieldSubmittedCallback.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do callback reativo onChanged para validação de senha.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção dos estilos locais e adoção de TextTheme, ColorScheme e
+// InputDecorationTheme para todos os estados visuais do campo.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do campo de formulário reutilizável com identidade visual
@@ -10,7 +24,10 @@
 
 import 'package:flutter/material.dart';
 
-// Campo de formulário configurável que preserva a identidade visual do app em
+typedef AppTextFormFieldChangedCallback = void Function(String value);
+typedef AppTextFormFieldSubmittedCallback = void Function(String value);
+
+// Campo de formulário configurável que herda a identidade visual do tema em
 // diferentes tipos de entrada.
 class AppTextFormField extends StatelessWidget {
   const AppTextFormField({
@@ -19,6 +36,7 @@ class AppTextFormField extends StatelessWidget {
     this.autofillHints,
     this.keyboardType,
     this.obscureText = false,
+    this.onChanged,
     this.onFieldSubmitted,
     this.suffixIcon,
     this.textInputAction,
@@ -26,17 +44,15 @@ class AppTextFormField extends StatelessWidget {
     super.key,
   });
 
-  // Cores compartilhadas pela decoração do campo.
-  static const _brandGreen = Color(0xFF009373);
-  static const _hintColor = Color(0xFF858585);
-
   // Contrato de conteúdo, comportamento e validação recebido pela tela.
   final TextEditingController controller;
   final String hintText;
   final Iterable<String>? autofillHints;
   final TextInputType? keyboardType;
   final bool obscureText;
-  final ValueChanged<String>? onFieldSubmitted;
+  // Permite que telas atualizem validações e indicadores enquanto há digitação.
+  final AppTextFormFieldChangedCallback? onChanged;
+  final AppTextFormFieldSubmittedCallback? onFieldSubmitted;
   final Widget? suffixIcon;
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
@@ -44,6 +60,8 @@ class AppTextFormField extends StatelessWidget {
   // Montagem do campo e de seus estados visuais.
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     // Mantém o comportamento do campo configurável sem repetir seu estilo.
     return TextFormField(
       controller: controller,
@@ -51,38 +69,20 @@ class AppTextFormField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscureText,
       obscuringCharacter: '•',
+      onChanged: onChanged,
       onFieldSubmitted: onFieldSubmitted,
       textInputAction: textInputAction,
       validator: validator,
-      cursorColor: _brandGreen,
-      style: const TextStyle(
-        fontSize: 20,
-        color: Colors.black87,
-        fontFamily: 'Urbanist',
-      ),
+      cursorColor: theme.colorScheme.primary,
+      style: theme.textTheme.headlineSmall,
       decoration: InputDecoration(
         hintText: hintText,
-        hintStyle: const TextStyle(
-          color: _hintColor,
-          fontSize: 20,
-          fontWeight: FontWeight.w400,
-          fontFamily: 'Urbanist',
+        hintStyle: theme.textTheme.headlineSmall?.copyWith(
+          color: theme.inputDecorationTheme.hintStyle?.color,
         ),
         contentPadding: const EdgeInsets.only(top: 14, bottom: 12),
         suffixIcon: suffixIcon,
-        suffixIconColor: _brandGreen,
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: _brandGreen, width: 2),
-        ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: _brandGreen, width: 2.5),
-        ),
-        errorBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.redAccent, width: 2),
-        ),
-        focusedErrorBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.redAccent, width: 2.5),
-        ),
+        suffixIconColor: theme.colorScheme.primary,
       ),
     );
   }

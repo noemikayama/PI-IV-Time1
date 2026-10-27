@@ -2,53 +2,73 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração da submissão com uma sessão autenticada tipada,
+// tratamento das falhas do repositório e fechamento da rota após o sucesso.
+// Alteração: Direcionamento do retorno para a tela de boas-vindas, delegação
+// da abertura do cadastro à RegistrationFlowRoute e remoção do controller de
+// cadastro da interface da tela, com suporte a avisos de cadastros parciais.
+//
+// Data: 15/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ajuste do espaçamento entre o título e a mensagem de boas-vindas.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição de cores, fontes e estilos locais pelos papéis
+// semânticos de TextTheme, ColorScheme e pelos temas globais de componentes.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da tela de login responsiva com validação, controle de
 // senha, submissão assíncrona, timeout, mensagens centralizadas e tratamento
 // de credenciais incorretas ou falhas de conexão com a SnackBar genérica e
 // reutilizável da aplicação.
-// Futuramente, haverá no backend uma callable chamada `login`; como ela ainda
-// não existe, este código deverá ser reajustado quando a Function for criada.
 // -----------------------------------------------------------------------------
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/app_text_form_field.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import '../../application/states/login_session.dart';
+import '../../data/repositories/login_repository.dart';
 import '../messages/authentication_error_messages.dart';
+import '../routes/registration_flow_route.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
+import 'welcome_screen.dart';
+
+typedef LoginOperation =
+    Future<LoginSession> Function(String email, String password);
 
 // Tela responsável pela entrada das credenciais e pela apresentação dos
-// estados locais do login. A integração definitiva será conectada quando a
-// callable correspondente existir no backend.
+// estados locais do login, com aparência herdada do tema institucional.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     this.onBack,
     this.onForgotPassword,
     this.login,
-    this.onSignUp,
+    this.initialErrorMessage,
     super.key,
   });
 
-  // Ações externas e contrato temporário da futura operação de login.
-  final VoidCallback? onBack;
+  // Ações externas e contratos injetáveis do fluxo de login.
+  final VoidCallback? onBack; 
   final VoidCallback? onForgotPassword;
-  final Future<bool> Function(String email, String password)? login;
-  final VoidCallback? onSignUp;
+  final LoginOperation? login;
+  final String? initialErrorMessage;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Configuração visual e limite de espera da operação remota.
-  static const _backgroundColor = Color(0xFFFAFAFA);
-  static const _errorSnackBarColor = Color(0xFFAA0000);
+  // Limite de espera da operação remota.
   static const _loginTimeout = Duration(seconds: 10);
 
   // Estado e controladores pertencentes ao formulário.
@@ -60,6 +80,18 @@ class _LoginScreenState extends State<LoginScreen> {
   // duplicados.
   bool _isPasswordVisible = false;
   bool _isSubmitting = false;
+  bool _didShowInitialError = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final initialErrorMessage = widget.initialErrorMessage;
+    if (_didShowInitialError || initialErrorMessage == null) return;
+    _didShowInitialError = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showSnackBar(initialErrorMessage);
+    });
+  }
 
   // Liberação dos recursos criados e mantidos pela tela.
   @override
@@ -91,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     AppSnackBar.show(
       context,
-      backgroundColor: _errorSnackBarColor,
+      backgroundColor: Theme.of(context).colorScheme.error,
       icon: Icons.error,
       message: message,
     );
@@ -104,8 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate() || _isSubmitting) return;
 
-    // Enquanto o backend não fornece a callable, a ausência da função é
-    // tratada da mesma forma que uma indisponibilidade do servidor.
+    // A ausência de uma operação configurada é tratada como indisponibilidade.
     final login = widget.login;
     if (login == null) {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);
@@ -115,14 +146,16 @@ class _LoginScreenState extends State<LoginScreen> {
     // Mantém o botão bloqueado até sucesso, falha ou expiração do timeout.
     setState(() => _isSubmitting = true);
     try {
-      final isAuthenticated = await login(
+      await login(
         _emailController.text.trim(),
         _passwordController.text,
       ).timeout(_loginTimeout);
-
-      if (!isAuthenticated) {
-        _showSnackBar(AuthenticationErrorMessages.invalidCredentials);
-      }
+      _passwordController.clear();
+      TextInput.finishAutofillContext();
+      if (!mounted) return;
+      Navigator.maybePop(context);
+    } on LoginFailure catch (error) {
+      _showSnackBar(error.message);
     } on TimeoutException {
       _showSnackBar(AuthenticationErrorMessages.serverConnection);
     } catch (_) {
@@ -132,23 +165,33 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Navegação de retorno injetável, com fallback para a pilha atual.
+  // Reutiliza a tela anterior ou recria o início quando o login é a raiz.
   void _goBack() {
     final onBack = widget.onBack;
     if (onBack != null) {
       onBack();
       return;
     }
-    Navigator.maybePop(context);
+
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+
+    navigator.pushReplacement<void, void>(
+      MaterialPageRoute<void>(builder: (context) => const WelcomeScreen()),
+    );
   }
 
   // Estrutura responsiva da tela.
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     // Permite rolagem com teclado aberto e preserva a composição em telas
     // maiores.
     return Scaffold(
-      backgroundColor: _backgroundColor,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -163,26 +206,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Cabeçalho e apresentação do fluxo.
                     AuthHeader(onBack: _goBack),
                     const SizedBox(height: 80),
-                    const Text(
-                      'Login',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                        fontFamily: 'Leage Spartan',
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    Text('Login', style: textTheme.displaySmall),
+                    const SizedBox(height: 24),
+                    Text(
                       'É muito bom te ter de volta!\nPronto para mais um?',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        height: 1.25,
-                        fontWeight: FontWeight.w300,
-                        fontFamily: 'Urbanist',
-                      ),
+                      style: textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 48),
                     // Formulário de credenciais e ações relacionadas.
@@ -244,21 +273,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onPressed: _submit,
                               ),
                               const SizedBox(height: 22),
-                              const Text(
+                              Text(
                                 'Ainda não possui uma conta?',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: 'Urbanist',
-                                ),
+                                style: textTheme.labelMedium,
                               ),
                               const SizedBox(height: 2),
                               Align(
                                 child: AuthLink(
                                   label: 'Cadastre-se',
-                                  onPressed: widget.onSignUp ?? () {},
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    RegistrationFlowRoute.build(),
+                                  ),
                                 ),
                               ),
                             ],
