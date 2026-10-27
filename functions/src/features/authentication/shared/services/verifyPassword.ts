@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Uso da URL compartilhada do Identity Toolkit.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Uso de códigos previstos em AppErrorCode e padronização.
@@ -11,7 +15,9 @@
 // Alteração: Criação da verificação de senha
 // -----------------------------------------------------------------------------
 
-import {WEB_API_KEY} from "../../../../shared/config/environment";
+import {
+  identityToolkitUrl,
+} from "../../../../shared/config/identityToolkit";
 import {AppError} from "../../../../shared/errors/AppError";
 
 type SignInResponse = {localId?: string; error?: {message?: string}};
@@ -24,19 +30,11 @@ export async function verifyPassword(
   email: string,
   password: string
 ): Promise<string> {
-  const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
-  const baseUrl = emulatorHost ?
-    `http://${emulatorHost}/identitytoolkit.googleapis.com` :
-    "https://identitytoolkit.googleapis.com";
-
-  const response = await fetch(
-    `${baseUrl}/v1/accounts:signInWithPassword?key=${WEB_API_KEY.value()}`,
-    {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({email, password, returnSecureToken: true}),
-    }
-  );
+  const response = await fetch(identityToolkitUrl("signInWithPassword"), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({email, password, returnSecureToken: true}),
+  });
   const body = (await response.json()) as SignInResponse;
 
   if (response.ok && body.localId) return body.localId;

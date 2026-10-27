@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Uso da checagem de código de erro compartilhada.
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Criação e remoção de contas no Firebase Authentication.
@@ -11,17 +15,10 @@ import {logger} from "firebase-functions";
 import {auth} from "../../../../shared/config/firebase";
 import type {Role} from "../../../../shared/constants/roles";
 import {AppError} from "../../../../shared/errors/AppError";
+import {
+  hasFirebaseErrorCode,
+} from "../../../../shared/errors/firebaseErrorCode";
 import type {Credentials} from "../types";
-
-/** Verifica se o erro contém o código solicitado.
- * @param {unknown} error Erro recebido.
- * @param {string} code Código procurado.
- * @return {boolean} Indica se os códigos correspondem.
- */
-function hasCode(error: unknown, code: string): boolean {
-  return typeof error === "object" && error !== null &&
-        (error as {code?: unknown}).code === code;
-}
 
 /** Cria a conta no Firebase Auth e define sua role como custom claim.
  * @param {Credentials} credentials Credenciais da conta.
@@ -47,7 +44,7 @@ export async function createAuthAccount(
 
     return user.uid;
   } catch (error) {
-    if (hasCode(error, "auth/email-already-exists")) {
+    if (hasFirebaseErrorCode(error, "auth/email-already-exists")) {
       throw new AppError("already-exists", "E-mail já cadastrado.");
     }
     throw error;

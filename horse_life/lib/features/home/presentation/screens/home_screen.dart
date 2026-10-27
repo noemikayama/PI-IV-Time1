@@ -7,17 +7,26 @@
 // Alteração: Criação da home temporária com a ação de encerramento da sessão.
 // -----------------------------------------------------------------------------
 
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Removido acoplamento à camada interna de autenticação.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 
-import '../../../../core/widgets/app_snack_bar.dart';
-import '../../../authentication/presentation/messages/authentication_error_messages.dart';
+import 'package:horse_life/core/widgets/app_snack_bar.dart';
 
 typedef SignOutOperation = Future<void> Function();
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({required this.signOut, super.key});
+  const HomeScreen({
+    required this.signOut,
+    this.signOutErrorMessage = 'Não foi possível sair. Tente novamente.',
+    super.key,
+  });
 
   final SignOutOperation signOut;
+  final String signOutErrorMessage;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -37,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         context,
         backgroundColor: Theme.of(context).colorScheme.error,
         icon: Icons.error,
-        message: AuthenticationErrorMessages.serverConnection,
+        message: widget.signOutErrorMessage,
       );
     } finally {
       if (mounted) setState(() => _isSigningOut = false);

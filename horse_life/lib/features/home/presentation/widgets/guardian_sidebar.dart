@@ -1,0 +1,214 @@
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 13/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Implementação da estrutura inicial da Home do Responsável,
+// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
+// -----------------------------------------------------------------------------
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+// -----------------------------------------------------------------------------
+//
+// Data: 25/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração do GuardianRepository e dos modelos com as Cloud
+// Functions; documentação das responsabilidades e lógicas principais,
+// preservando o comportamento anterior da interface.
+// -----------------------------------------------------------------------------
+import 'package:flutter/material.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_snack_bar.dart';
+import '../../data/models/guardian_home_data.dart';
+
+/// Menu lateral que compartilha a Future da Home e mantém o fluxo de logout recebido por callback.
+class GuardianSidebar extends StatefulWidget {
+  const GuardianSidebar({required this.onLogout, this.homeFuture, super.key});
+
+  final Future<GuardianHomeData>? homeFuture;
+
+  final Future<void> Function() onLogout;
+
+  @override
+  State<GuardianSidebar> createState() => _GuardianSidebarState();
+}
+
+class _GuardianSidebarState extends State<GuardianSidebar> {
+  bool _isLoggingOut = false;
+
+  // Itens provisórios da Sidebar.
+  static const List<String> _menuItems = [
+    'Item 1',
+    'Item 1',
+    'Item 1',
+    'Item 1',
+  ];
+
+  Future<void> _handleLogout() async {
+    if (_isLoggingOut) return;
+
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      await widget.onLogout();
+    } catch (_) {
+      if (!mounted) return;
+
+      AppSnackBar.show(
+        context,
+        backgroundColor: AppColors.error,
+        icon: Icons.error_outline,
+        message: 'Não foi possível sair. Tente novamente.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoggingOut = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Drawer(
+      width: MediaQuery.sizeOf(context).width * 0.82,
+      backgroundColor: AppColors.blueSpruce,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cabeçalho do responsável.
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 36,
+                    backgroundColor: AppColors.alabasterGray,
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Reutiliza a mesma Future da Home, evitando uma segunda chamada ao servidor.
+              FutureBuilder<GuardianHomeData>(
+                          future: widget.homeFuture,
+                          builder: (context, snapshot) => Text(
+                          snapshot.data?.guardianName ?? '<Usuário>',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          ),
+                        ),
+
+                        Text(
+                          'Conta de responsável',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
+
+                        FutureBuilder<GuardianHomeData>(
+                          future: widget.homeFuture,
+                          builder: (context, snapshot) => Text(
+                          'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              const Divider(color: AppColors.alabasterGray),
+
+              const SizedBox(height: 12),
+
+              // Itens provisórios.
+              ..._menuItems.map(
+                (item) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  minTileHeight: 50,
+                  leading: const Icon(
+                    Icons.add_circle_outline_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  title: Text(
+                    item,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+
+                  // Sem ação até as telas serem criadas.
+                  onTap: null,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              const Divider(color: AppColors.alabasterGray),
+
+              const SizedBox(height: 8),
+
+              // Botão de logout.
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                enabled: !_isLoggingOut,
+
+                leading: _isLoggingOut
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.logout_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+
+                title: Text(
+                  _isLoggingOut ? 'Saindo...' : 'Sair',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontSize: 21,
+                  ),
+                ),
+
+                onTap: _isLoggingOut ? null : _handleLogout,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
