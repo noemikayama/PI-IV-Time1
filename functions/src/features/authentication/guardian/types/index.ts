@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos tipos da edição de modalidades.
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos tipos de responsável para o módulo.
@@ -16,4 +20,7 @@ export type {
   TreinoDiaResponsavel,
   HomeResponsavel,
   GuardianHomeSource,
+  GuardianModality,
+  UpdateGuardianModalitiesInput,
+  UpdateGuardianModalitiesResult,
 } from "./guardian";

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação do e-mail da recuperação de senha, com a checagem de
+// e-mail extraída para reaproveitamento no cadastro.
+//
 // Data: 14/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Inclusão da validação dos dados de login.
@@ -12,7 +17,7 @@
 // -----------------------------------------------------------------------------
 
 import {AppError} from "../../../../shared/errors/AppError";
-import type {Credentials, LoginInput} from "../types";
+import type {Credentials, LoginInput, PasswordResetInput} from "../types";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -35,6 +40,21 @@ export function asRecord(data: unknown): Record<string, unknown> {
   return data as Record<string, unknown>;
 }
 
+/** Valida o formato do e-mail e o normaliza.
+ * @param {unknown} email E-mail recebido.
+ * @return {string} E-mail sem espaços e em minúsculas.
+ */
+function parseEmail(email: unknown): string {
+  if (
+    typeof email !== "string" ||
+    email.length > 254 ||
+    !EMAIL_PATTERN.test(email.trim())
+  ) {
+    throw invalid("E-mail inválido.");
+  }
+  return email.trim().toLowerCase();
+}
+
 /** Valida e normaliza as credenciais usadas no cadastro.
  * @param {Object} data Dados recebidos.
  * @return {Credentials} Credenciais validadas e normalizadas.
@@ -49,22 +69,27 @@ export function parseCredentials(data: Record<string, unknown>): Credentials {
   ) {
     throw invalid("O nome deve ter entre 3 e 120 caracteres.");
   }
-  if (
-    typeof email !== "string" ||
-    email.length > 254 ||
-    !EMAIL_PATTERN.test(email.trim())
-  ) {
-    throw invalid("E-mail inválido.");
-  }
+  const normalizedEmail = parseEmail(email);
   if (typeof senha !== "string" || senha.length < 8 || senha.length > 128) {
     throw invalid("A senha deve ter entre 8 e 128 caracteres.");
   }
 
   return {
     nome: nome.trim(),
-    email: email.trim().toLowerCase(),
+    email: normalizedEmail,
     senha,
   };
+}
+
+/** Valida e normaliza o e-mail da recuperação de senha. O formato é a única
+ * checagem: a existência da conta nunca é verificada nem revelada.
+ * @param {unknown} data Dados recebidos pelo endpoint.
+ * @return {PasswordResetInput} E-mail normalizado.
+ */
+export function validatePasswordResetInput(
+  data: unknown
+): PasswordResetInput {
+  return {email: parseEmail(asRecord(data).email)};
 }
 
 /** Valida e normaliza e-mail e senha para autenticação.

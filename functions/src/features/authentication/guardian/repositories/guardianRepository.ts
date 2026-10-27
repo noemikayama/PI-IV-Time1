@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Atualização exclusiva do vínculo do responsável com modalidades.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Padronização do formato da consulta da home.
@@ -21,7 +25,12 @@ import type {ClientSession} from "mongodb";
 import {getDatabase} from "../../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../../shared/constants/collections";
 import {nextCode} from "../../../../shared/database/sequence";
-import type {GuardianDocument, NewGuardian, GuardianHomeSource} from "../types";
+import type {
+  GuardianDocument,
+  GuardianModality,
+  NewGuardian,
+  GuardianHomeSource,
+} from "../types";
 
 /** Grava o responsável e devolve o código sequencial atribuído.
  * @param {NewGuardian} guardian Dados do responsável.
@@ -66,4 +75,23 @@ export async function findGuardianHomeSource(
       {_id: uid},
       {projection: {nome: 1, situacaoCadastral: 1, cavalos: 1}}
     );
+}
+
+/** Substitui apenas a lista de modalidades do responsável.
+ * Nenhum outro campo é alterado além de 'atualizadoEm'.
+ * @param {string} uid UID do usuário.
+ * @param {GuardianModality[]} modalidades Novos vínculos.
+ * @param {Date} atualizadoEm Data da alteração.
+ * @return {Promise<boolean>} Se o responsável foi encontrado.
+ */
+export async function updateGuardianModalities(
+  uid: string,
+  modalidades: GuardianModality[],
+  atualizadoEm: Date
+): Promise<boolean> {
+  const db = await getDatabase();
+  const result = await db
+    .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
+    .updateOne({_id: uid}, {$set: {modalidades, atualizadoEm}});
+  return result.matchedCount === 1;
 }
