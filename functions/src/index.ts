@@ -4,6 +4,7 @@
 //
 // Data: 21/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da edição de modalidades do responsável.
 // Alteração: Exportação da função de logout.
 //
 // Data: 20/10/2026
@@ -23,6 +24,7 @@ export {
   registerGuardian,
   registerTrainer,
   getGuardianProfile,
+  updateGuardianModalities,
   getTrainerProfile,
   login,
   getHome,
