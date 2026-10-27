@@ -2,27 +2,29 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 13/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Implementação da estrutura inicial da Home do Responsável,
-// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
-// -----------------------------------------------------------------------------
-//
-// Data: 18/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
-// -----------------------------------------------------------------------------
+// Data: 27/10/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Migração do componente para core/widgets com ajuste dos imports.
 //
 // Data: 25/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do GuardianRepository e dos modelos com as Cloud
 // Functions; documentação das responsabilidades e lógicas principais,
 // preservando o comportamento anterior da interface.
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+//
+// Data: 13/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Implementação da estrutura inicial da Home do Responsável,
+// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
-import '../../data/models/guardian_home_data.dart';
+import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
 
 /// Menu lateral que compartilha a Future da Home e mantém o fluxo de logout recebido por callback.
 class GuardianSidebar extends StatefulWidget {
@@ -102,17 +104,17 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Reutiliza a mesma Future da Home, evitando uma segunda chamada ao servidor.
-              FutureBuilder<GuardianHomeData>(
+                        FutureBuilder<GuardianHomeData>(
                           future: widget.homeFuture,
                           builder: (context, snapshot) => Text(
-                          snapshot.data?.guardianName ?? '<Usuário>',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                          ),
+                            snapshot.data?.guardianName ?? '<Usuário>',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
 
@@ -127,11 +129,11 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                         FutureBuilder<GuardianHomeData>(
                           future: widget.homeFuture,
                           builder: (context, snapshot) => Text(
-                          'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
+                            'Animais registrados: ${snapshot.data?.horsesCount ?? 0}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
@@ -212,3 +214,4 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
     );
   }
 }
+

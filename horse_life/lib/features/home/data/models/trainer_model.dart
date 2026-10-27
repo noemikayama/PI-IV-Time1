@@ -16,40 +16,40 @@
 
 /// Contrato confirmado: getHome para a role trainer retorna HomeTreinador.
 /// A API ainda não expõe especialidade ou quantidade de planos ativos.
-class ProfessionalReference {
+class TrainerReference {
   final String id;
   final String name;
 
-  const ProfessionalReference({required this.id, required this.name});
+  const TrainerReference({required this.id, required this.name});
 
-  factory ProfessionalReference.fromJson(Map<String, dynamic> json) =>
-      ProfessionalReference(
+  factory TrainerReference.fromJson(Map<String, dynamic> json) =>
+      TrainerReference(
         id: _asId(json['id']),
         name: _asString(json['nome']),
       );
 }
 
-class ProfessionalProgress {
+class TrainerProgress {
   final int completed;
   final int total;
 
-  const ProfessionalProgress({required this.completed, required this.total});
+  const TrainerProgress({required this.completed, required this.total});
 
-  factory ProfessionalProgress.fromJson(Map<String, dynamic> json) =>
-      ProfessionalProgress(
+  factory TrainerProgress.fromJson(Map<String, dynamic> json) =>
+      TrainerProgress(
         completed: _asInt(json['feitos']),
         total: _asInt(json['total']),
       );
 }
 
-class ProfessionalTodayTraining {
+class TrainerTodayTraining {
   final String recordId;
   final String title;
   final String horseName;
   final String planName;
   final String? status;
 
-  const ProfessionalTodayTraining({
+  const TrainerTodayTraining({
     required this.recordId,
     required this.title,
     required this.horseName,
@@ -57,8 +57,8 @@ class ProfessionalTodayTraining {
     this.status,
   });
 
-  factory ProfessionalTodayTraining.fromJson(Map<String, dynamic> json) =>
-      ProfessionalTodayTraining(
+  factory TrainerTodayTraining.fromJson(Map<String, dynamic> json) =>
+      TrainerTodayTraining(
         recordId: _asId(json['registroId']),
         title: _asString(json['nomeTreino']),
         horseName: _asString(json['nomeCavalo']),
@@ -68,19 +68,19 @@ class ProfessionalTodayTraining {
 }
 
 /// Resposta retornada pela callable getHome quando tipoConta é TREINADOR.
-class ProfessionalHomeModel {
+class TrainerHomeModel {
   final String name;
   final String? specialty;
   final int totalHorses;
-  final List<ProfessionalTodayTraining> todayTrainings;
-  final ProfessionalProgress feedbacksWeek;
+  final List<TrainerTodayTraining> todayTrainings;
+  final TrainerProgress feedbacksWeek;
   final int? activePlans;
-  final ProfessionalProgress trainingsWeek;
+  final TrainerProgress trainingsWeek;
   final int createdExercises;
-  final List<ProfessionalReference> horses;
-  final List<ProfessionalReference> clients;
+  final List<TrainerReference> horses;
+  final List<TrainerReference> clients;
 
-  const ProfessionalHomeModel({
+  const TrainerHomeModel({
     required this.name,
     required this.specialty,
     required this.totalHorses,
@@ -93,7 +93,7 @@ class ProfessionalHomeModel {
     required this.clients,
   });
 
-  factory ProfessionalHomeModel.fromJson(Map<String, dynamic> json) {
+  factory TrainerHomeModel.fromJson(Map<String, dynamic> json) {
     final role = json['tipoConta'];
     if (role != 'TREINADOR') {
       throw FormatException(
@@ -101,26 +101,26 @@ class ProfessionalHomeModel {
       );
     }
 
-    return ProfessionalHomeModel(
+    return TrainerHomeModel(
       name: _asString(json['nome']),
       specialty: _optionalString(json['modalidade']), // Não enviado atualmente.
       totalHorses: _asInt(json['totalCavalos']),
       todayTrainings: _asList(json['treinosDoDia'])
-          .map((item) => ProfessionalTodayTraining.fromJson(_asMap(item)))
+          .map((item) => TrainerTodayTraining.fromJson(_asMap(item)))
           .toList(growable: false),
-      feedbacksWeek: ProfessionalProgress.fromJson(
+      feedbacksWeek: TrainerProgress.fromJson(
         _asMap(json['feedbacksSemana']),
       ),
       activePlans: _optionalInt(json['planosAtivos']), // Não enviado atualmente.
-      trainingsWeek: ProfessionalProgress.fromJson(
+      trainingsWeek: TrainerProgress.fromJson(
         _asMap(json['treinosSemana']),
       ),
       createdExercises: _asInt(json['totalExercicios']),
       horses: _asList(json['cavalos'])
-          .map((item) => ProfessionalReference.fromJson(_asMap(item)))
+          .map((item) => TrainerReference.fromJson(_asMap(item)))
           .toList(growable: false),
       clients: _asList(json['clientes'])
-          .map((item) => ProfessionalReference.fromJson(_asMap(item)))
+          .map((item) => TrainerReference.fromJson(_asMap(item)))
           .toList(growable: false),
     );
   }

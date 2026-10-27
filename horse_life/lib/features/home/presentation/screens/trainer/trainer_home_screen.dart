@@ -2,35 +2,38 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 18/10/2026
+// Data: 27/10/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização das importações de HomeAppBar, HomeBottomNavBar e
+// TrainerSidebar movidos para core/widgets/.
+//
+// Data: 27/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Implementação da Home do Profissional com AppBar e navegação
-// compartilhadas, Sidebar exclusiva, Mock API e três cenários de testes.
-// -----------------------------------------------------------------------------
+// Alteração: Movido para screens/trainer conforme arquitetura e injeção de HomeLoader.
 //
 // Data: 26/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração ao mesmo fluxo de Repository/Service usado no Guardian,
 // com Firebase por padrão e cenários mock explícitos para testes.
-// -----------------------------------------------------------------------------
-
-// Data: 27/10/2026
+//
+// Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Movido para screens/trainer conforme arquitetura e injeção de HomeLoader.
+// Alteração: Implementação da Home do Profissional com AppBar e navegação
+// compartilhadas, Sidebar exclusiva, Mock API e três cenários de testes.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../../data/models/professional_home_data.dart';
+import 'package:horse_life/core/widgets/home_app_bar.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
+import 'package:horse_life/core/widgets/trainer_sidebar.dart';
 import '../../../application/controllers/home_loader.dart';
+import '../../../data/models/trainer_home_data.dart';
+import '../../../data/repositories/trainer_repository.dart';
 import '../../../home_composition.dart';
-import '../../../data/repositories/professional_repository.dart';
-import '../../widgets/home_app_bar.dart';
-import '../../widgets/home_bottom_nav_bar.dart';
-import '../../widgets/professional_home_content.dart';
-import '../../widgets/professional_sidebar.dart';
+import '../../widgets/trainer_home_content.dart';
 
-class ProfessionalHomeScreen extends StatefulWidget {
-  const ProfessionalHomeScreen({
+class TrainerHomeScreen extends StatefulWidget {
+  const TrainerHomeScreen({
     super.key,
     required this.onLogout,
     this.mockScenario,
@@ -48,33 +51,33 @@ class ProfessionalHomeScreen extends StatefulWidget {
   /// null: Firebase real; 'normal', 'empty' ou 'error': Mock API.
   final String? mockScenario;
   /// Preferencialmente injetado pela raiz do aplicativo.
-  final HomeLoader<ProfessionalHomeData>? loader;
+  final HomeLoader<TrainerHomeData>? loader;
   /// Injeção opcional de repositório (por exemplo, em testes).
-  final ProfessionalRepository? repository;
+  final TrainerRepository? repository;
   final Future<void> Function() onLogout;
-  final ValueChanged<ProfessionalTraining>? onViewTraining;
-  final ValueChanged<ProfessionalHorse>? onSelectHorse;
-  final ValueChanged<ProfessionalClient>? onSelectClient;
+  final ValueChanged<TrainerTraining>? onViewTraining;
+  final ValueChanged<TrainerHorse>? onSelectHorse;
+  final ValueChanged<TrainerClient>? onSelectClient;
   final VoidCallback? onShowAllTrainings;
   final VoidCallback? onShowAllHorses;
   final VoidCallback? onShowAllClients;
   final ValueChanged<int>? onNavigationSelected;
 
   @override
-  State<ProfessionalHomeScreen> createState() => _ProfessionalHomeScreenState();
+  State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
 }
 
-class _ProfessionalHomeScreenState extends State<ProfessionalHomeScreen> {
-  late Future<ProfessionalHomeData> _homeFuture;
+class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
+  late Future<TrainerHomeData> _homeFuture;
   int _selectedIndex = 0;
 
-  late HomeLoader<ProfessionalHomeData> _loader;
+  late HomeLoader<TrainerHomeData> _loader;
 
   /// A sidebar e o conteúdo usam uma única Future, evitando chamadas duplicadas.
-  Future<ProfessionalHomeData> _fetchHome() => _loader.fetchHome();
+  Future<TrainerHomeData> _fetchHome() => _loader.fetchHome();
 
   void _configureLoader() {
-    _loader = widget.loader ?? HomeComposition.professional(
+    _loader = widget.loader ?? HomeComposition.trainer(
       mockScenario: widget.mockScenario,
       repository: widget.repository,
     );
@@ -90,7 +93,7 @@ class _ProfessionalHomeScreenState extends State<ProfessionalHomeScreen> {
   void _retry() => setState(() => _homeFuture = _fetchHome());
 
   @override
-  void didUpdateWidget(covariant ProfessionalHomeScreen oldWidget) {
+  void didUpdateWidget(covariant TrainerHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.mockScenario != oldWidget.mockScenario ||
         widget.repository != oldWidget.repository ||
@@ -105,11 +108,11 @@ class _ProfessionalHomeScreenState extends State<ProfessionalHomeScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const HomeAppBar(),
-      drawer: ProfessionalSidebar(
+      drawer: TrainerSidebar(
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
       ),
-      body: ProfessionalHomeContent(
+      body: TrainerHomeContent(
         homeFuture: _homeFuture,
         onRetry: _retry,
         onViewTraining: widget.onViewTraining,

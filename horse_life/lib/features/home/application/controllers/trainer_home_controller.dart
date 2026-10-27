@@ -12,18 +12,18 @@
 // Alteração: Movido para application/controllers e passou a implementar HomeLoader.
 // -----------------------------------------------------------------------------
 
-import '../../data/models/professional_home_data.dart';
-import '../../data/mappers/professional_home_mapper.dart';
+import '../../data/models/trainer_home_data.dart';
+import '../../data/mappers/trainer_home_mapper.dart';
 import 'home_loader.dart';
-import '../../data/repositories/professional_repository.dart';
+import '../../data/repositories/trainer_repository.dart';
 
 /// Busca no repository e traduz a resposta da API para dados da interface.
-class ProfessionalHomeController implements HomeLoader<ProfessionalHomeData> {
-  final ProfessionalRepository repository;
+class TrainerHomeController implements HomeLoader<TrainerHomeData> {
+  final TrainerRepository repository;
 
-  ProfessionalHomeController(this.repository);
+  TrainerHomeController(this.repository);
 
   @override
-  Future<ProfessionalHomeData> fetchHome() async =>
+  Future<TrainerHomeData> fetchHome() async =>
       (await repository.getHome()).toViewData();
 }
