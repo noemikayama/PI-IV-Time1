@@ -16,6 +16,12 @@
 // Professional, preservando os contratos e visuais de ambos os perfis.
 // -----------------------------------------------------------------------------
 
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Suporte a indicador sem dados disponíveis (—), preservando
+// os valores numéricos dos cards Guardian e dos cenários simulados.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 
 /// Os dois layouts existentes são preservados enquanto os dados e a API
@@ -33,7 +39,7 @@ class HomeStatsCard extends StatelessWidget {
   });
 
   final String title;
-  final int value;
+  final int? value;
   final int? total;
   final List<Color> gradientColors;
   final HomeStatsCardStyle style;
@@ -42,26 +48,30 @@ class HomeStatsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final compact = style == HomeStatsCardStyle.professional;
-    final number = RichText(
-      text: TextSpan(children: [
-        TextSpan(
-          text: '$value',
-          style: theme.textTheme.displayMedium?.copyWith(
-            color: Colors.white,
-            fontSize: compact ? 48 : 52,
-            fontWeight: compact ? FontWeight.w400 : FontWeight.w500,
-          ),
-        ),
-        // O Professional omite '/0'; o Guardian preserva sua exibição.
-        if (total != null && (!compact || total! > 0))
+    final number = Text.rich(
+      TextSpan(
+        children: [
           TextSpan(
-            text: '/$total',
-            style: compact
-                ? theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white, fontSize: 16)
-                : theme.textTheme.titleMedium?.copyWith(color: Colors.white),
+            text: value?.toString() ?? '—',
+            style: theme.textTheme.displayMedium?.copyWith(
+              color: Colors.white,
+              fontSize: compact ? 48 : 52,
+              fontWeight: compact ? FontWeight.w400 : FontWeight.w500,
+            ),
           ),
-      ]),
+          if (total != null && (!compact || total! > 0))
+            TextSpan(
+              text: '/$total',
+              style: compact
+                  ? theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontSize: 16,
+                    )
+                  : theme.textTheme.titleMedium?.copyWith(color: Colors.white),
+            ),
+        ],
+      ),
+      semanticsLabel: value == null ? 'Dado indisponível' : null,
     );
 
     if (compact) {
@@ -125,7 +135,9 @@ class HomeStatsCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Center(child: FittedBox(fit: BoxFit.scaleDown, child: number)),
+          Center(
+            child: FittedBox(fit: BoxFit.scaleDown, child: number),
+          ),
         ],
       ),
     );

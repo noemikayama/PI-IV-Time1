@@ -16,27 +16,30 @@
 // Alteração: Criação do arquivo para inicializar os serviços do Flutter e
 // montar a raiz do HorseLife com o carregamento do Firebase e a tela de login
 // como destino inicial.
+//
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração da composição de dependências na raiz e seleção
+// das Homes pelo papel autenticado, sem duplicar o MaterialApp.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:horse_life/app/app.dart';
+import 'package:horse_life/app/app_dependencies.dart';
+import 'package:horse_life/core/firebase/firebase_bootstrap.dart';
+import 'package:horse_life/features/authentication/presentation/screens/welcome_screen.dart';
 
-import 'app/app.dart';
-import 'core/firebase/firebase_bootstrap.dart';
-import 'features/authentication/data/repositories/firebase_authentication_session_repository.dart';
-import 'features/authentication/presentation/screens/welcome_screen.dart';
-
-// Ponto de entrada da aplicação.
 void main() {
-  // Prepara os serviços do Flutter antes de iniciar as dependências
-  // assíncronas.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Monta a aplicação com a inicialização do Firebase e a tela principal.
+  // Os adapters são criados aqui, mas só acessam o Firebase após o bootstrap.
+  final dependencies = AppDependencies.production();
+
   runApp(
     HorseLifeApp(
       initializeApp: FirebaseBootstrap.initialize,
       home: const WelcomeScreen(),
-      sessionRepository: const FirebaseAuthenticationSessionRepository(),
+      dependencies: dependencies,
     ),
   );
 }

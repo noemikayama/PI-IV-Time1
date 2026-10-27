@@ -24,6 +24,13 @@
 // não foi implementada.
 // -----------------------------------------------------------------------------
 
+//
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Após cadastro, abre o fluxo de login configurado com controller
+// e repositório, permitindo ao AppGate direcionar a Home conforme o papel.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -36,7 +43,7 @@ import '../widgets/auth_header.dart';
 import '../widgets/auth_next_button.dart';
 import '../widgets/editable_review_field.dart';
 import '../widgets/registration_progress_indicator.dart';
-import 'login_screen.dart';
+import '../routes/login_flow_route.dart';
 
 typedef GuardianPasswordEditRequested =
     void Function(GuardianRegistrationDraft registration);
@@ -224,7 +231,7 @@ class _GuardianConfirmationScreenState
         onCreated();
       } else {
         Navigator.of(context).pushAndRemoveUntil<void>(
-          MaterialPageRoute<void>(builder: (context) => const LoginScreen()),
+          LoginFlowRoute.build(),
           (route) => false,
         );
       }

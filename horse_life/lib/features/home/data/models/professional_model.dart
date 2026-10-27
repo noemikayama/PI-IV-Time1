@@ -7,9 +7,15 @@
 // seguindo a separação entre API e apresentação adotada no Guardian.
 // -----------------------------------------------------------------------------
 
-/// IMPORTANTE: as chaves JSON abaixo ainda precisam ser conferidas com o
-/// contrato TypeScript REAL do backend Professional. Os campos foram inferidos
-/// do protótipo da tela, não de uma Function disponibilizada neste pacote.
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Alinhamento do modelo Professional ao tipo HomeTreinador de
+// functions/src/features/authentication/trainer/types/trainer.ts.
+// Campos ausentes da API não são transformados em contagens fictícias.
+// -----------------------------------------------------------------------------
+
+/// Contrato confirmado: getHome para a role trainer retorna HomeTreinador.
+/// A API ainda não expõe especialidade ou quantidade de planos ativos.
 class ProfessionalReference {
   final String id;
   final String name;
@@ -61,14 +67,14 @@ class ProfessionalTodayTraining {
       );
 }
 
-/// Resposta esperada *provisoriamente* para o papel profissional em getHome.
+/// Resposta retornada pela callable getHome quando tipoConta é TREINADOR.
 class ProfessionalHomeModel {
   final String name;
-  final String specialty;
-  final int? totalHorses;
+  final String? specialty;
+  final int totalHorses;
   final List<ProfessionalTodayTraining> todayTrainings;
   final ProfessionalProgress feedbacksWeek;
-  final int activePlans;
+  final int? activePlans;
   final ProfessionalProgress trainingsWeek;
   final int createdExercises;
   final List<ProfessionalReference> horses;
@@ -77,7 +83,7 @@ class ProfessionalHomeModel {
   const ProfessionalHomeModel({
     required this.name,
     required this.specialty,
-    this.totalHorses,
+    required this.totalHorses,
     required this.todayTrainings,
     required this.feedbacksWeek,
     required this.activePlans,
@@ -88,31 +94,28 @@ class ProfessionalHomeModel {
   });
 
   factory ProfessionalHomeModel.fromJson(Map<String, dynamic> json) {
-    // Os nomes do enum de conta também devem ser validados com o backend.
     final role = json['tipoConta'];
-    if (role != 'PROFISSIONAL' && role != 'TREINADOR') {
+    if (role != 'TREINADOR') {
       throw FormatException(
-        'getHome não retornou uma conta profissional. tipoConta: $role',
+        'getHome não retornou uma conta TREINADOR. tipoConta: $role',
       );
     }
 
     return ProfessionalHomeModel(
       name: _asString(json['nome']),
-      specialty: _asString(json['modalidade']),
-      totalHorses: json['totalCavalos'] == null
-          ? null
-          : _asInt(json['totalCavalos']),
+      specialty: _optionalString(json['modalidade']), // Não enviado atualmente.
+      totalHorses: _asInt(json['totalCavalos']),
       todayTrainings: _asList(json['treinosDoDia'])
           .map((item) => ProfessionalTodayTraining.fromJson(_asMap(item)))
           .toList(growable: false),
       feedbacksWeek: ProfessionalProgress.fromJson(
         _asMap(json['feedbacksSemana']),
       ),
-      activePlans: _asInt(json['planosAtivos']),
+      activePlans: _optionalInt(json['planosAtivos']), // Não enviado atualmente.
       trainingsWeek: ProfessionalProgress.fromJson(
         _asMap(json['treinosSemana']),
       ),
-      createdExercises: _asInt(json['exerciciosCriados']),
+      createdExercises: _asInt(json['totalExercicios']),
       horses: _asList(json['cavalos'])
           .map((item) => ProfessionalReference.fromJson(_asMap(item)))
           .toList(growable: false),
@@ -143,6 +146,10 @@ String _asString(dynamic value) {
   if (value is String) return value;
   throw FormatException('Esperado texto, recebido: $value');
 }
+
+String? _optionalString(dynamic value) => value == null ? null : _asString(value);
+
+int? _optionalInt(dynamic value) => value == null ? null : _asInt(value);
 
 String _asId(dynamic value) {
   if (value is String) return value;

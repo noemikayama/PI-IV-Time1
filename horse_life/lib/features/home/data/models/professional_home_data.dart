@@ -45,14 +45,20 @@ class ProfessionalClient {
   const ProfessionalClient({required this.id, required this.name});
 }
 
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Os campos de especialidade e planos ativos agora podem estar
+// ausentes, conforme contrato do backend Trainer.
+// -----------------------------------------------------------------------------
+
 /// Contrato dos dados fornecidos à Home; independente de Firebase e dos widgets.
 class ProfessionalHomeData {
   final String professionalName;
-  final String specialty;
+  final String? specialty;
   final List<ProfessionalTraining> todayTrainings;
   final int weeklyFeedbacksDone;
   final int weeklyFeedbacksTotal;
-  final int activePlans;
+  final int? activePlans;
   final int weeklyTrainingsCompleted;
   final int weeklyTrainingsPlanned;
   final int createdExercises;

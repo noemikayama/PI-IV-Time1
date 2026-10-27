@@ -15,6 +15,12 @@
 // -----------------------------------------------------------------------------
 
 import 'dart:math' as math;
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Indicador de exercícios renomeado de acordo com o cálculo
+// realizado pela Cloud Function (exercícios ativos do treinador).
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import '../../data/models/professional_home_data.dart';
@@ -235,7 +241,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                       const SizedBox(width: 14),
                       Expanded(
                         child: ProfessionalStatsCard(
-                          title: 'Total de exercícios criados',
+                          title: 'Exercícios ativos',
                           value: data.createdExercises,
                           gradientColors: const [
                             Color(0xFFC8A1BC),

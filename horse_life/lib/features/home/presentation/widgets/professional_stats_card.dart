@@ -20,6 +20,11 @@
 // Home*, compartilhado entre Guardian e Professional.
 // -----------------------------------------------------------------------------
 
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Permite cards com indicador indisponível no backend atual.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'home_stats_card.dart';
 
@@ -28,7 +33,7 @@ class ProfessionalStatsCard extends HomeStatsCard {
   const ProfessionalStatsCard({
     super.key,
     required String title,
-    required int value,
+    required int? value,
     int? total,
     required List<Color> gradientColors,
   }) : super(

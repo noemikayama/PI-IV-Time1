@@ -14,6 +14,12 @@
 // Repository/Mapper/Service, sem alterar a composição visual aprovada.
 // -----------------------------------------------------------------------------
 
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Remoção de especialidade fictícia quando getHome não informa
+// a modalidade do treinador.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
@@ -96,7 +102,9 @@ class _ProfessionalSidebarState extends State<ProfessionalSidebar> {
                               ),
                             ),
                             Text(
-                              'Treinador de ${data?.specialty ?? '<modalidade>'}',
+                              data?.specialty?.trim().isNotEmpty == true
+                                  ? 'Treinador de ${data!.specialty}'
+                                  : 'Profissional',
                               maxLines: 2,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: Colors.white,
