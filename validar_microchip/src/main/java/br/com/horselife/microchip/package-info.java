@@ -1,16 +1,16 @@
 /**
- * Servidor de validação de microchip do HorseLife.
+ * servidor de validacao de microchip do horselife.
  *
- * <p>Pacote raiz: contém apenas o {@code Main}, que lê a configuração, monta as
- * dependências e inicia o servidor. Nenhuma regra de negócio fica aqui.
+ * <p>pacote raiz: contem apenas o {@code main}, que le a configuracao, monta as
+ * dependencias e inicia o servidor. nenhuma regra de negocio fica aqui.
  *
- * <p>Dependências permitidas entre pacotes:
+ * <p>dependencias permitidas entre pacotes:
  * <pre>
  *   servidor  -&gt; protocolo -&gt; dominio
  *   todos     -&gt; modelos, utilitarios
- *   modelos e utilitarios não dependem de nenhum outro pacote do projeto
+ *   modelos e utilitarios nao dependem de nenhum outro pacote do projeto
  * </pre>
- * Separar as camadas assim permite testar a regra do microchip com JUnit puro,
+ * separar as camadas assim permite testar a regra do microchip com junit puro,
  * sem subir servidor nenhum.
  */
 package br.com.horselife.microchip;

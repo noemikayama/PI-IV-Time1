@@ -1,8 +1,8 @@
 /**
- * Funções auxiliares genéricas e sem estado mutável.
+ * funcoes auxiliares genericas e sem estado mutavel.
  *
- * <p>Classes {@code final} com construtor privado e métodos {@code static}, ou
- * objetos imutáveis e thread-safe. Nada aqui conhece a regra do microchip:
- * tudo poderia ser reaproveitado em outro projeto sem mudança.
+ * <p>classes {@code final} com construtor privado e metodos {@code static}, ou
+ * objetos imutaveis e thread-safe. nada aqui conhece a regra do microchip:
+ * tudo poderia ser reaproveitado em outro projeto sem mudanca.
  */
 package br.com.horselife.microchip.utilitarios;

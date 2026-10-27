@@ -1,7 +1,7 @@
 /**
- * Regras de validação do microchip e tabela de países.
+ * regras de validacao do microchip e tabela de paises.
  *
- * <p>Java puro: não usa JSON, Jackson nem sockets. O cálculo dos dígitos
- * verificadores é regra de negócio e fica aqui, não em {@code utilitarios}.
+ * <p>java puro: nao usa json, jackson nem sockets. o calculo dos digitos
+ * verificadores e regra de negocio e fica aqui, nao em {@code utilitarios}.
  */
 package br.com.horselife.microchip.dominio;

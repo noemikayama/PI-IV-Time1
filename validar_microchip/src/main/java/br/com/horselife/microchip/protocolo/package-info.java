@@ -1,7 +1,7 @@
 /**
- * Tradução entre JSON e chamadas ao domínio.
+ * traducao entre json e chamadas ao dominio.
  *
- * <p>Recebe a linha JSON como {@code String} e devolve a resposta como {@code String}.
- * Não usa sockets, por isso é testável sem rede.
+ * <p>recebe a linha json como {@code string} e devolve a resposta como {@code string}.
+ * nao usa sockets, por isso e testavel sem rede.
  */
 package br.com.horselife.microchip.protocolo;
