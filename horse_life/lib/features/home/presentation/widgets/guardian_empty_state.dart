@@ -52,14 +52,8 @@ class GuardianEmptyState extends StatelessWidget {
             children: [
               Icon(icon, size: 24, color: AppColors.text),
               const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(title,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
             ],
           ),
           const SizedBox(height: 10),

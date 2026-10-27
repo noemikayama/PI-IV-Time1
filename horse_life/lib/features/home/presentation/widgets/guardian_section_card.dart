@@ -58,7 +58,9 @@ class GuardianSectionCard extends StatelessWidget {
               if (onShowAll != null)
                 TextButton(
                   onPressed: onShowAll,
-                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('Mostrar tudo'),
                 ),
             ],
