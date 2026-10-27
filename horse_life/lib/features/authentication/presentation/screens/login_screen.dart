@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da submissão com uma sessão autenticada tipada,
@@ -58,7 +63,7 @@ class LoginScreen extends StatefulWidget {
   });
 
   // Ações externas e contratos injetáveis do fluxo de login.
-  final VoidCallback? onBack; 
+  final VoidCallback? onBack;
   final VoidCallback? onForgotPassword;
   final LoginOperation? login;
   final String? initialErrorMessage;

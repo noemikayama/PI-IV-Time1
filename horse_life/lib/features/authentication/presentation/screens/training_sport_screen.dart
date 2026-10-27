@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ajuste do dropdown para quebrar modalidades longas entre palavras
@@ -51,6 +56,7 @@ class TrainingSportScreen extends StatefulWidget {
 }
 
 class _TrainingSportScreenState extends State<TrainingSportScreen> {
+  // Resultado remoto, seleção atual e estados visuais do dropdown assíncrono.
   List<String> _sports = const [];
   String? _selectedSport;
   bool _isLoading = true;
@@ -60,6 +66,7 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
   @override
   void initState() {
     super.initState();
+    // A consulta começa assim que a etapa entra na árvore de widgets.
     _loadSports();
   }
 
@@ -94,6 +101,7 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
   }
 
   void _goBack() {
+    // Testes podem assumir o retorno; em produção a pilha é a fonte de verdade.
     final onBack = widget.onBack;
     if (onBack != null) {
       onBack();
@@ -203,6 +211,7 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
   }
 
   Widget _buildSportField(BuildContext context) {
+    // Cada estado remoto ocupa o mesmo espaço lógico do campo de modalidade.
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(key: Key('training-sports-loading')),
@@ -231,6 +240,7 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
       );
     }
 
+    // O InputDecorator mantém o dropdown consistente com os demais formulários.
     return InputDecorator(
       decoration: InputDecoration(
         labelText: _isMenuOpen ? 'Selecionar Modalidade' : null,
@@ -264,6 +274,7 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
             fontSize: 20,
           ),
           itemHeight: null,
+          // A representação fechada aceita quebra de linhas para nomes longos.
           selectedItemBuilder: (context) => [
             for (final sport in _sports)
               Align(
@@ -271,6 +282,7 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
                 child: Text(sport, softWrap: true),
               ),
           ],
+          // No menu aberto, a opção atual recebe contraste e ícone de seleção.
           items: [
             for (final sport in _sports)
               DropdownMenuItem<String>(

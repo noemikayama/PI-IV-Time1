@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Validação do limite de 10 MB e preservação da leitura do PDF
@@ -66,6 +71,8 @@ class TrainerExperienceScreen extends StatefulWidget {
 }
 
 class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
+  // O draft fornece a seleção inicial; novas escolhas existem localmente até o
+  // avanço para evitar alterar o estado compartilhado durante a edição.
   TrainerDocument? _selectedDocument;
   bool _isPicking = false;
 
@@ -76,6 +83,7 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
   }
 
   void _goBack() {
+    // O fluxo real retorna pela pilha; o callback permite composição isolada.
     final onBack = widget.onBack;
     if (onBack != null) {
       onBack();
@@ -90,6 +98,7 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
     setState(() => _isPicking = true);
 
     try {
+      // O seletor concede acesso temporário ao arquivo escolhido pelo usuário.
       final file = await widget.filePicker();
       if (file == null || !mounted) return;
 
@@ -103,6 +112,7 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
         return;
       }
 
+      // A extensão e o tamanho são verificados antes de preservar a referência.
       final sizeInBytes = await file.length();
       if (!TrainerDocumentLimits.acceptsSize(sizeInBytes)) {
         if (!mounted) return;
@@ -115,6 +125,7 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
         return;
       }
 
+      // O conteúdo não é lido agora: readAsBytes fica armazenado para o upload.
       final document = TrainerDocument(
         name: file.name,
         path: file.path,
@@ -171,6 +182,7 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
     final textTheme = Theme.of(context).textTheme;
     final selectedDocument = _selectedDocument;
 
+    // A quarta etapa mantém o avanço disponível porque o comprovante é opcional.
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
@@ -251,6 +263,7 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
     ).textTheme.headlineSmall?.copyWith(fontSize: 20);
     const borderRadius = BorderRadius.all(Radius.circular(18));
 
+    // Sem seleção, o campo funciona como uma ação para abrir o seletor nativo.
     if (selectedDocument == null) {
       return Semantics(
         button: true,
@@ -296,6 +309,7 @@ class _TrainerExperienceScreenState extends State<TrainerExperienceScreen> {
       );
     }
 
+    // Com seleção, o mesmo espaço exibe metadados e permite remover o arquivo.
     return Container(
       key: const Key('selected-trainer-experience-file'),
       height: 64,
