@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da função de logout.
+//
 // Data: 20/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da função de recuperação de senha.
@@ -26,6 +30,7 @@ export {
   createTrainerAttachmentUpload,
   removeTrainerAttachment,
   requestPasswordReset,
+  logout,
 } from "./features/authentication";
 export {
   getModalities,
