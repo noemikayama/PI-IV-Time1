@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ligação direta da ação "Esqueci minha senha" à tela de
+// recuperação usada em produção, com controller injetável por contrato.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da submissão com uma sessão autenticada tipada,
@@ -35,12 +40,15 @@ import 'package:flutter/services.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
 import '../../../../core/widgets/app_text_form_field.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import '../../application/controllers/password_reset_controller.dart';
 import '../../application/states/login_session.dart';
+import '../../data/repositories/firebase_password_reset_repository.dart';
 import '../../data/repositories/login_repository.dart';
 import '../messages/authentication_error_messages.dart';
 import '../routes/registration_flow_route.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_link.dart';
+import 'password_reset_screen.dart';
 import 'welcome_screen.dart';
 
 typedef LoginOperation =
@@ -51,16 +59,16 @@ typedef LoginOperation =
 class LoginScreen extends StatefulWidget {
   const LoginScreen({
     this.onBack,
-    this.onForgotPassword,
     this.login,
+    this.passwordResetController,
     this.initialErrorMessage,
     super.key,
   });
 
   // Ações externas e contratos injetáveis do fluxo de login.
-  final VoidCallback? onBack; 
-  final VoidCallback? onForgotPassword;
+  final VoidCallback? onBack;
   final LoginOperation? login;
+  final PasswordResetController? passwordResetController;
   final String? initialErrorMessage;
 
   @override
@@ -184,6 +192,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _openPasswordReset() {
+    final controller =
+        widget.passwordResetController ??
+        const PasswordResetController(FirebasePasswordResetRepository());
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => PasswordResetScreen(controller: controller),
+      ),
+    );
+  }
+
   // Estrutura responsiva da tela.
   @override
   Widget build(BuildContext context) {
@@ -262,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 alignment: Alignment.centerLeft,
                                 child: AuthLink(
                                   label: 'Esqueci minha senha',
-                                  onPressed: widget.onForgotPassword ?? () {},
+                                  onPressed: _openPasswordReset,
                                 ),
                               ),
                               const SizedBox(height: 20),

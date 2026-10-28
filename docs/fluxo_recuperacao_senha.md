@@ -1,5 +1,11 @@
 # Fluxo de recuperação de senha
 
+## Histórico de alterações
+
+| Data | Autor | Alteração |
+| --- | --- | --- |
+| 27/10/2026 | Noemi Kayama — RA 25004140 | Integração Flutter concluída e coberta por testes do controller, adapter, interface, navegação e backend; o acesso externo usa portas tipadas com implementações reais de produção, sem callbacks exclusivos de teste. |
+
 Este documento descreve a callable `requestPasswordReset` e como o frontend deve
 usá-la. A recuperação é inteiramente gerenciada pelo Firebase Authentication:
 o backend apenas solicita o envio, e o link, o e-mail e a redefinição seguem as
@@ -8,7 +14,7 @@ configurações do projeto no Console.
 ## Ordem da recuperação
 
 ```text
-LoginScreen (onForgotPassword)
+LoginScreen (ação "Esqueci minha senha")
   ↓ tela de recuperação: coleta apenas o e-mail
 callable requestPasswordReset { email }
   ↓ validatePasswordResetInput (formato do e-mail)
@@ -69,14 +75,35 @@ e-mail e, por isso, podem ser informadas como erro interno.
 A existência da conta não é consultada no MongoDB: o Firebase Authentication é a
 fonte de verdade das credenciais.
 
-## Integração pendente no Flutter
+## Integração no Flutter
 
-O `LoginScreen` já expõe o callback `onForgotPassword`, ainda sem fluxo ligado.
-O frontend deve, em um repositório injetado como o de login, chamar
+A ação **Esqueci minha senha** do `LoginScreen` abre a tela de recuperação
+diretamente com `Navigator.of(context)`. A composição cria um
+`PasswordResetController` ligado ao `FirebasePasswordResetRepository`, mantendo
+os detalhes do Firebase fora da tela.
+
+O repositório normaliza o e-mail e usa a porta
+`PasswordResetRemoteDataSource`. Sua implementação de produção chama
 `FirebaseFunctions.instanceFor(region: 'southamerica-east1')
-.httpsCallable('requestPasswordReset')` com `{ 'email': email }`. Qualquer
-resposta de sucesso deve exibir a mensagem genérica; `invalid-argument` indica
-e-mail com formato inválido.
+.httpsCallable('requestPasswordReset')` com `{ 'email': email }`. O adapter
+valida o contrato `{ mensagem: String }`; a tela aplica validação local,
+bloqueia envios duplicados, limita a espera a 10 segundos e exibe erros em uma
+`AppSnackBar`.
+
+Após qualquer resposta válida, a interface apresenta o modal **E-mail
+enviado**. A mensagem não informa se existe uma conta associada, preservando a
+proteção contra enumeração de usuários definida pelo backend. Ao confirmar o
+modal pelo botão **Ok**, a tela de recuperação é encerrada e o login volta a
+ser exibido.
+
+Os testes Flutter cobrem controller, normalização e validação do contrato do
+adapter, limites do e-mail, envio pelo teclado, bloqueio de duplicidade,
+carregamento, timeout, retry, falhas tipadas e inesperadas, modal e navegação
+com `Navigator.push`/`MaterialPageRoute`. A integração parte do `LoginScreen`,
+confirma o envio e verifica o retorno ao login. No backend, os testes cobrem a
+validação pública, a normalização, o serviço, as respostas silenciosas do
+Firebase e o mapeamento de erros do handler. As dependências externas são
+substituídas pelas portas tipadas, sem callbacks exclusivos de teste.
 
 ## Configuração no Firebase Console
 
