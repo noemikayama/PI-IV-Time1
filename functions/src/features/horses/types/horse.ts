@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipos do envio, da confirmação e da remoção de imagens.
+//
 // Data: 22/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos do documento, do cadastro, da edição e da consulta.
@@ -40,7 +44,7 @@ export type HorseDocument = {
     raca: string;
     pelagem: string;
     sexo: HorseSex;
-    // Caminhos no Storage; o envio de imagens ainda não foi implementado.
+    // Caminhos no Storage (formato do DD), na ordem de envio.
     imagens: string[];
     modalidade?: {_id: ObjectId; codigo: number; nome: string};
     limitacoesFisicas: string[];
@@ -104,6 +108,31 @@ export type HorseRegistrationResult = {
 
 export type HorseAge = {anos: number; meses: number};
 
+export type HorseImageContentType = "image/jpeg" | "image/png";
+
+// Formato enviado ao app: caminho (formato do DD) e URL assinada de leitura.
+export type HorseImageView = {
+    caminho: string;
+    url: string;
+};
+
+export type HorseImageUploadInput = {
+    id: ObjectId;
+    contentType: HorseImageContentType;
+};
+
+// Usado para confirmar o envio e para remover uma imagem.
+export type HorseImageFileInput = {
+    id: ObjectId;
+    caminho: string;
+};
+
+export type HorseImageUploadResult = {
+    caminho: string;
+    uploadUrl: string;
+    headers: Record<string, string>;
+};
+
 // Referência enviada ao app: o ObjectId vira string.
 type RefView = {id: string; codigo: number; nome: string};
 
@@ -117,7 +146,7 @@ export type HorseView = {
     raca: string;
     pelagem: string;
     sexo: HorseSex;
-    imagens: string[];
+    imagens: HorseImageView[];
     modalidade: RefView | null;
     limitacoesFisicas: string[];
     observacoesSaude: string[];

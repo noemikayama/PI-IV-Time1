@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Imagens enviadas com URL assinada de leitura.
+//
 // Data: 22/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Conversão do documento do cavalo para o formato do app.
@@ -13,6 +17,7 @@ import type {
   HorseView,
 } from "../types";
 import {calculateHorseAge} from "./horseAge";
+import {toHorseImageView} from "./horseImageService";
 
 const toRefView = (ref: {_id: unknown; codigo: number; nome: string}) => ({
   id: String(ref._id),
@@ -35,13 +40,16 @@ export function responsibilitiesOf(
   return result;
 }
 
-/** Converte o documento para o app: ObjectId e Date viram string e a idade
- * é calculada no momento da consulta.
+/** Converte o documento para o app: ObjectId e Date viram string, a idade
+ * é calculada no momento da consulta e cada imagem ganha uma URL de leitura.
  * @param {HorseDocument} horse Documento do cavalo.
  * @param {string} uid UID de quem consulta.
- * @return {HorseView} Cavalo no formato do app.
+ * @return {Promise<HorseView>} Cavalo no formato do app.
  */
-export function toHorseView(horse: HorseDocument, uid: string): HorseView {
+export async function toHorseView(
+  horse: HorseDocument,
+  uid: string
+): Promise<HorseView> {
   return {
     id: horse._id.toHexString(),
     codigo: horse.codigo,
@@ -51,8 +59,7 @@ export function toHorseView(horse: HorseDocument, uid: string): HorseView {
     raca: horse.raca,
     pelagem: horse.pelagem,
     sexo: horse.sexo,
-    // Por enquanto, os caminhos; com o envio de imagens, URLs assinadas.
-    imagens: horse.imagens,
+    imagens: await Promise.all(horse.imagens.map(toHorseImageView)),
     modalidade: horse.modalidade ? toRefView(horse.modalidade) : null,
     limitacoesFisicas: horse.limitacoesFisicas,
     observacoesSaude: horse.observacoesSaude,

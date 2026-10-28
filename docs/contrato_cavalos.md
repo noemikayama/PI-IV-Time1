@@ -44,8 +44,8 @@ Exige login de **responsável**. Só cadastra quem é proprietário: se
 
 Resposta: `{ "id": "...", "codigo": "123123456789012", "nome": "Trovão" }`.
 
-Imagens ainda não são enviadas. O cavalo é criado com `imagens: []`. O envio
-seguirá o mesmo fluxo de URL assinada dos anexos do treinador.
+O cavalo é criado com `imagens: []`. As imagens são enviadas depois, com o
+`id` devolvido aqui (ver [Imagens](#imagens)).
 
 ## updateHorse
 
@@ -78,3 +78,70 @@ A resposta traz os campos do documento, mais:
 
 Relacionamentos vêm como `{ id, codigo, nome }`. `modalidade`, `atleta` e
 `planoAtual` vêm como `null` quando não existem.
+
+`imagens` vem como lista de `{ "caminho": "...", "url": "..." }`, na ordem de
+envio. A `url` é assinada e vale 15 minutos; o `caminho` identifica a imagem
+para removê-la. `updateHorse` responde no mesmo formato.
+
+## Imagens
+
+Exigem login de **responsável** e só podem ser chamadas pelo proprietário
+(`permission-denied` para os demais). O fluxo é o mesmo dos PDFs do treinador:
+o app envia os bytes direto ao Storage por uma URL assinada.
+
+Para cada imagem, o app:
+
+1. chama `createHorseImageUpload` com `id` e `contentType`;
+2. recebe `caminho`, `uploadUrl` e os headers obrigatórios;
+3. envia os bytes por `PUT` para `uploadUrl`, com esses headers, em até 10
+   minutos;
+4. chama `confirmHorseImage` com `id` e `caminho`.
+
+Envie as imagens uma de cada vez: o backend escolhe o próximo índice livre a
+partir das imagens já confirmadas.
+
+| Regra | Valor |
+| --- | --- |
+| Formatos | `image/jpeg` ou `image/png` (o conteúdo é conferido). |
+| Tamanho | Até 5 MB. |
+| Quantidade | Até 10 por cavalo. |
+| Caminho | `/fotos/cavalos/<id>/imagem_<n>.jpg` (ou `.png`). |
+
+### createHorseImageUpload
+
+```json
+{ "id": "66e1a0c2f1b2c3d4e5f60050", "contentType": "image/jpeg" }
+```
+
+Resposta:
+
+```json
+{
+  "caminho": "/fotos/cavalos/66e1a0c2f1b2c3d4e5f60050/imagem_1.jpg",
+  "uploadUrl": "https://storage.googleapis.com/...",
+  "headers": {
+    "Content-Type": "image/jpeg",
+    "x-goog-content-length-range": "0,5242880"
+  }
+}
+```
+
+Com 10 imagens confirmadas, retorna `invalid-argument`.
+
+### confirmHorseImage
+
+```json
+{
+  "id": "66e1a0c2f1b2c3d4e5f60050",
+  "caminho": "/fotos/cavalos/66e1a0c2f1b2c3d4e5f60050/imagem_1.jpg"
+}
+```
+
+Resposta: `{ "caminho": "...", "url": "..." }`. Retorna `not-found` se o
+arquivo não foi enviado. Se o arquivo não for uma imagem válida, ele é apagado
+e a resposta é `invalid-argument`.
+
+### removeHorseImage
+
+Mesmo corpo de `confirmHorseImage`. Apaga a imagem do cavalo e do Storage e
+responde `{ "removido": true }`, ou `not-found` se ela não estiver no cavalo.
