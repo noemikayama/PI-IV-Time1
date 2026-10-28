@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da submissão com tratamento de falhas tipadas,
@@ -230,10 +235,9 @@ class _GuardianConfirmationScreenState
       if (onCreated != null) {
         onCreated();
       } else {
-        Navigator.of(context).pushAndRemoveUntil<void>(
-          LoginFlowRoute.build(),
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushAndRemoveUntil<void>(LoginFlowRoute.build(), (route) => false);
       }
     } on RegistrationFailure catch (error) {
       if (mounted) _showError(error.message);

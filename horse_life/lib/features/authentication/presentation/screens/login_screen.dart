@@ -4,6 +4,8 @@
 //
 // Data: 27/10/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
 // Alteração: Ligação direta da ação "Esqueci minha senha" à tela de
 // recuperação usada em produção, com controller injetável por contrato.
 //

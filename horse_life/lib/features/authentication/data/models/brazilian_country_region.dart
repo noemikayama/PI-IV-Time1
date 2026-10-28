@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 16/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do catálogo das macrorregiões brasileiras e suas UFs.
@@ -11,6 +16,7 @@
 class BrazilianCountryRegion {
   const BrazilianCountryRegion({required this.name, required this.stateCodes});
 
+  // Nome apresentado na UI e conjunto de UFs usado para filtrar seleções.
   final String name;
   final Set<String> stateCodes;
 }
