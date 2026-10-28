@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do envio, da confirmação e da remoção de imagens
+// de cavalos.
+//
 // Data: 22/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do cadastro, da edição e da consulta de cavalos.
@@ -45,4 +50,7 @@ export {
   registerHorse,
   updateHorse,
   getHorse,
+  createHorseImageUpload,
+  confirmHorseImage,
+  removeHorseImage,
 } from "./features/horses";

@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Inclusão e remoção dos caminhos das imagens do cavalo.
+//
 // Data: 22/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Cadastro, edição e consulta de cavalos; índice do microchip e
@@ -13,7 +17,12 @@
 // -----------------------------------------------------------------------------
 
 // Coleção 'cavalos'. Índice único em 'codigo' (microchip).
-import type {ClientSession, ObjectId, UpdateFilter} from "mongodb";
+import type {
+  ClientSession,
+  Filter,
+  ObjectId,
+  UpdateFilter,
+} from "mongodb";
 import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
 import {AppError} from "../../../shared/errors/AppError";
@@ -107,6 +116,53 @@ export async function updateHorseDocument(
       update,
       {returnDocument: "after", session}
     );
+}
+
+/** Acrescenta o caminho de uma imagem, respeitando o limite.
+ * Devolve false se o limite foi atingido ou o caminho já estava gravado.
+ * @param {ObjectId} id _id do cavalo.
+ * @param {string} caminho Caminho da imagem no Storage.
+ * @param {number} limit Máximo de imagens.
+ */
+export async function addHorseImage(
+  id: ObjectId,
+  caminho: string,
+  limit: number
+): Promise<boolean> {
+  const db = await getDatabase();
+  const result = await db
+    .collection<HorseDocument>(COLLECTIONS.Cavalos)
+    .updateOne(
+      {
+        _id: id,
+        situacaoCadastral: "ATIVO",
+        imagens: {$ne: caminho},
+        [`imagens.${limit - 1}`]: {$exists: false},
+      } as Filter<HorseDocument>,
+      {
+        $push: {imagens: caminho},
+        $set: {atualizadoEm: new Date()},
+      }
+    );
+  return result.modifiedCount === 1;
+}
+
+/** Remove a referência a uma imagem.
+ * @param {ObjectId} id _id do cavalo.
+ * @param {string} caminho Caminho da imagem no Storage.
+ */
+export async function removeHorseImage(
+  id: ObjectId,
+  caminho: string
+): Promise<boolean> {
+  const db = await getDatabase();
+  const result = await db
+    .collection<HorseDocument>(COLLECTIONS.Cavalos)
+    .updateOne(
+      {_id: id, imagens: caminho},
+      {$pull: {imagens: caminho}, $set: {atualizadoEm: new Date()}}
+    );
+  return result.modifiedCount === 1;
 }
 
 /** Acrescenta o cavalo à lista resumida do responsável ativo.
