@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos tipos da edição do perfil.
+//
 // Data: 21/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos tipos da edição de modalidades.
@@ -23,4 +27,6 @@ export type {
   GuardianModality,
   UpdateGuardianModalitiesInput,
   UpdateGuardianModalitiesResult,
+  UpdateGuardianProfileInput,
+  UpdateGuardianProfileResult,
 } from "./guardian";

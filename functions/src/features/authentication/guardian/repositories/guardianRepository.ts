@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Edição do nome do responsável e atualização das suas cópias.
+//
 // Data: 21/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Atualização exclusiva do vínculo do responsável com modalidades.
@@ -94,4 +98,60 @@ export async function updateGuardianModalities(
     .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
     .updateOne({_id: uid}, {$set: {modalidades, atualizadoEm}});
   return result.matchedCount === 1;
+}
+
+/** Substitui apenas o nome do responsável ativo.
+ * Nenhum outro campo é alterado além de 'atualizadoEm'.
+ * @param {string} uid UID do usuário.
+ * @param {string} nome Nome completo validado.
+ * @param {Date} atualizadoEm Data da alteração.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<GuardianDocument|null>} Perfil atualizado.
+ */
+export async function updateGuardianName(
+  uid: string,
+  nome: string,
+  atualizadoEm: Date,
+  session: ClientSession
+): Promise<GuardianDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
+    .findOneAndUpdate(
+      {_id: uid, situacaoCadastral: "ATIVO"},
+      {$set: {nome, atualizadoEm}},
+      {returnDocument: "after", session}
+    );
+}
+
+/** Atualiza o nome do responsável nas cópias de cavalos e treinadores.
+ * Só altera as cópias com nome diferente, então pode ser chamada sempre.
+ * @param {string} uid UID do responsável.
+ * @param {string} nome Novo nome.
+ * @param {ClientSession} session Sessão da transação.
+ */
+export async function renameGuardianRefs(
+  uid: string,
+  nome: string,
+  session: ClientSession
+): Promise<void> {
+  const db = await getDatabase();
+  const atualizadoEm = new Date();
+  const horses = db.collection(COLLECTIONS.Cavalos);
+
+  await Promise.all([
+    // cavalos.proprietario e cavalos.atleta.
+    ...["proprietario", "atleta"].map((ref) =>
+      horses.updateMany(
+        {[`${ref}._id`]: uid, [`${ref}.nome`]: {$ne: nome}},
+        {$set: {[`${ref}.nome`]: nome, atualizadoEm}},
+        {session}
+      )
+    ),
+    db.collection(COLLECTIONS.Treinadores).updateMany(
+      {clientes: {$elemMatch: {_id: uid, nome: {$ne: nome}}}},
+      {$set: {"clientes.$[cliente].nome": nome, atualizadoEm}},
+      {arrayFilters: [{"cliente._id": uid}], session}
+    ),
+  ]);
 }
