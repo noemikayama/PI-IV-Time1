@@ -15,14 +15,14 @@
 // -----------------------------------------------------------------------------
 
 /// Treino acompanhado pelo profissional na tela inicial.
-class ProfessionalTraining {
+class TrainerTraining {
   final String id;
   final String title;
   final String horseName;
   final String planName;
   final String? status;
 
-  const ProfessionalTraining({
+  const TrainerTraining({
     required this.id,
     required this.title,
     required this.horseName,
@@ -31,18 +31,18 @@ class ProfessionalTraining {
   });
 }
 
-class ProfessionalHorse {
+class TrainerHorse {
   final String id;
   final String name;
 
-  const ProfessionalHorse({required this.id, required this.name});
+  const TrainerHorse({required this.id, required this.name});
 }
 
-class ProfessionalClient {
+class TrainerClient {
   final String id;
   final String name;
 
-  const ProfessionalClient({required this.id, required this.name});
+  const TrainerClient({required this.id, required this.name});
 }
 
 // Data: 27/10/2026
@@ -52,22 +52,22 @@ class ProfessionalClient {
 // -----------------------------------------------------------------------------
 
 /// Contrato dos dados fornecidos à Home; independente de Firebase e dos widgets.
-class ProfessionalHomeData {
-  final String professionalName;
+class TrainerHomeData {
+  final String trainerName;
   final String? specialty;
-  final List<ProfessionalTraining> todayTrainings;
+  final List<TrainerTraining> todayTrainings;
   final int weeklyFeedbacksDone;
   final int weeklyFeedbacksTotal;
   final int? activePlans;
   final int weeklyTrainingsCompleted;
   final int weeklyTrainingsPlanned;
   final int createdExercises;
-  final List<ProfessionalHorse> horses;
+  final List<TrainerHorse> horses;
   final int? totalLinkedHorses;
-  final List<ProfessionalClient> clients;
+  final List<TrainerClient> clients;
 
-  const ProfessionalHomeData({
-    required this.professionalName,
+  const TrainerHomeData({
+    required this.trainerName,
     required this.specialty,
     required this.todayTrainings,
     required this.weeklyFeedbacksDone,

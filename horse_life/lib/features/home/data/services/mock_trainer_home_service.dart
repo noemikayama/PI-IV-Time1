@@ -6,4 +6,4 @@
 // Alteração: Reexportação temporária para preservar imports de testes antigos.
 // -----------------------------------------------------------------------------
 
-export '../../testing/fakes/mock_professional_home_service.dart';
+export '../../testing/fakes/mock_trainer_home_service.dart';

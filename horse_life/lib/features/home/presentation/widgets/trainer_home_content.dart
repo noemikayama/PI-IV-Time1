@@ -2,34 +2,37 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 18/10/2026
+// Data: 27/10/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Exibição de 0 como padrão no card de Total de planos ativos
+// quando o indicador não for retornado pelo backend.
+//
+// Data: 27/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Composição da Home do Profissional conforme protótipos normal e
-// vazio, com carregamento, erro, quatro métricas, treinos e vínculos.
-// -----------------------------------------------------------------------------
+// Alteração: Indicador de exercícios renomeado de acordo com o cálculo
+// realizado pela Cloud Function (exercícios ativos do treinador).
 //
 // Data: 26/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Revisão de integração e compatibilidade com a arquitetura
 // Repository/Mapper/Service, sem alterar a composição visual aprovada.
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Composição da Home do Profissional conforme protótipos normal e
+// vazio, com carregamento, erro, quatro métricas, treinos e vínculos.
 // -----------------------------------------------------------------------------
 
 import 'dart:math' as math;
-// Data: 27/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Indicador de exercícios renomeado de acordo com o cálculo
-// realizado pela Cloud Function (exercícios ativos do treinador).
-// -----------------------------------------------------------------------------
-
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import '../../data/models/professional_home_data.dart';
-import 'professional_daily_training_card.dart';
-import 'professional_list_card.dart';
-import 'professional_stats_card.dart';
+import '../../data/models/trainer_home_data.dart';
+import 'trainer_daily_training_card.dart';
+import 'trainer_list_card.dart';
+import 'trainer_stats_card.dart';
 
-class ProfessionalHomeContent extends StatelessWidget {
-  const ProfessionalHomeContent({
+class TrainerHomeContent extends StatelessWidget {
+  const TrainerHomeContent({
     super.key,
     required this.homeFuture,
     required this.onRetry,
@@ -41,17 +44,17 @@ class ProfessionalHomeContent extends StatelessWidget {
     this.onShowAllClients,
   });
 
-  final Future<ProfessionalHomeData> homeFuture;
+  final Future<TrainerHomeData> homeFuture;
   final VoidCallback onRetry;
-  final ValueChanged<ProfessionalTraining>? onViewTraining;
-  final ValueChanged<ProfessionalHorse>? onSelectHorse;
-  final ValueChanged<ProfessionalClient>? onSelectClient;
+  final ValueChanged<TrainerTraining>? onViewTraining;
+  final ValueChanged<TrainerHorse>? onSelectHorse;
+  final ValueChanged<TrainerClient>? onSelectClient;
   final VoidCallback? onShowAllTrainings;
   final VoidCallback? onShowAllHorses;
   final VoidCallback? onShowAllClients;
 
   /// Prévia local: o app pode substituir esta ação por uma rota real.
-  void _viewTraining(BuildContext context, ProfessionalTraining training) {
+  void _viewTraining(BuildContext context, TrainerTraining training) {
     if (onViewTraining != null) {
       onViewTraining!(training);
       return;
@@ -136,7 +139,7 @@ class ProfessionalHomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<ProfessionalHomeData>(
+    return FutureBuilder<TrainerHomeData>(
       future: homeFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -173,7 +176,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Olá ${data.professionalName}!',
+                    'Olá ${data.trainerName}!',
                     style: theme.textTheme.displaySmall?.copyWith(
                       color: AppColors.prussianBlue,
                     ),
@@ -183,12 +186,12 @@ class ProfessionalHomeContent extends StatelessWidget {
                     style: theme.textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 28),
-                  ProfessionalDailyTrainingCard(
+                  TrainerDailyTrainingCard(
                     trainings: data.todayTrainings,
                     onViewTraining: (training) =>
                         _viewTraining(context, training),
                     onShowAll: onShowAllTrainings ??
-                        () => _showAll<ProfessionalTraining>(
+                        () => _showAll<TrainerTraining>(
                               context,
                               title: 'Treinos do dia',
                               items: data.todayTrainings,
@@ -201,7 +204,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ProfessionalStatsCard(
+                        child: TrainerStatsCard(
                           title: 'Feedbacks feitos nesta semana',
                           value: data.weeklyFeedbacksDone,
                           total: data.weeklyFeedbacksTotal,
@@ -213,9 +216,9 @@ class ProfessionalHomeContent extends StatelessWidget {
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: ProfessionalStatsCard(
+                        child: TrainerStatsCard(
                           title: 'Total de planos ativos',
-                          value: data.activePlans,
+                          value: data.activePlans ?? 0,
                           gradientColors: const [
                             AppColors.goldenApricot,
                             Color(0xFFFFC78D),
@@ -228,7 +231,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ProfessionalStatsCard(
+                        child: TrainerStatsCard(
                           title: 'Treinos realizados nesta semana',
                           value: data.weeklyTrainingsCompleted,
                           total: data.weeklyTrainingsPlanned,
@@ -240,7 +243,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: ProfessionalStatsCard(
+                        child: TrainerStatsCard(
                           title: 'Exercícios ativos',
                           value: data.createdExercises,
                           gradientColors: const [
@@ -252,7 +255,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  ProfessionalListCard<ProfessionalHorse>(
+                  TrainerListCard<TrainerHorse>(
                     title: 'Meus cavalos',
                     items: data.horses,
                     itemName: (horse) => horse.name,
@@ -262,7 +265,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                         'Prescreva treinos para os cavalos vinculados a você.',
                     onItemTap: onSelectHorse,
                     onShowAll: onShowAllHorses ??
-                        () => _showAll<ProfessionalHorse>(
+                        () => _showAll<TrainerHorse>(
                               context,
                               title: 'Meus cavalos',
                               items: data.horses,
@@ -271,7 +274,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                             ),
                   ),
                   const SizedBox(height: 16),
-                  ProfessionalListCard<ProfessionalClient>(
+                  TrainerListCard<TrainerClient>(
                     title: 'Meus clientes',
                     items: data.clients,
                     itemName: (client) => client.name,
@@ -280,7 +283,7 @@ class ProfessionalHomeContent extends StatelessWidget {
                         'Ao vincular-se a um cavalo, você automaticamente se vincula ao seu responsável.',
                     onItemTap: onSelectClient,
                     onShowAll: onShowAllClients ??
-                        () => _showAll<ProfessionalClient>(
+                        () => _showAll<TrainerClient>(
                               context,
                               title: 'Meus clientes',
                               items: data.clients,
