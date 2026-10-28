@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da edição do perfil do responsável.
+//
 // Data: 21/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da edição de modalidades do responsável.
@@ -23,6 +27,7 @@
 export {registerGuardian} from "./guardian";
 export {getGuardianProfile} from "./guardian";
 export {updateGuardianModalities} from "./guardian";
+export {updateGuardianProfile} from "./guardian";
 export {registerTrainer} from "./trainer";
 export {getTrainerProfile} from "./trainer";
 export {confirmTrainerAttachment} from "./trainer";
