@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do painel fixo de ações da tela inicial, utilizando os
@@ -12,6 +17,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/gradient_button.dart';
 
+// Rodapé da tela inicial que separa as duas entradas da autenticação: acessar
+// uma sessão existente ou iniciar a seleção de perfil para um novo cadastro.
 class WelcomeActionPanel extends StatelessWidget {
   const WelcomeActionPanel({
     required this.onAccessAccount,
@@ -19,8 +26,10 @@ class WelcomeActionPanel extends StatelessWidget {
     super.key,
   });
 
+  // Altura-base sem a área segura inferior adicionada durante a composição.
   static const double height = 280;
 
+  // A tela-pai decide como abrir login e cadastro; o painel cuida apenas da UI.
   final VoidCallback onAccessAccount;
   final VoidCallback onCreateAccount;
 

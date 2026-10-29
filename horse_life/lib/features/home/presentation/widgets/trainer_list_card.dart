@@ -26,8 +26,8 @@ import 'home_section_card.dart';
 import 'home_list_tile.dart';
 
 /// O tipo genérico preserva os modelos próprios de cavalos e clientes.
-class ProfessionalListCard<T> extends StatelessWidget {
-  const ProfessionalListCard({
+class TrainerListCard<T> extends StatelessWidget {
+  const TrainerListCard({
     super.key,
     required this.title,
     required this.items,

@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da navegação entre o login e a recuperação de senha.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Adaptação dos cenários ao contrato de sessão tipada, às falhas
@@ -26,11 +30,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/core/widgets/app_text_form_field.dart';
+import 'package:horse_life/features/authentication/application/controllers/password_reset_controller.dart';
 import 'package:horse_life/features/authentication/application/states/login_session.dart';
 import 'package:horse_life/features/authentication/data/repositories/login_repository.dart';
+import 'package:horse_life/features/authentication/data/repositories/password_reset_repository.dart';
 import 'package:horse_life/features/authentication/presentation/screens/login_screen.dart';
+import 'package:horse_life/features/authentication/presentation/screens/password_reset_screen.dart';
 import 'package:horse_life/features/authentication/presentation/screens/profile_selection_screen.dart';
 import 'package:horse_life/features/authentication/presentation/screens/welcome_screen.dart';
+
+final class _LoginFlowPasswordResetRepository
+    implements PasswordResetRepository {
+  String? receivedEmail;
+
+  @override
+  Future<String> requestPasswordReset({required String email}) async {
+    receivedEmail = email;
+    return 'Mensagem genérica';
+  }
+}
 
 void main() {
   const session = LoginSession(
@@ -114,6 +132,43 @@ void main() {
 
     expect(find.byType(ProfileSelectionScreen), findsOneWidget);
     expect(find.text('Seleção de perfil'), findsOneWidget);
+  });
+
+  testWidgets('opens password recovery from the forgot password action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp(const LoginScreen()));
+
+    await tester.tap(find.text('Esqueci minha senha'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PasswordResetScreen), findsOneWidget);
+    expect(find.text('Recuperação de senha'), findsOneWidget);
+  });
+
+  testWidgets('completes password recovery and returns to login', (
+    tester,
+  ) async {
+    final repository = _LoginFlowPasswordResetRepository();
+    await tester.pumpWidget(
+      buildApp(
+        LoginScreen(
+          passwordResetController: PasswordResetController(repository),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Esqueci minha senha'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), ' usuario@email.com ');
+    await tester.tap(find.byKey(const Key('request-password-reset')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-password-reset')));
+    await tester.pumpAndSettle();
+
+    expect(repository.receivedEmail, 'usuario@email.com');
+    expect(find.byType(PasswordResetScreen), findsNothing);
+    expect(find.byType(LoginScreen), findsOneWidget);
   });
 
   // Cenário 2: validação local e encaminhamento normalizado das credenciais.

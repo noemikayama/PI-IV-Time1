@@ -2,37 +2,39 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 13/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Implementação da estrutura inicial da Home do Responsável,
-// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
-// -----------------------------------------------------------------------------
+// Data: 27/10/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização das importações de HomeAppBar, HomeBottomNavBar e
+// GuardianSidebar movidos para core/widgets/.
 //
-// Data: 18/10/2026
+// Data: 27/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
-// -----------------------------------------------------------------------------
+// Alteração: Injeção de HomeLoader; acesso a Firebase saiu da screen.
 //
 // Data: 25/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do GuardianRepository e dos modelos com as Cloud
 // Functions; documentação das responsabilidades e lógicas principais,
 // preservando o comportamento anterior da interface.
-// -----------------------------------------------------------------------------
-
-// Data: 27/10/2026
+//
+// Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Injeção de HomeLoader; acesso a Firebase saiu da screen.
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+//
+// Data: 13/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Implementação da estrutura inicial da Home do Responsável,
+// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../widgets/home_app_bar.dart';
-import '../../widgets/home_bottom_nav_bar.dart';
-import '../../widgets/guardian_sidebar.dart';
-import '../../widgets/guardian_home_content.dart';
-import '../../../data/models/guardian_home_data.dart';
+import 'package:horse_life/core/widgets/guardian_sidebar.dart';
+import 'package:horse_life/core/widgets/home_app_bar.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import '../../../application/controllers/home_loader.dart';
+import '../../../data/models/guardian_home_data.dart';
 import '../../../home_composition.dart';
+import '../../widgets/guardian_home_content.dart';
 
 /// Coordena fonte de dados, estado de navegação e compartilhamento da Future entre corpo e sidebar.
 class GuardianHomeScreen extends StatefulWidget {

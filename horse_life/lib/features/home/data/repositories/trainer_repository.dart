@@ -7,31 +7,31 @@
 // espelhando a arquitetura do Guardian. Contrato Professional pendente de validação.
 // -----------------------------------------------------------------------------
 import 'package:cloud_functions/cloud_functions.dart';
-import '../models/professional_model.dart';
+import '../models/trainer_model.dart';
 
 /// Abstração para teste e troca futura da origem de dados.
-abstract class ProfessionalRepository {
-  Future<ProfessionalHomeModel> getHome();
+abstract class TrainerRepository {
+  Future<TrainerHomeModel> getHome();
 }
 
 /// Usa a MESMA região e callable getHome da implementação do Guardian.
 /// Requer Firebase inicializado, autenticação e suporte do backend ao papel.
-class FirebaseProfessionalRepository implements ProfessionalRepository {
+class FirebaseTrainerRepository implements TrainerRepository {
   final FirebaseFunctions _functions;
 
-  FirebaseProfessionalRepository({FirebaseFunctions? functions})
+  FirebaseTrainerRepository({FirebaseFunctions? functions})
       : _functions = functions ??
             FirebaseFunctions.instanceFor(region: 'southamerica-east1');
 
   @override
-  Future<ProfessionalHomeModel> getHome() async {
+  Future<TrainerHomeModel> getHome() async {
     final response = await _functions.httpsCallable('getHome').call<dynamic>(
       <String, dynamic>{},
     );
     if (response.data is! Map) {
       throw const FormatException('Resposta inválida da Cloud Function getHome.');
     }
-    return ProfessionalHomeModel.fromJson(
+    return TrainerHomeModel.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
   }

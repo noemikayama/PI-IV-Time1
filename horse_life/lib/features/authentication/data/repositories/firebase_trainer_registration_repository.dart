@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração sequencial do cadastro profissional, autenticação
@@ -32,6 +37,7 @@ typedef TrainerAttachmentConfirmationCall =
     Future<void> Function(TrainerAttachmentType type, String path);
 typedef TrainerSignOutCall = Future<void> Function();
 
+// Categorias aceitas pelas callables de preparação e confirmação de anexos.
 enum TrainerAttachmentType {
   experience('experiencias'),
   certification('certificacoes');
@@ -41,6 +47,8 @@ enum TrainerAttachmentType {
   final String value;
 }
 
+// Credenciais temporárias de upload devolvidas pelo backend. A URL assinada
+// permite enviar o PDF ao Storage sem expor permissões permanentes no cliente.
 class TrainerAttachmentUpload {
   const TrainerAttachmentUpload({
     required this.path,
@@ -48,6 +56,7 @@ class TrainerAttachmentUpload {
     required this.headers,
   });
 
+  // Caminho definitivo, endpoint temporário e cabeçalhos exigidos pelo Storage.
   final String path;
   final String url;
   final Map<String, String> headers;
@@ -88,6 +97,11 @@ final class FirebaseTrainerRegistrationRepository
   FirebaseFunctions get _functions =>
       FirebaseFunctions.instanceFor(region: _region);
 
+  // O cadastro possui duas fases independentes:
+  // 1. criação da conta e dos dados profissionais pela callable;
+  // 2. autenticação temporária e upload de cada documento selecionado.
+  // Falhas da segunda fase informam que a conta já existe para impedir uma
+  // nova tentativa de cadastro com o mesmo e-mail.
   @override
   Future<void> createAccount({
     required RegistrationDraft registration,
@@ -99,9 +113,11 @@ final class FirebaseTrainerRegistrationRepository
       );
     }
 
+    // Valida tudo localmente antes de criar uma conta que não possa ser enviada.
     _validateDocuments(registration);
     final data = _buildRegistrationData(registration, password);
 
+    // Primeira fase: persiste a conta e os campos profissionais estruturados.
     try {
       await (_registerTrainer ?? _registerTrainerWithFirebase)(data);
     } on RegistrationFailure {
@@ -112,9 +128,11 @@ final class FirebaseTrainerRegistrationRepository
       throw const RegistrationFailure.connection();
     }
 
+    // Sem anexos, a conta já está completa e nenhuma sessão temporária é aberta.
     final documents = _documentsFrom(registration);
     if (documents.isEmpty) return;
 
+    // Segunda fase: o UID autenticado define os caminhos seguros do Storage.
     var isAuthenticated = false;
     try {
       await (_authenticate ?? _authenticateWithFirebase)(
@@ -123,6 +141,7 @@ final class FirebaseTrainerRegistrationRepository
       );
       isAuthenticated = true;
 
+      // O envio sequencial facilita identificar e compensar uma falha parcial.
       for (final document in documents) {
         await _sendDocument(document.$1, document.$2);
       }
@@ -139,6 +158,8 @@ final class FirebaseTrainerRegistrationRepository
         accountCreated: true,
       );
     } finally {
+      // A sessão serve apenas ao upload; o cadastro termina desautenticado e a
+      // pessoa usuária segue para o login explícito.
       if (isAuthenticated) {
         try {
           await (_signOut ?? _signOutFromFirebase)();
@@ -154,11 +175,14 @@ final class FirebaseTrainerRegistrationRepository
     TrainerRegistrationDraft registration,
     String password,
   ) {
+    // Modalidade é obrigatória para o perfil treinador e já deve ter sido
+    // coletada na terceira etapa do fluxo.
     final sport = registration.sport?.trim();
     if (sport == null || sport.isEmpty) {
       throw const RegistrationFailure('Selecione uma modalidade.');
     }
 
+    // A senha nunca é armazenada no draft: entra no payload apenas neste ponto.
     return {
       'nome':
           '${registration.firstName.trim()} '
@@ -173,6 +197,8 @@ final class FirebaseTrainerRegistrationRepository
   List<Map<String, Object>> _serializeServiceAreas(
     List<TrainerServiceArea> areas,
   ) {
+    // O mapa usa estado+cidade como chave para remover sobreposições produzidas
+    // pela expansão de regiões e estados inteiros.
     final serialized = <String, Map<String, Object>>{};
 
     void addArea({
@@ -187,6 +213,8 @@ final class FirebaseTrainerRegistrationRepository
       };
     }
 
+    // O backend recebe somente estado/cidade. Abrangências maiores são
+    // expandidas para todas as UFs correspondentes usando "Todas as cidades".
     for (final area in areas) {
       switch (area.type) {
         case TrainerServiceAreaType.countryRegion:
@@ -215,6 +243,7 @@ final class FirebaseTrainerRegistrationRepository
       }
     }
 
+    // O limite é aplicado depois da expansão, que representa o payload real.
     if (serialized.length > 30) {
       throw const RegistrationFailure(
         'Selecione no máximo 30 regiões de atendimento.',
@@ -224,6 +253,8 @@ final class FirebaseTrainerRegistrationRepository
   }
 
   void _validateDocuments(TrainerRegistrationDraft registration) {
+    // Revalida quantidade, extensão e tamanho na boundary remota, mesmo que as
+    // telas já tenham bloqueado seleções inválidas.
     if (registration.trainerCertificationDocuments.length >
         TrainerDocumentLimits.maximumCertifications) {
       throw const RegistrationFailure('Adicione no máximo 10 certificações.');
@@ -246,6 +277,7 @@ final class FirebaseTrainerRegistrationRepository
   List<(TrainerAttachmentType, TrainerDocument)> _documentsFrom(
     TrainerRegistrationDraft registration,
   ) {
+    // Associa cada arquivo ao diretório reconhecido pelas callables de anexo.
     return [
       if (registration.trainerExperienceDocument case final document?)
         (TrainerAttachmentType.experience, document),
@@ -258,6 +290,8 @@ final class FirebaseTrainerRegistrationRepository
     TrainerAttachmentType type,
     TrainerDocument document,
   ) async {
+    // Protocolo de três passos: obter URL assinada, transferir bytes e confirmar
+    // o caminho para que o backend associe o anexo ao treinador.
     final createUpload =
         _createAttachmentUpload ?? _createAttachmentUploadWithFirebase;
     final upload = await createUpload(type);
@@ -270,10 +304,12 @@ final class FirebaseTrainerRegistrationRepository
   }
 
   Future<void> _registerTrainerWithFirebase(Map<String, Object> data) async {
+    // A callable cria Authentication e dados de domínio de forma coordenada.
     await _functions.httpsCallable(_registerFunctionName).call<void>(data);
   }
 
   Future<void> _authenticateWithFirebase(String email, String password) async {
+    // Reutiliza o login do projeto para obter uma sessão curta de upload.
     final result = await _functions.httpsCallable(_loginFunctionName).call({
       'email': email,
       'senha': password,
@@ -289,6 +325,7 @@ final class FirebaseTrainerRegistrationRepository
   Future<TrainerAttachmentUpload> _createAttachmentUploadWithFirebase(
     TrainerAttachmentType type,
   ) async {
+    // O backend escolhe o caminho e assina a URL; o cliente não monta chaves.
     final result = await _functions
         .httpsCallable(_createUploadFunctionName)
         .call({'tipo': type.value});
@@ -315,6 +352,7 @@ final class FirebaseTrainerRegistrationRepository
     TrainerAttachmentUpload upload,
     Uint8List bytes,
   ) async {
+    // A transferência ocorre diretamente para a URL assinada recebida.
     final response = await http.put(
       Uri.parse(upload.url),
       headers: upload.headers,
@@ -331,6 +369,7 @@ final class FirebaseTrainerRegistrationRepository
     TrainerAttachmentType type,
     String path,
   ) async {
+    // Somente após o PUT bem-sucedido o caminho é persistido no cadastro.
     await _functions.httpsCallable(_confirmUploadFunctionName).call<void>({
       'tipo': type.value,
       'caminho': path,
@@ -338,10 +377,12 @@ final class FirebaseTrainerRegistrationRepository
   }
 
   Future<void> _signOutFromFirebase() {
+    // Encerra a autenticação temporária criada exclusivamente para anexos.
     return FirebaseAuth.instance.signOut();
   }
 
   Map<Object?, Object?> _asMap(Object? value) {
+    // Evita acessar campos de respostas que não atendem ao contrato remoto.
     if (value is Map<Object?, Object?>) return value;
     throw const RegistrationFailure('Resposta inválida do servidor.');
   }
@@ -349,6 +390,8 @@ final class FirebaseTrainerRegistrationRepository
   RegistrationFailure _mapRegistrationFailure(
     FirebaseFunctionsException error,
   ) {
+    // Apenas conflitos e argumentos inválidos têm mensagens acionáveis; os
+    // demais códigos são tratados como indisponibilidade.
     return switch (error.code) {
       'already-exists' => const RegistrationFailure('E-mail já cadastrado.'),
       'invalid-argument' => RegistrationFailure(

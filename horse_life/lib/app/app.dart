@@ -28,7 +28,7 @@ import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/features/authentication/data/repositories/authentication_session_repository.dart';
 import 'package:horse_life/features/home/application/controllers/home_loader.dart';
 import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
-import 'package:horse_life/features/home/data/models/professional_home_data.dart';
+import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 
 // Contrato de inicialização exigido pela raiz do aplicativo.
 typedef AppInitializer = Future<void> Function();
@@ -53,7 +53,7 @@ class HorseLifeApp extends StatelessWidget {
   /// Parâmetros antigos mantidos para não quebrar testes/composições existentes.
   final AuthenticationSessionRepository? sessionRepository;
   final HomeLoader<GuardianHomeData>? guardianLoader;
-  final HomeLoader<ProfessionalHomeData>? trainerLoader;
+  final HomeLoader<TrainerHomeData>? trainerLoader;
 
   @override
   Widget build(BuildContext context) {
