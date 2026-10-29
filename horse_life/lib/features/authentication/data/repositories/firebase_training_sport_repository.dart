@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos e segmentos do código de autenticação,
+// detalhando responsabilidades, fluxo de dados e integração entre camadas.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração das modalidades profissionais com a callable
@@ -14,6 +19,7 @@ import 'training_sport_repository.dart';
 
 typedef TrainingSportsCall = Future<Object?> Function();
 
+// Adapter da lista de modalidades mantida pelo backend.
 final class FirebaseTrainingSportRepository implements TrainingSportRepository {
   const FirebaseTrainingSportRepository({TrainingSportsCall? getModalities})
     : _getModalities = getModalities;
@@ -23,6 +29,7 @@ final class FirebaseTrainingSportRepository implements TrainingSportRepository {
 
   final TrainingSportsCall? _getModalities;
 
+  // Valida toda a coleção antes de entregá-la ao dropdown profissional.
   @override
   Future<List<String>> fetchSports() async {
     final response = await (_getModalities ?? _getModalitiesFromFirebase)();
@@ -41,6 +48,7 @@ final class FirebaseTrainingSportRepository implements TrainingSportRepository {
   }
 
   Future<Object?> _getModalitiesFromFirebase() async {
+    // A callable é pública porque esta etapa ocorre antes da criação da conta.
     final result = await FirebaseFunctions.instanceFor(
       region: _region,
     ).httpsCallable(_functionName).call();

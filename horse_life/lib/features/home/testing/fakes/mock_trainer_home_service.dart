@@ -13,13 +13,13 @@
 // Alteração: Fake movido para testing/fakes; mantido para testes legados.
 // -----------------------------------------------------------------------------
 
-import '../../data/models/professional_home_data.dart';
+import '../../data/models/trainer_home_data.dart';
 
 /// Serviço de testes. Substituir por um repositório real na integração com a API.
-class MockProfessionalHomeService {
-  const MockProfessionalHomeService();
+class MockTrainerHomeService {
+  const MockTrainerHomeService();
 
-  Future<ProfessionalHomeData> fetchHome({
+  Future<TrainerHomeData> fetchHome({
     String scenario = 'normal',
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -29,8 +29,8 @@ class MockProfessionalHomeService {
     }
 
     if (scenario == 'empty') {
-      return const ProfessionalHomeData(
-        professionalName: 'Mariana',
+      return const TrainerHomeData(
+        trainerName: 'Mariana',
         specialty: 'Salto',
         todayTrainings: [],
         weeklyFeedbacksDone: 0,
@@ -44,17 +44,17 @@ class MockProfessionalHomeService {
       );
     }
 
-    return const ProfessionalHomeData(
-      professionalName: 'Mariana',
+    return const TrainerHomeData(
+      trainerName: 'Mariana',
       specialty: 'Salto',
       todayTrainings: [
-        ProfessionalTraining(
+        TrainerTraining(
           id: 'training-01',
           title: 'Treino de salto',
           horseName: 'Apollo',
           planName: 'Preparação para competição',
         ),
-        ProfessionalTraining(
+        TrainerTraining(
           id: 'training-02',
           title: 'Treino de adestramento',
           horseName: 'Luna',
@@ -68,12 +68,12 @@ class MockProfessionalHomeService {
       weeklyTrainingsPlanned: 6,
       createdExercises: 16,
       horses: [
-        ProfessionalHorse(id: 'horse-01', name: 'Apollo'),
-        ProfessionalHorse(id: 'horse-02', name: 'Luna'),
-        ProfessionalHorse(id: 'horse-03', name: 'Thor'),
+        TrainerHorse(id: 'horse-01', name: 'Apollo'),
+        TrainerHorse(id: 'horse-02', name: 'Luna'),
+        TrainerHorse(id: 'horse-03', name: 'Thor'),
       ],
       clients: [
-        ProfessionalClient(id: 'client-01', name: 'Gabriela'),
+        TrainerClient(id: 'client-01', name: 'Gabriela'),
       ],
     );
   }

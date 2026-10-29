@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração da composição de dependências na raiz e seleção
+// das Homes pelo papel autenticado, sem duplicar o MaterialApp.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ativação da restauração da sessão Firebase na composição do app.
@@ -16,11 +21,6 @@
 // Alteração: Criação do arquivo para inicializar os serviços do Flutter e
 // montar a raiz do HorseLife com o carregamento do Firebase e a tela de login
 // como destino inicial.
-//
-// Data: 27/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Integração da composição de dependências na raiz e seleção
-// das Homes pelo papel autenticado, sem duplicar o MaterialApp.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';

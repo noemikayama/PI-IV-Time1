@@ -26,7 +26,7 @@ import 'package:flutter/material.dart';
 
 /// Os dois layouts existentes são preservados enquanto os dados e a API
 /// de renderização tornam-se compartilhados entre Guardian e Professional.
-enum HomeStatsCardStyle { guardian, professional }
+enum HomeStatsCardStyle { guardian, trainer }
 
 class HomeStatsCard extends StatelessWidget {
   const HomeStatsCard({
@@ -47,7 +47,7 @@ class HomeStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final compact = style == HomeStatsCardStyle.professional;
+    final compact = style == HomeStatsCardStyle.trainer;
     final number = Text.rich(
       TextSpan(
         children: [

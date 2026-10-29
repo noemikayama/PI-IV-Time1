@@ -16,35 +16,35 @@
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import '../../data/models/professional_home_data.dart';
+import '../../data/models/trainer_home_data.dart';
 import 'home_empty_state.dart';
 import 'home_section_card.dart';
 import 'horse_asset_icon.dart';
 
-class ProfessionalDailyTrainingCard extends StatefulWidget {
-  const ProfessionalDailyTrainingCard({
+class TrainerDailyTrainingCard extends StatefulWidget {
+  const TrainerDailyTrainingCard({
     super.key,
     required this.trainings,
     this.onViewTraining,
     this.onShowAll,
   });
 
-  final List<ProfessionalTraining> trainings;
-  final ValueChanged<ProfessionalTraining>? onViewTraining;
+  final List<TrainerTraining> trainings;
+  final ValueChanged<TrainerTraining>? onViewTraining;
   final VoidCallback? onShowAll;
 
   @override
-  State<ProfessionalDailyTrainingCard> createState() =>
-      _ProfessionalDailyTrainingCardState();
+  State<TrainerDailyTrainingCard> createState() =>
+      _TrainerDailyTrainingCardState();
 }
 
-class _ProfessionalDailyTrainingCardState
-    extends State<ProfessionalDailyTrainingCard> {
+class _TrainerDailyTrainingCardState
+    extends State<TrainerDailyTrainingCard> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
   @override
-  void didUpdateWidget(covariant ProfessionalDailyTrainingCard oldWidget) {
+  void didUpdateWidget(covariant TrainerDailyTrainingCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.trainings, widget.trainings)) {
       _currentPage = 0;
@@ -85,7 +85,7 @@ class _ProfessionalDailyTrainingCardState
                     onPageChanged: (index) {
                       setState(() => _currentPage = index);
                     },
-                    itemBuilder: (context, index) => _ProfessionalTrainingPreview(
+                    itemBuilder: (context, index) => _TrainerTrainingPreview(
                       training: trainings[index],
                       index: index + 1,
                       count: trainings.length,
@@ -137,18 +137,18 @@ class _ProfessionalDailyTrainingCardState
   }
 }
 
-class _ProfessionalTrainingPreview extends StatelessWidget {
-  const _ProfessionalTrainingPreview({
+class _TrainerTrainingPreview extends StatelessWidget {
+  const _TrainerTrainingPreview({
     required this.training,
     required this.index,
     required this.count,
     this.onViewTraining,
   });
 
-  final ProfessionalTraining training;
+  final TrainerTraining training;
   final int index;
   final int count;
-  final ValueChanged<ProfessionalTraining>? onViewTraining;
+  final ValueChanged<TrainerTraining>? onViewTraining;
 
   @override
   Widget build(BuildContext context) {

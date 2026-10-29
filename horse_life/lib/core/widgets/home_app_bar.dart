@@ -2,27 +2,31 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 13/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Implementação da estrutura inicial da Home do Responsável,
-// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
-// -----------------------------------------------------------------------------
-//
-// Data: 18/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
-// -----------------------------------------------------------------------------
+// Data: 27/10/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Migração do componente para core/widgets e aplicação de gradiente linear
+// vertical (whiteSmoke -> alabasterGray) como cor de fundo da AppBar.
 //
 // Data: 25/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do GuardianRepository e dos modelos com as Cloud
 // Functions; documentação das responsabilidades e lógicas principais,
 // preservando o comportamento anterior da interface.
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+//
+// Data: 13/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Implementação da estrutura inicial da Home do Responsável,
+// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
-/// Cabeçalho institucional com ação para abrir o Drawer da Screen.
+/// Cabeçalho institucional com ação para abrir o Drawer da Screen e fundo em gradiente.
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HomeAppBar({super.key});
 
@@ -31,13 +35,28 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return AppBar(
-      // Cor e elevação herdadas do AppTheme.
+      // Fundo transparente e sem elevação padrão para exibição nítida do gradiente.
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       centerTitle: true,
       toolbarHeight: 85,
 
-      // Botão que abre a Sidebar.
+      // Gradiente linear do topo central à parte de baixo central (whiteSmoke -> alabasterGray).
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.alabasterGray,
+              AppColors.whiteSmoke,
+            ],
+          ),
+        ),
+      ),
+
+      // Botão que abre a Sidebar lateral.
       leading: Builder(
         builder: (context) {
           return IconButton(
@@ -54,24 +73,14 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         },
       ),
 
-      // Título com a fonte oficial League Spartan.
-      title: Text(
-        'HorseLife',
-        style: theme.textTheme.headlineMedium?.copyWith(
-          color: AppColors.seaGreen,
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-
-      // Logo oficial já existente no projeto.
+      // Logo institucional exibida no canto direito da barra.
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 20),
           child: Image.asset(
-            'assets/Logo_somente_simbolo.png',
-            width: 42,
-            height: 42,
+            'assets/Logo_HorseLife.png',
+            width: 48,
+            height: 48,
             fit: BoxFit.contain,
           ),
         ),

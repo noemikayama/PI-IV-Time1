@@ -12,7 +12,7 @@ import 'package:horse_life/features/authentication/data/repositories/authenticat
 import 'package:horse_life/features/authentication/data/repositories/firebase_authentication_session_repository.dart';
 import 'package:horse_life/features/home/application/controllers/home_loader.dart';
 import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
-import 'package:horse_life/features/home/data/models/professional_home_data.dart';
+import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/home_composition.dart';
 
 /// Dependências de longa duração. Não mantém o estado visual do aplicativo.
@@ -21,7 +21,7 @@ class AppDependencies {
   AppDependencies({
     required this.sessionRepository,
     HomeLoader<GuardianHomeData>? guardianLoader,
-    HomeLoader<ProfessionalHomeData>? trainerLoader,
+    HomeLoader<TrainerHomeData>? trainerLoader,
   }) : _guardianLoader = guardianLoader,
        _trainerLoader = trainerLoader;
 
@@ -33,13 +33,13 @@ class AppDependencies {
   final AuthenticationSessionRepository sessionRepository;
 
   HomeLoader<GuardianHomeData>? _guardianLoader;
-  HomeLoader<ProfessionalHomeData>? _trainerLoader;
+  HomeLoader<TrainerHomeData>? _trainerLoader;
 
   /// A primeira leitura deve ocorrer após FirebaseBootstrap.initialize.
   HomeLoader<GuardianHomeData> get guardianLoader =>
       _guardianLoader ??= HomeComposition.guardian();
 
   /// O retorno de getHome para trainer depende do contrato real do backend.
-  HomeLoader<ProfessionalHomeData> get trainerLoader =>
-      _trainerLoader ??= HomeComposition.professional();
+  HomeLoader<TrainerHomeData> get trainerLoader =>
+      _trainerLoader ??= HomeComposition.trainer();
 }

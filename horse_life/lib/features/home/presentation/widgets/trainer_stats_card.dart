@@ -29,8 +29,8 @@ import 'package:flutter/material.dart';
 import 'home_stats_card.dart';
 
 /// API original de Professional mantida; lógica visual compartilhada.
-class ProfessionalStatsCard extends HomeStatsCard {
-  const ProfessionalStatsCard({
+class TrainerStatsCard extends HomeStatsCard {
+  const TrainerStatsCard({
     super.key,
     required String title,
     required int? value,
@@ -41,6 +41,6 @@ class ProfessionalStatsCard extends HomeStatsCard {
          value: value,
          total: total,
          gradientColors: gradientColors,
-         style: HomeStatsCardStyle.professional,
+         style: HomeStatsCardStyle.trainer,
        );
 }
