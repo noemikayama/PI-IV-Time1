@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da regra de treino executado para o dashboard.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -12,6 +16,7 @@
 // -----------------------------------------------------------------------------
 
 export {
+  EXECUTED_STATUSES,
   countHorseExecutions,
   countTrainerExecutions,
   countTrainerFeedbacks,
