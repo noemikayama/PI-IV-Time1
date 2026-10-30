@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Conversão de um dia de calendário no instante em que ele
+// começa em São Paulo e filtro de período para consultas, usados pelo
+// dashboard.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Início do dia, soma de dias e de meses e data em AAAA-MM-DD,
@@ -21,6 +27,21 @@ const DAY_MS = 86_400_000;
 
 // 'start' é inclusivo e 'end' é exclusivo.
 export type DatePeriod = {start: Date; end: Date};
+
+// Reutilizado entre chamadas: criar um Intl.DateTimeFormat é caro.
+const OFFSET_FORMAT = new Intl.DateTimeFormat("en-US", {
+  timeZone: TIME_ZONE,
+  timeZoneName: "longOffset",
+});
+
+/** Monta o filtro de um campo de data dentro do período, para o $match.
+ * @param {string} field Campo de data.
+ * @param {DatePeriod} period Período do filtro.
+ * @return {Object} Trecho do filtro.
+ */
+export const inPeriod = (field: string, period: DatePeriod) => ({
+  [field]: {$gte: period.start, $lt: period.end},
+});
 
 export const addDays = (date: Date, days: number) =>
   new Date(date.getTime() + days * DAY_MS);
@@ -43,6 +64,25 @@ export function getTodayYmd(now = new Date()): string {
  */
 export function getDayStart(now = new Date()): Date {
   return new Date(`${getTodayYmd(now)}T00:00:00.000Z`);
+}
+
+/** Converte um dia de calendário (meia-noite UTC) no instante em que ele
+ * começa em São Paulo. Campos com hora ('criadoEm', 'feedback.data') são
+ * instantes, então o dia 28 vai de 28T03:00Z a 29T03:00Z, e não de 28T00:00Z.
+ * @param {Date} day Dia de calendário à meia-noite UTC.
+ * @return {Date} Início do dia no fuso de São Paulo.
+ */
+export function toZonedDayStart(day: Date): Date {
+  // O offset é lido ao meio-dia para não cair na virada do dia anterior.
+  const offset = OFFSET_FORMAT
+    .formatToParts(new Date(day.getTime() + DAY_MS / 2))
+    .find((part) => part.type === "timeZoneName")?.value ?? "GMT";
+  // "GMT-03:00" -> -180 minutos; "GMT" sozinho é offset zero.
+  const match = /GMT([+-])(\d{2}):(\d{2})/.exec(offset);
+  const minutes = match ?
+    (match[1] === "-" ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3])) :
+    0;
+  return new Date(day.getTime() - minutes * 60_000);
 }
 
 /** Soma meses a uma data, sem estourar para o mês seguinte: um dia que não

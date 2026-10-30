@@ -2,22 +2,33 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Lista de feedbacks opcional, feedback.data filtrado pelo
+// instante de São Paulo, filtro de período compartilhado, poda dos
+// registros fora da janela antes do $facet e contagens de planos e
+// avaliações do treinador.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Agregação dos indicadores e das listas do dashboard.
 // -----------------------------------------------------------------------------
 
-// Coleção 'registros_treino'. Usa idx_registros_cavalo_data
-// (cavalo._id, dataPlanejada, status).
-import type {Document, ObjectId} from "mongodb";
+// Coleções 'registros_treino' (idx_registros_cavalo_data: cavalo._id,
+// dataPlanejada, status), 'planos' (idx_planos_treinador_status) e
+// 'avaliacoes'.
+import type {ObjectId} from "mongodb";
 import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
+import {inPeriod} from "../../../shared/utils/dates";
 import type {DatePeriod} from "../../../shared/utils/dates";
 import {EXECUTED_STATUSES} from "../../training";
 import type {
   DashboardAgregado,
   DashboardIndicadoresRow,
+  DashboardWindow,
   FeedbackRecenteRow,
+  PlanosStatusRow,
   TreinoRecenteRow,
 } from "../types";
 
@@ -57,7 +68,8 @@ const RATIO = {
 type DashboardFacet = {
     indicadores: DashboardIndicadoresRow[];
     ultimosTreinos: TreinoRecenteRow[];
-    ultimosFeedbacks: FeedbackRecenteRow[];
+    // Ausente quando o ramo de feedbacks não é pedido.
+    ultimosFeedbacks?: FeedbackRecenteRow[];
 };
 
 const EMPTY_INDICATORS: DashboardIndicadoresRow = {
@@ -74,35 +86,64 @@ const EMPTY_RESULT: DashboardAgregado = {
   ultimosFeedbacks: [],
 };
 
-/** Monta o filtro de data de um campo; sem período, não filtra.
- * @param {string} field Campo de data.
- * @param {DatePeriod} range Intervalo do filtro ou null.
- * @return {Document} Trecho do $match.
- */
-function inPeriod(field: string, range: DatePeriod | null): Document {
-  return range ? {[field]: {$gte: range.start, $lt: range.end}} : {};
-}
-
 /** Agrega os indicadores e as listas do dashboard em uma única consulta.
  * Os indicadores usam 'dataPlanejada' (o que estava previsto no período) e
  * as listas usam a data do próprio evento ('dataExecucao' e 'feedback.data').
  * @param {ObjectId[]} horseIds Cavalos aos quais o usuário tem acesso.
- * @param {DatePeriod} range Intervalo do filtro ou null para desde sempre.
+ * @param {DashboardWindow} window Janela do período.
  * @param {number} limit Tamanho das listas de recentes.
+ * @param {boolean} withFeedbacks Se a lista de feedbacks é montada; o
+ * treinador não a exibe e pula esse ramo.
  * @return {Promise<DashboardAgregado>} Números e listas do período.
  */
 export async function aggregateHorseDashboard(
   horseIds: ObjectId[],
-  range: DatePeriod | null,
-  limit: number
+  window: DashboardWindow,
+  limit: number,
+  withFeedbacks = true
 ): Promise<DashboardAgregado> {
   if (horseIds.length === 0) return EMPTY_RESULT;
+
+  const {range, instants} = window;
+  // O $facet não usa índice e recebe tudo o que passar do $match inicial.
+  // Sem esta poda, um filtro SEMANAL levaria todo o histórico dos cavalos
+  // para a memória; cada ramo ainda aplica o seu próprio filtro de data.
+  const inSomeBranch = [
+    inPeriod("dataPlanejada", range),
+    inPeriod("dataExecucao", range),
+    ...(withFeedbacks ? [inPeriod("feedback.data", instants)] : []),
+  ];
+  const feedbackBranch = {
+    ultimosFeedbacks: [
+      {
+        $match: {
+          "feedback": {$exists: true},
+          ...inPeriod("feedback.data", instants),
+        },
+      },
+      {$sort: {"feedback.data": -1, "_id": -1}},
+      {$limit: limit},
+      {
+        $project: {
+          "feedback.data": 1,
+          "treinamento.titulo": 1,
+          "plano.titulo": 1,
+        },
+      },
+    ],
+  };
 
   const db = await getDatabase();
   const result = await db
     .collection(COLLECTIONS.RegistrosTreino)
     .aggregate<DashboardFacet>([
-      {$match: {"cavalo._id": {$in: horseIds}, ...NOT_CANCELED}},
+      {
+        $match: {
+          "cavalo._id": {$in: horseIds},
+          ...NOT_CANCELED,
+          "$or": inSomeBranch,
+        },
+      },
       {
         $facet: {
           indicadores: [
@@ -141,23 +182,7 @@ export async function aggregateHorseDashboard(
               },
             },
           ],
-          ultimosFeedbacks: [
-            {
-              $match: {
-                "feedback": {$exists: true},
-                ...inPeriod("feedback.data", range),
-              },
-            },
-            {$sort: {"feedback.data": -1, "_id": -1}},
-            {$limit: limit},
-            {
-              $project: {
-                "feedback.data": 1,
-                "treinamento.titulo": 1,
-                "plano.titulo": 1,
-              },
-            },
-          ],
+          ...(withFeedbacks ? feedbackBranch : {}),
         },
       },
     ])
@@ -175,4 +200,65 @@ export async function aggregateHorseDashboard(
     ultimosTreinos: result?.ultimosTreinos ?? [],
     ultimosFeedbacks: result?.ultimosFeedbacks ?? [],
   };
+}
+
+const PLAN_STATUS_FIELD: Record<string, keyof PlanosStatusRow> = {
+  ATIVO: "ativos",
+  CONCLUIDO: "concluidos",
+  CANCELADO: "cancelados",
+  RASCUNHO: "rascunhos",
+};
+
+/** Conta os planos criados pelo treinador no período, pelo status atual.
+ * Usa idx_planos_treinador_status (treinador._id, status).
+ * @param {string} trainerId UID do treinador.
+ * @param {DatePeriod} createdIn Período de 'criadoEm'.
+ * @return {Promise<PlanosStatusRow>} Quantidade por status.
+ */
+export async function countTrainerPlansByStatus(
+  trainerId: string,
+  createdIn: DatePeriod
+): Promise<PlanosStatusRow> {
+  const db = await getDatabase();
+  const rows = await db
+    .collection(COLLECTIONS.Planos)
+    .aggregate<{_id: string; total: number}>([
+      {
+        $match: {
+          "treinador._id": trainerId,
+          ...inPeriod("criadoEm", createdIn),
+        },
+      },
+      {$group: {_id: "$status", total: {$sum: 1}}},
+    ])
+    .toArray();
+
+  const counts: PlanosStatusRow = {
+    ativos: 0,
+    concluidos: 0,
+    cancelados: 0,
+    rascunhos: 0,
+  };
+  for (const row of rows) {
+    const field = PLAN_STATUS_FIELD[row._id];
+    if (field) counts[field] = row.total;
+  }
+  return counts;
+}
+
+/** Conta as avaliações feitas pelo treinador no período. O DD não define
+ * índice por treinador em 'avaliacoes' (só idx_avaliacoes_cavalo_data); com
+ * volume, vale criar um em (treinador._id, data).
+ * @param {string} trainerId UID do treinador.
+ * @param {DatePeriod} range Período de 'data' (calendário).
+ * @return {Promise<number>} Quantidade de avaliações.
+ */
+export async function countTrainerEvaluations(
+  trainerId: string,
+  range: DatePeriod
+): Promise<number> {
+  const db = await getDatabase();
+  return db
+    .collection(COLLECTIONS.Avaliacoes)
+    .countDocuments({"treinador._id": trainerId, ...inPeriod("data", range)});
 }

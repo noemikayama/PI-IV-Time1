@@ -2,15 +2,21 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Filtro do painel profissional, janela com instantes e as duas
+// respostas do dashboard do treinador.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos dos filtros e da resposta do dashboard do responsável.
 // -----------------------------------------------------------------------------
 
 import type {ObjectId} from "mongodb";
+import type {DatePeriod} from "../../../shared/utils/dates";
 
-// Períodos aceitos pelo filtro. SEMPRE não limita a data; os demais são
-// janelas que terminam no fim do dia de hoje (ver dashboardPeriod.ts).
+// Períodos aceitos pelo filtro. Todos terminam no fim do dia de hoje; SEMPRE
+// só não tem início (ver dashboardPeriod.ts).
 export type DashboardPeriodo =
     | "SEMPRE"
     | "DIARIO"
@@ -19,10 +25,24 @@ export type DashboardPeriodo =
     | "SEMESTRAL"
     | "ANUAL";
 
-// Filtros já validados. 'cavaloId' nulo significa todos os cavalos.
+// Filtros com formato já validado. 'cavaloId' nulo significa todos os
+// cavalos. As regras de 'painelProfissional' por perfil (exclusivo do
+// treinador, sem 'cavaloId') ficam nos services.
 export type DashboardFiltros = {
     periodo: DashboardPeriodo;
     cavaloId: ObjectId | null;
+    painelProfissional: boolean;
+};
+
+// Janela do período. 'range' filtra datas de calendário (dataPlanejada,
+// dataExecucao, avaliacoes.data) e 'instants' filtra campos com hora
+// (criadoEm, feedback.data), no fuso de São Paulo. Sempre terminam no fim
+// de hoje, inclusive em SEMPRE, que só não tem início ('inicio' nulo).
+export type DashboardWindow = {
+    range: DatePeriod;
+    instants: DatePeriod;
+    inicio: string | null;
+    fim: string;
 };
 
 // Referência resumida usada no seletor de cavalos do filtro.
@@ -90,8 +110,71 @@ export interface DashboardResponsavel {
     ultimosFeedbacks: FeedbackRecente[];
 }
 
-// A resposta do treinador entra nesta união quando for implementada.
-export type DashboardResult = DashboardResponsavel;
+// Campos comuns às duas visões do treinador.
+interface DashboardTreinadorBase {
+    tipoConta: "TREINADOR";
+    periodo: DashboardPeriodo;
+    inicio: string | null;
+    fim: string;
+}
+
+// Painel profissional desativado: evolução dos cavalos vinculados.
+export interface DashboardTreinadorCavalos extends DashboardTreinadorBase {
+    painelProfissional: false;
+    cavaloId: string | null;
+    cavalos: RefCavalo[];
+    // false sem cavalos ou sem treinos no período: "Sem dados para exibir".
+    possuiDados: boolean;
+    treinosRealizados: TreinosRealizados;
+    cumprimentoTreinos: CumprimentoTreinos;
+    frequenciaExecucao: FrequenciaExecucao;
+    ultimosTreinos: TreinoRecente[];
+    // true quando há mais treinos na janela do que os listados
+    // ("Mostrar tudo").
+    possuiMaisTreinos: boolean;
+}
+
+// Gráfico de setores "Planos criados". O status é o atual de cada plano e
+// os quatro percentuais somam 100 quando há planos.
+export interface PlanosCriados {
+    total: number;
+    ativos: number;
+    concluidos: number;
+    cancelados: number;
+    rascunhos: number;
+    percentualAtivos: number;
+    percentualConcluidos: number;
+    percentualCancelados: number;
+    percentualRascunhos: number;
+}
+
+// Card "Percentual de feedbacks dados": registros executados dos planos do
+// treinador que já têm feedback.
+export interface FeedbacksDados {
+    percentual: number;
+    comFeedback: number;
+    executados: number;
+}
+
+// Painel profissional ativado: produção do próprio treinador. Não tem
+// 'possuiDados': sem produção, a tela mostra os cards zerados.
+export interface DashboardTreinadorProfissional
+    extends DashboardTreinadorBase {
+    painelProfissional: true;
+    planosCriados: PlanosCriados;
+    feedbacksDados: FeedbacksDados;
+    // Vínculos atuais: o modelo não guarda a data do vínculo.
+    clientesVinculados: number;
+    cavalosVinculados: number;
+    avaliacoesFeitas: number;
+    exerciciosCriados: number;
+}
+
+export type DashboardTreinador =
+    | DashboardTreinadorCavalos
+    | DashboardTreinadorProfissional;
+
+export type DashboardResult = DashboardResponsavel | DashboardTreinador;
 
 // ---------------------------------------------------------------------------
 // Resultado bruto da agregação sobre 'registros_treino'.
@@ -120,6 +203,14 @@ export type FeedbackRecenteRow = {
     feedback: {data: Date};
     treinamento?: {titulo?: string};
     plano?: {titulo?: string};
+};
+
+// Contagem de planos por status atual, sobre a coleção 'planos'.
+export type PlanosStatusRow = {
+    ativos: number;
+    concluidos: number;
+    cancelados: number;
+    rascunhos: number;
 };
 
 export type DashboardAgregado = {
