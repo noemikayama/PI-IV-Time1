@@ -2,22 +2,24 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 13/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Implementação da estrutura inicial da Home do Responsável,
-// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
-// -----------------------------------------------------------------------------
-//
-// Data: 18/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
-// -----------------------------------------------------------------------------
+// Data: 27/10/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Migração do componente para core/widgets mantendo o design e comportamento.
 //
 // Data: 25/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do GuardianRepository e dos modelos com as Cloud
 // Functions; documentação das responsabilidades e lógicas principais,
 // preservando o comportamento anterior da interface.
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+//
+// Data: 13/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Implementação da estrutura inicial da Home do Responsável,
+// seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
@@ -146,3 +148,4 @@ class HomeBottomNavBar extends StatelessWidget {
     );
   }
 }
+

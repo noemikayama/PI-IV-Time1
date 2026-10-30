@@ -24,10 +24,10 @@ import 'package:horse_life/features/authentication/application/states/login_sess
 import 'package:horse_life/features/authentication/data/repositories/authentication_session_repository.dart';
 import 'package:horse_life/features/home/application/controllers/home_loader.dart';
 import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
-import 'package:horse_life/features/home/data/models/professional_home_data.dart';
+import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/home_composition.dart';
 import 'package:horse_life/features/home/presentation/screens/guardian/guardian_home_screen.dart';
-import 'package:horse_life/features/home/presentation/screens/trainer/professional_home_screen.dart';
+import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
 import 'package:horse_life/features/splash/presentation/screens/splash_screen.dart';
 
 /// Permite testar o gate sem montar os cards de cada Home.
@@ -58,7 +58,7 @@ class AppGate extends StatefulWidget {
   // Compatibilidade com chamadas anteriores do AppGate.
   final AuthenticationSessionRepository? sessionRepository;
   final HomeLoader<GuardianHomeData>? guardianLoader;
-  final HomeLoader<ProfessionalHomeData>? trainerLoader;
+  final HomeLoader<TrainerHomeData>? trainerLoader;
 
   final SessionHomeBuilder? guardianHomeBuilder;
   final SessionHomeBuilder? trainerHomeBuilder;
@@ -72,7 +72,7 @@ class _AppGateState extends State<AppGate> {
   late Future<void> _initialization;
   Stream<LoginSession?>? _sessionStream;
   HomeLoader<GuardianHomeData>? _legacyGuardianLoader;
-  HomeLoader<ProfessionalHomeData>? _legacyTrainerLoader;
+  HomeLoader<TrainerHomeData>? _legacyTrainerLoader;
 
   AuthenticationSessionRepository? get _sessionRepository =>
       widget.dependencies?.sessionRepository ?? widget.sessionRepository;
@@ -185,10 +185,10 @@ class _AppGateState extends State<AppGate> {
       widget.guardianLoader ??
       (_legacyGuardianLoader ??= HomeComposition.guardian());
 
-  HomeLoader<ProfessionalHomeData> get _trainerLoader =>
+  HomeLoader<TrainerHomeData> get _trainerLoader =>
       widget.dependencies?.trainerLoader ??
       widget.trainerLoader ??
-      (_legacyTrainerLoader ??= HomeComposition.professional());
+      (_legacyTrainerLoader ??= HomeComposition.trainer());
 
   Widget _buildAuthenticatedHome(
     BuildContext context,
@@ -204,7 +204,7 @@ class _AppGateState extends State<AppGate> {
             );
       case AuthenticationRole.trainer:
         return widget.trainerHomeBuilder?.call(context, session, onLogout) ??
-            ProfessionalHomeScreen(
+            TrainerHomeScreen(
               onLogout: onLogout,
               loader: _trainerLoader,
             );

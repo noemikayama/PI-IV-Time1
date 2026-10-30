@@ -9,13 +9,13 @@
 
 import 'application/controllers/guardian_home_controller.dart';
 import 'application/controllers/home_loader.dart';
-import 'application/controllers/professional_home_controller.dart';
+import 'application/controllers/trainer_home_controller.dart';
 import 'data/models/guardian_home_data.dart';
-import 'data/models/professional_home_data.dart';
+import 'data/models/trainer_home_data.dart';
 import 'data/repositories/guardian_repository.dart';
-import 'data/repositories/professional_repository.dart';
+import 'data/repositories/trainer_repository.dart';
 import 'testing/fakes/mock_guardian_home_service.dart';
-import 'testing/fakes/mock_professional_home_service.dart';
+import 'testing/fakes/mock_trainer_home_service.dart';
 
 /// Ponto de composição de transição. No projeto completo, AppDependencies
 /// pode criar/injetar estes loaders na raiz; as telas aceitam HomeLoader<T>.
@@ -27,15 +27,15 @@ abstract final class HomeComposition {
     return GuardianHomeController(FirebaseGuardianRepository());
   }
 
-  static HomeLoader<ProfessionalHomeData> professional({
+  static HomeLoader<TrainerHomeData> trainer({
     String? mockScenario,
-    ProfessionalRepository? repository,
+    TrainerRepository? repository,
   }) {
     if (mockScenario != null) {
-      return _MockProfessionalLoader(mockScenario);
+      return _MockTrainerLoader(mockScenario);
     }
-    return ProfessionalHomeController(
-      repository ?? FirebaseProfessionalRepository(),
+    return TrainerHomeController(
+      repository ?? FirebaseTrainerRepository(),
     );
   }
 }
@@ -52,11 +52,11 @@ class _MockGuardianLoader implements HomeLoader<GuardianHomeData> {
       );
 }
 
-class _MockProfessionalLoader implements HomeLoader<ProfessionalHomeData> {
-  const _MockProfessionalLoader(this.scenario);
+class _MockTrainerLoader implements HomeLoader<TrainerHomeData> {
+  const _MockTrainerLoader(this.scenario);
   final String scenario;
 
   @override
-  Future<ProfessionalHomeData> fetchHome() =>
-      const MockProfessionalHomeService().fetchHome(scenario: scenario);
+  Future<TrainerHomeData> fetchHome() =>
+      const MockTrainerHomeService().fetchHome(scenario: scenario);
 }

@@ -2,44 +2,46 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 18/10/2026
+// Data: 27/10/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Migração do componente para core/widgets com ajuste dos imports.
+//
+// Data: 27/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Implementação do menu lateral do Profissional com especialidade,
-// quantidade de cavalos vinculados e saída protegida contra toques repetidos.
-// -----------------------------------------------------------------------------
+// Alteração: Remoção de especialidade fictícia quando getHome não informa
+// a modalidade do treinador.
 //
 // Data: 26/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Revisão de integração e compatibilidade com a arquitetura
 // Repository/Mapper/Service, sem alterar a composição visual aprovada.
-// -----------------------------------------------------------------------------
-
-// Data: 27/10/2026
+//
+// Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Remoção de especialidade fictícia quando getHome não informa
-// a modalidade do treinador.
+// Alteração: Implementação do menu lateral do Profissional com especialidade,
+// quantidade de cavalos vinculados e saída protegida contra toques repetidos.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
-import '../../data/models/professional_home_data.dart';
+import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 
-class ProfessionalSidebar extends StatefulWidget {
-  const ProfessionalSidebar({
+class TrainerSidebar extends StatefulWidget {
+  const TrainerSidebar({
     super.key,
     required this.onLogout,
     required this.homeFuture,
   });
 
   final Future<void> Function() onLogout;
-  final Future<ProfessionalHomeData> homeFuture;
+  final Future<TrainerHomeData> homeFuture;
 
   @override
-  State<ProfessionalSidebar> createState() => _ProfessionalSidebarState();
+  State<TrainerSidebar> createState() => _TrainerSidebarState();
 }
 
-class _ProfessionalSidebarState extends State<ProfessionalSidebar> {
+class _TrainerSidebarState extends State<TrainerSidebar> {
   bool _isLoggingOut = false;
 
   // Itens provisórios do protótipo; substituir ao integrar as respectivas rotas.
@@ -76,7 +78,7 @@ class _ProfessionalSidebarState extends State<ProfessionalSidebar> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FutureBuilder<ProfessionalHomeData>(
+              FutureBuilder<TrainerHomeData>(
                 future: widget.homeFuture,
                 builder: (context, snapshot) {
                   final data = snapshot.data;
@@ -92,7 +94,7 @@ class _ProfessionalSidebarState extends State<ProfessionalSidebar> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              data?.professionalName ?? '<Usuário>',
+                              data?.trainerName ?? '<Usuário>',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleLarge?.copyWith(
@@ -177,3 +179,4 @@ class _ProfessionalSidebarState extends State<ProfessionalSidebar> {
     );
   }
 }
+
