@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do suporte a ícone e dos estados do componente.
+//
+// Data: 28/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão de ícone opcional ao lado do rótulo, preservando os
+// estados de carregamento e desabilitado do botão.
+//
 // Data: 13/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Migração do gradiente, conteúdo e indicador de progresso para as
@@ -15,13 +24,16 @@
 
 import 'package:flutter/material.dart';
 
-// Botão principal reutilizável que deriva sua aparência do tema e oferece
-// suporte a ação desabilitada e estado de processamento assíncrono.
+/// Botão principal reutilizável com gradiente da identidade visual.
+///
+/// Aceita um [icon] opcional e representa ações desabilitadas ou em
+/// processamento sem permitir novos toques.
 class GradientButton extends StatelessWidget {
   const GradientButton({
     required this.label,
     required this.onPressed,
     this.isLoading = false,
+    this.icon,
     super.key,
   });
 
@@ -29,6 +41,9 @@ class GradientButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
+
+  /// Ícone exibido antes do rótulo quando informado.
+  final IconData? icon;
 
   // Composição visual, semântica e interação por toque.
   @override
@@ -67,11 +82,20 @@ class GradientButton extends StatelessWidget {
                             strokeWidth: 2.5,
                           ),
                         )
-                      : Text(
-                          label,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: colorScheme.onPrimary,
-                          ),
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (icon != null) ...[
+                              Icon(icon, color: colorScheme.onPrimary),
+                              const SizedBox(width: 10),
+                            ],
+                            Text(
+                              label,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                          ],
                         ),
                 ),
               ),
