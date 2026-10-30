@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Carga do treinador ativo e conversão dos anexos compartilhadas
+// com a edição do perfil.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -15,9 +20,10 @@
 // Alteração: Consulta do perfil do treinador autenticado.
 // -----------------------------------------------------------------------------
 
-import {AppError} from "../../../../shared/errors/AppError";
-import {findTrainerById} from "../repositories/trainerRepository";
-import {toAttachmentView} from "./trainerAttachmentService";
+import {
+  loadActiveTrainer,
+  toAttachmentViews,
+} from "./trainerAttachmentService";
 import type {TrainerProfile} from "../types";
 
 /** Retorna os dados públicos do perfil do treinador.
@@ -26,26 +32,11 @@ import type {TrainerProfile} from "../types";
 export async function getTrainerProfileService(
   uid: string
 ): Promise<TrainerProfile> {
-  const trainer = await findTrainerById(uid);
-
-  if (!trainer) {
-    throw new AppError("not-found", "Perfil não encontrado.");
-  }
-  if (trainer.situacaoProfissional === "INATIVO") {
-    throw new AppError("permission-denied", "Cadastro inativo.");
-  }
-
-  const [experiencias, certificacoes] = await Promise.all([
-    typeof trainer.experiencias === "string" ?
-      toAttachmentView(trainer.experiencias) :
-      null,
-    Promise.all(trainer.certificacoes.map(toAttachmentView)),
-  ]);
+  const trainer = await loadActiveTrainer(uid);
 
   return {
     ...trainer,
-    experiencias,
-    certificacoes,
+    ...(await toAttachmentViews(trainer)),
     criadoEm: trainer.criadoEm.toISOString(),
     atualizadoEm: trainer.atualizadoEm.toISOString(),
   };

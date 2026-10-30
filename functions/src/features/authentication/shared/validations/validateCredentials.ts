@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Mensagem opcional em asRecord, para campos aninhados.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do nome completo (nome + sobrenome) e dos campos
@@ -36,11 +40,15 @@ function invalid(message: string): AppError {
 
 /** Garante que os dados recebidos sejam um objeto simples.
  * @param {unknown} data Dados recebidos.
+ * @param {string} message Mensagem do erro; campos aninhados informam a sua.
  * @return {Object} Dados convertidos em objeto.
  */
-export function asRecord(data: unknown): Record<string, unknown> {
+export function asRecord(
+  data: unknown,
+  message = "Dados de cadastro inválidos."
+): Record<string, unknown> {
   if (typeof data !== "object" || data === null || Array.isArray(data)) {
-    throw invalid("Dados de cadastro inválidos.");
+    throw invalid(message);
   }
   return data as Record<string, unknown>;
 }

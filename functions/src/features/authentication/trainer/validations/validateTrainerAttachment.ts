@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação do caminho exportada para a edição do perfil.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação dos dados dos endpoints de anexos do treinador.
@@ -38,7 +42,7 @@ function parseTipo(value: unknown): AttachmentType {
  * @param {unknown} value Valor recebido.
  * @return {string} Caminho validado.
  */
-function parseCaminho(value: unknown): string {
+export function parseCaminho(value: unknown): string {
   if (
     typeof value !== "string" ||
     value.length > 200 ||

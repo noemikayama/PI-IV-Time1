@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da edição do perfil do treinador.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -24,3 +28,4 @@ export {createTrainerAttachmentUpload} from
   "./handlers/createTrainerAttachmentUpload";
 export {removeTrainerAttachment} from
   "./handlers/removeTrainerAttachment";
+export {updateTrainerProfile} from "./handlers/updateTrainerProfile";

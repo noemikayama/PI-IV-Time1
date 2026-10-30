@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipos da edição do perfil do treinador.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -133,4 +137,37 @@ export interface HomeTreinador {
 export type TrainerHomeSource = Pick<
     TrainerDocument,
     "nome" | "situacaoProfissional" | "cavalos" | "clientes"
+>;
+
+// Somente os campos enviados pelo app; campo ausente não é alterado.
+// O nome completo já vem composto a partir do nome e do sobrenome.
+// O envio de PDFs continua em createTrainerAttachmentUpload e
+// confirmTrainerAttachment; aqui os anexos só podem ser removidos.
+export type UpdateTrainerProfileInput = {
+    nome?: string;
+    regioesAtendimento?: {
+        adicionar: ServiceRegion[];
+        remover: ServiceRegion[];
+    };
+    experiencias?: {remover: string};
+    certificacoes?: {remover: string[]};
+};
+
+// Alterações já conferidas com o documento atual, enviadas ao repository.
+// 'regioesAtendimento' é a lista final; os anexos são os caminhos a remover.
+export type TrainerProfileChanges = {
+    nome?: string;
+    regioesAtendimento?: ServiceRegion[];
+    removerExperiencia?: string;
+    removerCertificacoes: string[];
+};
+
+// Campos editáveis no formato de getTrainerProfile.
+export type UpdateTrainerProfileResult = Pick<
+  TrainerProfile,
+  | "nome"
+  | "experiencias"
+  | "certificacoes"
+  | "regioesAtendimento"
+  | "atualizadoEm"
 >;
