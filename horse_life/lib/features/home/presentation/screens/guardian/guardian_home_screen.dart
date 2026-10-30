@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do carregamento e das ações do perfil do responsável.
+//
+// Data: 28/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração do perfil do responsável à navegação inferior, com
+// carregamento real ou injetável e ações externas de perfil e cavalos.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Atualização das importações de HomeAppBar, HomeBottomNavBar e
@@ -31,6 +40,9 @@ import 'package:flutter/material.dart';
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
+import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
+import 'package:horse_life/features/profile/data/repositories/guardian_profile_repository.dart';
+import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/guardian_home_data.dart';
 import '../../../home_composition.dart';
@@ -43,6 +55,9 @@ class GuardianHomeScreen extends StatefulWidget {
     this.mockScenario,
     this.loader,
     this.onRegisterHorse,
+    this.guardianProfileLoader,
+    this.onEditGuardianProfile,
+    this.onShowAllGuardianHorses,
     super.key,
   });
 
@@ -55,6 +70,13 @@ class GuardianHomeScreen extends StatefulWidget {
 
   // Navegação futura para o cadastro de cavalos.
   final VoidCallback? onRegisterHorse;
+
+  /// Fonte injetável do perfil, usada principalmente em testes e composições.
+  final GuardianProfileLoader? guardianProfileLoader;
+
+  /// Ações de navegação disponibilizadas pela tela de perfil.
+  final VoidCallback? onEditGuardianProfile;
+  final VoidCallback? onShowAllGuardianHorses;
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
@@ -70,11 +92,21 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   late Future<GuardianHomeData> _homeFuture;
 
   late HomeLoader<GuardianHomeData> _loader;
+  FirebaseGuardianProfileRepository? _guardianProfileRepository;
 
   Future<GuardianHomeData> _fetchHome() => _loader.fetchHome();
 
+  // Reutiliza o repositório real entre reconstruções quando não há injeção.
+  Future<GuardianProfileData> _fetchGuardianProfile() {
+    final injectedLoader = widget.guardianProfileLoader;
+    if (injectedLoader != null) return injectedLoader();
+    _guardianProfileRepository ??= FirebaseGuardianProfileRepository();
+    return _guardianProfileRepository!.getGuardianProfile();
+  }
+
   void _configureLoader() {
-    _loader = widget.loader ??
+    _loader =
+        widget.loader ??
         HomeComposition.guardian(mockScenario: widget.mockScenario);
   }
 
@@ -112,11 +144,19 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         homeFuture: _homeFuture,
       ),
       // Área reservada aos cards futuros.
-      body: GuardianHomeContent(
-        homeFuture: _homeFuture,
-        onRetry: _retryHome,
-        onRegisterHorse: widget.onRegisterHorse,
-      ),
+      body: _selectedIndex == 4
+          ? GuardianProfileScreen(
+              loadGuardianProfile: _fetchGuardianProfile,
+              onLogout: widget.onLogout,
+              onEditGuardianProfile: widget.onEditGuardianProfile,
+              onShowAllGuardianHorses: widget.onShowAllGuardianHorses,
+              onRegisterGuardianHorse: widget.onRegisterHorse,
+            )
+          : GuardianHomeContent(
+              homeFuture: _homeFuture,
+              onRetry: _retryHome,
+              onRegisterHorse: widget.onRegisterHorse,
+            ),
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
         selectedIndex: _selectedIndex,
