@@ -23,11 +23,16 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -190,5 +195,34 @@ class ServidorMicrochipIntegracaoTest {
         ServidorMicrochip segundo = criarServidor(primeiro.portaLocal(), VALIDO, TIMEOUT_PADRAO);
 
         assertThrows(BindException.class, segundo::iniciar);
+    }
+
+    @Test
+    void deveRegistrarPortaSemSeparadorDeMilhar() throws IOException {
+        Logger logger = Logger.getLogger(ServidorMicrochip.class.getName());
+        List<String> mensagens = new CopyOnWriteArrayList<>();
+        Handler capturador = new Handler() {
+            @Override
+            public void publish(LogRecord registro) {
+                mensagens.add(new SimpleFormatter().formatMessage(registro));
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        logger.addHandler(capturador);
+        try {
+            ServidorMicrochip servidor = iniciarServidor(VALIDO, TIMEOUT_PADRAO);
+
+            String esperada = "Servidor de microchip escutando na porta " + servidor.portaLocal() + ".";
+            assertTrue(mensagens.contains(esperada), () -> "mensagens registradas: " + mensagens);
+        } finally {
+            logger.removeHandler(capturador);
+        }
     }
 }

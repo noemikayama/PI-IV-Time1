@@ -40,7 +40,7 @@ public final class ServidorMicrochip implements AutoCloseable {
                 .name("aceitador-microchip")
                 .daemon(false)
                 .start(this::aceitarConexoes);
-        LOGGER.log(Level.INFO, "Servidor de microchip escutando na porta {0}.", portaLocal());
+        LOGGER.log(Level.INFO, "Servidor de microchip escutando na porta {0}.", String.valueOf(portaLocal()));
     }
 
     public int portaLocal() {
