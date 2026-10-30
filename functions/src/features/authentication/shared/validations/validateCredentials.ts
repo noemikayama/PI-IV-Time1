@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação do nome completo (nome + sobrenome) e dos campos
+// permitidos, compartilhadas pelas edições de perfil.
+//
 // Data: 20/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do e-mail da recuperação de senha, com a checagem de
@@ -55,13 +60,25 @@ function parseEmail(email: unknown): string {
   return email.trim().toLowerCase();
 }
 
-/** Valida e normaliza as credenciais usadas no cadastro.
+/** Recusa qualquer campo fora da lista de campos permitidos.
  * @param {Object} data Dados recebidos.
- * @return {Credentials} Credenciais validadas e normalizadas.
+ * @param {string[]} allowed Campos aceitos pelo endpoint.
  */
-export function parseCredentials(data: Record<string, unknown>): Credentials {
-  const {nome, email, senha} = data;
+export function assertAllowedFields(
+  data: Record<string, unknown>,
+  allowed: readonly string[]
+): void {
+  const blocked = Object.keys(data).find((field) => !allowed.includes(field));
+  if (blocked !== undefined) {
+    throw invalid(`O campo '${blocked}' não pode ser editado.`);
+  }
+}
 
+/** Valida o nome da conta e remove espaços nas pontas.
+ * @param {unknown} nome Nome recebido.
+ * @return {string} Nome normalizado.
+ */
+function parseName(nome: unknown): string {
   if (
     typeof nome !== "string" ||
     nome.trim().length < 3 ||
@@ -69,13 +86,40 @@ export function parseCredentials(data: Record<string, unknown>): Credentials {
   ) {
     throw invalid("O nome deve ter entre 3 e 120 caracteres.");
   }
+  return nome.trim();
+}
+
+/** Junta nome e sobrenome como o app faz no cadastro ('<nome> <sobrenome>') e
+ * valida o resultado com a mesma regra do campo 'nome'.
+ * @param {unknown} nome Nome recebido.
+ * @param {unknown} sobrenome Sobrenome recebido.
+ * @return {string} Nome completo normalizado.
+ */
+export function parseFullName(nome: unknown, sobrenome: unknown): string {
+  if (
+    typeof nome !== "string" || nome.trim() === "" ||
+    typeof sobrenome !== "string" || sobrenome.trim() === ""
+  ) {
+    throw invalid("Informe o nome e o sobrenome.");
+  }
+  return parseName(`${nome.trim()} ${sobrenome.trim()}`);
+}
+
+/** Valida e normaliza as credenciais usadas no cadastro.
+ * @param {Object} data Dados recebidos.
+ * @return {Credentials} Credenciais validadas e normalizadas.
+ */
+export function parseCredentials(data: Record<string, unknown>): Credentials {
+  const {nome, email, senha} = data;
+
+  const normalizedName = parseName(nome);
   const normalizedEmail = parseEmail(email);
   if (typeof senha !== "string" || senha.length < 8 || senha.length > 128) {
     throw invalid("A senha deve ter entre 8 e 128 caracteres.");
   }
 
   return {
-    nome: nome.trim(),
+    nome: normalizedName,
     email: normalizedEmail,
     senha,
   };

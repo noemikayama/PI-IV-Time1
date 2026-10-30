@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Atualização do nome exibido da conta, usada na edição do perfil.
+//
 // Data: 22/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Uso da checagem de código de erro compartilhada.
@@ -60,6 +64,25 @@ export async function deleteAuthAccount(uid: string): Promise<void> {
   } catch {
     logger.error(
       "Falha ao reverter usuário do Firebase Authentication",
+      {uid}
+    );
+  }
+}
+
+/** Atualiza o nome exibido da conta no Firebase Auth (cópia do perfil).
+ * O nome válido é o do MongoDB, já gravado; a falha aqui só é registrada.
+ * @param {string} uid UID do usuário.
+ * @param {string} nome Novo nome.
+ */
+export async function updateAuthDisplayName(
+  uid: string,
+  nome: string
+): Promise<void> {
+  try {
+    await auth.updateUser(uid, {displayName: nome});
+  } catch {
+    logger.error(
+      "Falha ao atualizar o nome no Firebase Authentication",
       {uid}
     );
   }
