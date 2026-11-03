@@ -4,6 +4,7 @@
 //
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do dashboard de evolução.
 // Alteração: Exportação da edição do perfil do responsável.
 //
 // Data: 27/10/2026
@@ -59,3 +60,6 @@ export {
   confirmHorseImage,
   removeHorseImage,
 } from "./features/horses";
+export {
+  getDashboard,
+} from "./features/dashboard";

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da consulta resumida usada pela home e pelo
+// dashboard.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -24,3 +29,7 @@ export {createTrainerAttachmentUpload} from
   "./handlers/createTrainerAttachmentUpload";
 export {removeTrainerAttachment} from
   "./handlers/removeTrainerAttachment";
+export {
+  findTrainerHomeSource,
+} from "./repositories/trainerRepository";
+export type {TrainerHomeSource} from "./types";
