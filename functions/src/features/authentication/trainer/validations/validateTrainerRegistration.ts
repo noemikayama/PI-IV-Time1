@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação de uma região exportada para a edição do perfil.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -13,6 +17,7 @@
 
 import {AppError} from "../../../../shared/errors/AppError";
 import {asRecord, parseCredentials} from "../../shared";
+import {MAX_SERVICE_REGIONS} from "../constants/serviceRegions";
 import type {TrainerRegistrationInput, ServiceRegion} from "../types";
 
 /** Cria um erro de argumento inválido com a mensagem informada.
@@ -40,39 +45,47 @@ function parseModalidades(value: unknown): string[] {
   });
 }
 
+/** Valida e normaliza uma região de atendimento.
+ * @param {unknown} item Valor recebido.
+ * @return {ServiceRegion} Região normalizada.
+ */
+export function parseRegion(item: unknown): ServiceRegion {
+  const {estado, cidade, complemento} = asRecord(
+    item,
+    "Região de atendimento inválida."
+  );
+
+  if (typeof estado !== "string" || !/^[A-Z]{2}$/.test(estado)) {
+    throw invalid("O estado deve ser a sigla com 2 letras maiúsculas.");
+  }
+  if (
+    typeof cidade !== "string" ||
+    cidade.trim() === "" ||
+    cidade.length > 100
+  ) {
+    throw invalid("Cidade inválida.");
+  }
+  if (complemento === undefined) return {estado, cidade: cidade.trim()};
+  if (
+    typeof complemento !== "string" ||
+    complemento.trim() === "" ||
+    complemento.length > 150
+  ) {
+    throw invalid("Complemento inválido.");
+  }
+  return {estado, cidade: cidade.trim(), complemento: complemento.trim()};
+}
+
 /** Valida e normaliza as regiões de atendimento.
  * @param {unknown} value Valor recebido.
  * @return {ServiceRegion[]} Regiões normalizadas.
  */
 function parseRegioes(value: unknown): ServiceRegion[] {
   if (value === undefined) return [];
-  if (!Array.isArray(value) || value.length > 30) {
+  if (!Array.isArray(value) || value.length > MAX_SERVICE_REGIONS) {
     throw invalid("Regiões de atendimento inválidas.");
   }
-  return value.map((item) => {
-    const region = asRecord(item);
-    const {estado, cidade, complemento} = region;
-
-    if (typeof estado !== "string" || !/^[A-Z]{2}$/.test(estado)) {
-      throw invalid("O estado deve ser a sigla com 2 letras maiúsculas.");
-    }
-    if (
-      typeof cidade !== "string" ||
-      cidade.trim() === "" ||
-      cidade.length > 100
-    ) {
-      throw invalid("Cidade inválida.");
-    }
-    if (complemento === undefined) return {estado, cidade: cidade.trim()};
-    if (
-      typeof complemento !== "string" ||
-      complemento.trim() === "" ||
-      complemento.length > 150
-    ) {
-      throw invalid("Complemento inválido.");
-    }
-    return {estado, cidade: cidade.trim(), complemento: complemento.trim()};
-  });
+  return value.map(parseRegion);
 }
 
 /** Valida e normaliza os dados do cadastro de treinador.

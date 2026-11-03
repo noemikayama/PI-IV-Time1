@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipos da edição do perfil do responsável.
+//
 // Data: 21/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos da edição das modalidades do responsável.
@@ -103,4 +107,15 @@ export type UpdateGuardianModalitiesInput = {
 // Formato enviado ao app: o ObjectId vira string.
 export type UpdateGuardianModalitiesResult = {
     modalidades: {id: string; codigo: number; nome: string}[];
+};
+
+// Nome completo já composto a partir do nome e do sobrenome enviados pelo app.
+export type UpdateGuardianProfileInput = {
+    nome: string;
+};
+
+// Nome gravado e data da última alteração, no formato do app.
+export type UpdateGuardianProfileResult = {
+    nome: string;
+    atualizadoEm: string;
 };

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Conferência do caminho, carga do treinador ativo e conversão dos
+// anexos exportadas para a consulta e a edição do perfil.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -11,6 +16,7 @@
 // Alteração: Envio, confirmação e remoção de PDFs do treinador.
 // -----------------------------------------------------------------------------
 
+import type {ClientSession} from "mongodb";
 import {
   createReadUrl,
   createUploadUrl,
@@ -40,6 +46,7 @@ import type {
   AttachmentUploadResult,
   TrainerAttachmentView,
   TrainerDocument,
+  TrainerProfile,
 } from "../types";
 
 /** Caminho do PDF de experiências (único), no formato do DD.
@@ -77,7 +84,7 @@ function isCertificationPath(uid: string, caminho: string): boolean {
  * @param {string} caminho Caminho informado pelo app.
  * @return {void}
  */
-function assertOwnedPath(
+export function assertOwnedPath(
   uid: string,
   tipo: AttachmentType,
   caminho: string
@@ -109,12 +116,14 @@ function nextCertificationIndex(certificacoes: string[]): number {
 
 /** Carrega o treinador e garante que a conta está ativa.
  * @param {string} uid UID do usuário.
+ * @param {ClientSession} session Sessão da transação, se houver.
  * @return {Promise<TrainerDocument>} Treinador ativo.
  */
-async function loadActiveTrainer(
-  uid: string
+export async function loadActiveTrainer(
+  uid: string,
+  session?: ClientSession
 ): Promise<TrainerDocument> {
-  const trainer = await findTrainerById(uid);
+  const trainer = await findTrainerById(uid, session);
   if (!trainer) throw new AppError("not-found", "Perfil não encontrado.");
   if (trainer.situacaoProfissional === "INATIVO") {
     throw new AppError("permission-denied", "Cadastro inativo.");
@@ -146,6 +155,22 @@ export async function toAttachmentView(
   caminho: string
 ): Promise<TrainerAttachmentView> {
   return {caminho, url: await createReadUrl(caminho, READ_URL_TTL_MS)};
+}
+
+/** Converte a experiência e as certificações gravadas para o formato do app.
+ * @param {TrainerDocument} trainer Treinador carregado.
+ * @return {Promise<Object>} Anexos com URL de leitura.
+ */
+export async function toAttachmentViews(
+  trainer: Pick<TrainerDocument, "experiencias" | "certificacoes">
+): Promise<Pick<TrainerProfile, "experiencias" | "certificacoes">> {
+  const [experiencias, certificacoes] = await Promise.all([
+    typeof trainer.experiencias === "string" ?
+      toAttachmentView(trainer.experiencias) :
+      null,
+    Promise.all(trainer.certificacoes.map(toAttachmentView)),
+  ]);
+  return {experiencias, certificacoes};
 }
 
 /** Gera a URL para o app enviar o PDF direto ao Storage.
