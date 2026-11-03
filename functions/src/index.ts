@@ -46,6 +46,7 @@ export {
   confirmTrainerAttachment,
   createTrainerAttachmentUpload,
   removeTrainerAttachment,
+  updateTrainerProfile,
   requestPasswordReset,
   logout,
 } from "./features/authentication";

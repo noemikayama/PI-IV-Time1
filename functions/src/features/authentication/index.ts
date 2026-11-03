@@ -33,6 +33,7 @@ export {getTrainerProfile} from "./trainer";
 export {confirmTrainerAttachment} from "./trainer";
 export {createTrainerAttachmentUpload} from "./trainer";
 export {removeTrainerAttachment} from "./trainer";
+export {updateTrainerProfile} from "./trainer";
 export {login} from "./shared/handlers/login";
 export {getHome} from "./shared/handlers/getHome";
 export {logout} from "./shared/handlers/logout";

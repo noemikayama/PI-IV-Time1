@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 29/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Edição do perfil do treinador e atualização das cópias do nome.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -25,7 +29,7 @@
 
 // Coleção 'treinadores'.
 // O _id (UID do Firebase) já é único; não há índices extras.
-import type {ClientSession, Filter} from "mongodb";
+import type {ClientSession, Filter, UpdateFilter} from "mongodb";
 import {getDatabase} from "../../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../../shared/constants/collections";
 import {nextCode} from "../../../../shared/database/sequence";
@@ -34,6 +38,7 @@ import type {
   NewTrainer,
   TrainerDocument,
   TrainerHomeSource,
+  TrainerProfileChanges,
 } from "../types";
 
 /** Grava o treinador e devolve o código sequencial atribuído.
@@ -56,14 +61,16 @@ export async function insertTrainer(
 
 /** Busca o cadastro do treinador pelo UID do Firebase.
  * @param {string} uid UID do usuário.
+ * @param {ClientSession} session Sessão da transação, se houver.
  */
 export async function findTrainerById(
-  uid: string
+  uid: string,
+  session?: ClientSession
 ): Promise<TrainerDocument | null> {
   const db = await getDatabase();
   return db
     .collection<TrainerDocument>(COLLECTIONS.Treinadores)
-    .findOne({_id: uid});
+    .findOne({_id: uid}, {session});
 }
 
 /** Busca os dados mínimos do treinador usados pela home.
@@ -159,4 +166,85 @@ export async function removeTrainerFile(
       {$pull: {certificacoes: caminho}, $set: {atualizadoEm: now}}
     );
   return result.modifiedCount === 1;
+}
+
+/** Aplica as alterações do perfil ao treinador ativo.
+ * Só os campos presentes em 'changes' são alterados, além de 'atualizadoEm'.
+ * @param {string} uid UID do usuário.
+ * @param {TrainerProfileChanges} changes Alterações já conferidas.
+ * @param {Date} atualizadoEm Data da alteração.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<TrainerDocument|null>} Perfil atualizado.
+ */
+export async function updateTrainerProfileDocument(
+  uid: string,
+  changes: TrainerProfileChanges,
+  atualizadoEm: Date,
+  session: ClientSession
+): Promise<TrainerDocument | null> {
+  const db = await getDatabase();
+  const update: UpdateFilter<TrainerDocument> = {$set: {atualizadoEm}};
+
+  if (changes.nome !== undefined) {
+    update.$set = {...update.$set, nome: changes.nome};
+  }
+  if (changes.regioesAtendimento) {
+    update.$set = {
+      ...update.$set,
+      regioesAtendimento: changes.regioesAtendimento,
+    };
+  }
+  if (changes.removerExperiencia !== undefined) {
+    update.$set = {...update.$set, experiencias: null};
+  }
+  if (changes.removerCertificacoes.length > 0) {
+    update.$pull = {certificacoes: {$in: changes.removerCertificacoes}};
+  }
+
+  return db
+    .collection<TrainerDocument>(COLLECTIONS.Treinadores)
+    .findOneAndUpdate(
+      {_id: uid, situacaoProfissional: {$ne: "INATIVO"}},
+      update,
+      {returnDocument: "after", session}
+    );
+}
+
+/** Atualiza o nome do treinador nas cópias de cavalos e registros de treino.
+ * Só altera as cópias com nome diferente, então pode ser chamada sempre.
+ * @param {string} uid UID do treinador.
+ * @param {string} nome Novo nome.
+ * @param {ClientSession} session Sessão da transação.
+ */
+export async function renameTrainerRefs(
+  uid: string,
+  nome: string,
+  session: ClientSession
+): Promise<void> {
+  const db = await getDatabase();
+  const atualizadoEm = new Date();
+  const horses = db.collection(COLLECTIONS.Cavalos);
+
+  // As operações são sequenciais: a mesma sessão não deve executar comandos
+  // em paralelo. cavalos.treinadores e cavalos.avaliacoes.treinador ficam em
+  // operações separadas porque o filtro de array exige que o campo exista.
+  await horses.updateMany(
+    {treinadores: {$elemMatch: {_id: uid, nome: {$ne: nome}}}},
+    {$set: {"treinadores.$[treinador].nome": nome, atualizadoEm}},
+    {arrayFilters: [{"treinador._id": uid}], session}
+  );
+  await horses.updateMany(
+    {
+      avaliacoes: {
+        $elemMatch: {"treinador._id": uid, "treinador.nome": {$ne: nome}},
+      },
+    },
+    {$set: {"avaliacoes.$[avaliacao].treinador.nome": nome, atualizadoEm}},
+    {arrayFilters: [{"avaliacao.treinador._id": uid}], session}
+  );
+  await db.collection(COLLECTIONS.RegistrosTreino).updateMany(
+    {"treinador._id": uid, "treinador.nome": {$ne: nome}},
+    {$set: {"treinador.nome": nome}},
+    {session}
+  );
 }
