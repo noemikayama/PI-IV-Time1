@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 02/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do labelText no InputDecoration para exibir o hintText 
+// como rótulo do campo.
+//
 // Data: 16/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição de ValueChanged<String> pelos typedefs
@@ -23,6 +28,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
 
 typedef AppTextFormFieldChangedCallback = void Function(String value);
 typedef AppTextFormFieldSubmittedCallback = void Function(String value);
@@ -76,9 +82,9 @@ class AppTextFormField extends StatelessWidget {
       cursorColor: theme.colorScheme.primary,
       style: theme.textTheme.headlineSmall,
       decoration: InputDecoration(
-        hintText: hintText,
+        labelText: hintText,
         hintStyle: theme.textTheme.headlineSmall?.copyWith(
-          color: theme.inputDecorationTheme.hintStyle?.color,
+          color: AppColors.grey,
         ),
         contentPadding: const EdgeInsets.only(top: 14, bottom: 12),
         suffixIcon: suffixIcon,
