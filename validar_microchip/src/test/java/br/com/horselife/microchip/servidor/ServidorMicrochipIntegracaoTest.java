@@ -31,6 +31,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -255,6 +257,61 @@ class ServidorMicrochipIntegracaoTest {
         encerramento.get(12, TimeUnit.SECONDS);
 
         assertEquals(RESPOSTA_VALIDA, resposta.get(5, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void deveContinuarTentandoComPausaQuandoAceitarFalha() throws Exception {
+        AtomicInteger tentativas = new AtomicInteger();
+        ServidorMicrochip servidor = criarServidor(porta -> new ServerSocket(porta) {
+            @Override
+            public Socket accept() throws IOException {
+                tentativas.incrementAndGet();
+                throw new IOException("falha simulada ao aceitar conexão");
+            }
+        });
+        Logger logger = Logger.getLogger(ServidorMicrochip.class.getName());
+        logger.setUseParentHandlers(false);
+        try {
+            servidor.iniciar();
+            Thread.sleep(500);
+            servidor.encerrar();
+        } finally {
+            logger.setUseParentHandlers(true);
+        }
+
+        assertTrue(tentativas.get() >= 2, "tentativas de aceitar em 500 ms: " + tentativas.get());
+        assertTrue(tentativas.get() <= 50, "tentativas de aceitar em 500 ms: " + tentativas.get());
+    }
+
+    @Test
+    void deveFecharSocketDeEscutaQuandoAceitadorParar() throws Exception {
+        AtomicReference<Thread> aceitador = new AtomicReference<>();
+        AtomicReference<ServerSocket> socketDeEscuta = new AtomicReference<>();
+        CountDownLatch tentou = new CountDownLatch(1);
+        ServidorMicrochip servidor = criarServidor(porta -> {
+            ServerSocket socket = new ServerSocket(porta) {
+                @Override
+                public Socket accept() throws IOException {
+                    aceitador.set(Thread.currentThread());
+                    tentou.countDown();
+                    throw new IOException("falha simulada ao aceitar conexão");
+                }
+            };
+            socketDeEscuta.set(socket);
+            return socket;
+        });
+        Logger logger = Logger.getLogger(ServidorMicrochip.class.getName());
+        logger.setUseParentHandlers(false);
+        try {
+            servidor.iniciar();
+            aguardar(tentou);
+            aceitador.get().interrupt();
+            aceitador.get().join(Duration.ofSeconds(5));
+        } finally {
+            logger.setUseParentHandlers(true);
+        }
+
+        assertTrue(socketDeEscuta.get().isClosed());
     }
 
     @Test

@@ -19,6 +19,7 @@ public final class ServidorMicrochip implements AutoCloseable {
 
     private static final Logger LOGGER = Logger.getLogger(ServidorMicrochip.class.getName());
     private static final long ESPERA_ENCERRAMENTO_SEGUNDOS = 10;
+    private static final Duration PAUSA_APOS_FALHA = Duration.ofMillis(100);
 
     private final int porta;
     private final Duration timeoutLeitura;
@@ -73,22 +74,39 @@ public final class ServidorMicrochip implements AutoCloseable {
     }
 
     private void aceitarConexoes(ServerSocket socketDeEscuta) {
-        while (!socketDeEscuta.isClosed()) {
-            Socket socket;
-            try {
-                socket = socketDeEscuta.accept();
-            } catch (IOException e) {
-                if (socketDeEscuta.isClosed()) {
-                    break;
+        try {
+            while (!socketDeEscuta.isClosed()) {
+                Socket socket;
+                try {
+                    socket = socketDeEscuta.accept();
+                } catch (IOException e) {
+                    if (socketDeEscuta.isClosed()) {
+                        break;
+                    }
+                    LOGGER.log(Level.WARNING, "Falha ao aceitar conexão.", e);
+                    if (!pausarAposFalha()) {
+                        break;
+                    }
+                    continue;
                 }
-                LOGGER.log(Level.WARNING, "Falha ao aceitar conexão.", e);
-                continue;
+                try {
+                    executor.execute(new TratadorConexao(socket, timeoutLeitura, processador));
+                } catch (RejectedExecutionException e) {
+                    fecharSilenciosamente(socket);
+                }
             }
-            try {
-                executor.execute(new TratadorConexao(socket, timeoutLeitura, processador));
-            } catch (RejectedExecutionException e) {
-                fecharSilenciosamente(socket);
-            }
+        } finally {
+            fecharSilenciosamente(socketDeEscuta);
+        }
+    }
+
+    private static boolean pausarAposFalha() {
+        try {
+            Thread.sleep(PAUSA_APOS_FALHA);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 
