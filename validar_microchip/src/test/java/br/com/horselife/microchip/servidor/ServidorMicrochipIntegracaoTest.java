@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.BindException;
 import java.net.ConnectException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -29,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -65,6 +67,32 @@ class ServidorMicrochipIntegracaoTest {
         ServidorMicrochip servidor = new ServidorMicrochip(porta, timeoutLeitura, new ProcessadorRequisicao(validador));
         servidores.add(servidor);
         return servidor;
+    }
+
+    private ServidorMicrochip criarServidor(ServidorMicrochip.FabricaServidorSocket fabricaSocket) {
+        ServidorMicrochip servidor = new ServidorMicrochip(
+                0, TIMEOUT_PADRAO, new ProcessadorRequisicao(VALIDO), fabricaSocket);
+        servidores.add(servidor);
+        return servidor;
+    }
+
+    private static void aguardar(CountDownLatch sinal) {
+        try {
+            if (!sinal.await(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("O sinal esperado pelo teste não chegou.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static void aguardarNoMaximo(Future<?> tarefa, Duration limite) throws Exception {
+        try {
+            tarefa.get(limite.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            return;
+        }
     }
 
     private static String enviar(int porta, String linha) throws IOException {
@@ -187,6 +215,46 @@ class ServidorMicrochipIntegracaoTest {
 
         assertEquals(RESPOSTA_VALIDA, resposta.get(5, TimeUnit.SECONDS));
         assertThrows(ConnectException.class, () -> new Socket("localhost", porta).close());
+    }
+
+    @Test
+    void deveResponderConexaoAceitaLogoAntesDoEncerramento() throws Exception {
+        CountDownLatch aceitou = new CountDownLatch(1);
+        CountDownLatch liberarAceitador = new CountDownLatch(1);
+        CountDownLatch fechou = new CountDownLatch(1);
+        ServidorMicrochip servidor = criarServidor(porta -> new ServerSocket(porta) {
+            @Override
+            public Socket accept() throws IOException {
+                Socket socket = super.accept();
+                aceitou.countDown();
+                aguardar(liberarAceitador);
+                return socket;
+            }
+
+            @Override
+            public void close() throws IOException {
+                super.close();
+                fechou.countDown();
+            }
+        });
+        servidor.iniciar();
+        int porta = servidor.portaLocal();
+
+        CompletableFuture<String> resposta = CompletableFuture.supplyAsync(() -> {
+            try {
+                return enviar(porta, REQUISICAO);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        aguardar(aceitou);
+        CompletableFuture<Void> encerramento = CompletableFuture.runAsync(servidor::encerrar);
+        aguardar(fechou);
+        aguardarNoMaximo(encerramento, Duration.ofMillis(500));
+        liberarAceitador.countDown();
+        encerramento.get(12, TimeUnit.SECONDS);
+
+        assertEquals(RESPOSTA_VALIDA, resposta.get(5, TimeUnit.SECONDS));
     }
 
     @Test

@@ -23,15 +23,28 @@ public final class ServidorMicrochip implements AutoCloseable {
     private final int porta;
     private final Duration timeoutLeitura;
     private final ProcessadorRequisicao processador;
+    private final FabricaServidorSocket fabricaSocket;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final Object trava = new Object();
     private ServerSocket servidorSocket;
+    private Thread aceitador;
     private boolean encerrado;
 
+    @FunctionalInterface
+    interface FabricaServidorSocket {
+        ServerSocket abrir(int porta) throws IOException;
+    }
+
     public ServidorMicrochip(int porta, Duration timeoutLeitura, ProcessadorRequisicao processador) {
+        this(porta, timeoutLeitura, processador, ServerSocket::new);
+    }
+
+    ServidorMicrochip(int porta, Duration timeoutLeitura, ProcessadorRequisicao processador,
+            FabricaServidorSocket fabricaSocket) {
         this.porta = porta;
         this.timeoutLeitura = timeoutLeitura;
         this.processador = processador;
+        this.fabricaSocket = fabricaSocket;
     }
 
     public void iniciar() throws IOException {
@@ -39,9 +52,9 @@ public final class ServidorMicrochip implements AutoCloseable {
             if (servidorSocket != null || encerrado) {
                 throw new IllegalStateException("O servidor já foi iniciado ou encerrado.");
             }
-            ServerSocket socket = new ServerSocket(porta);
+            ServerSocket socket = fabricaSocket.abrir(porta);
             servidorSocket = socket;
-            Thread.ofPlatform()
+            aceitador = Thread.ofPlatform()
                     .name("aceitador-microchip")
                     .daemon(false)
                     .start(() -> aceitarConexoes(socket));
@@ -81,18 +94,23 @@ public final class ServidorMicrochip implements AutoCloseable {
 
     public void encerrar() {
         ServerSocket socket;
+        Thread threadAceitadora;
         synchronized (trava) {
             if (encerrado) {
                 return;
             }
             encerrado = true;
             socket = servidorSocket;
+            threadAceitadora = aceitador;
         }
         if (socket != null) {
             fecharSilenciosamente(socket);
         }
-        executor.shutdown();
         try {
+            if (threadAceitadora != null) {
+                threadAceitadora.join(Duration.ofSeconds(ESPERA_ENCERRAMENTO_SEGUNDOS));
+            }
+            executor.shutdown();
             if (!executor.awaitTermination(ESPERA_ENCERRAMENTO_SEGUNDOS, TimeUnit.SECONDS)) {
                 LOGGER.warning("Conexões não terminaram a tempo; interrompendo.");
                 executor.shutdownNow();
