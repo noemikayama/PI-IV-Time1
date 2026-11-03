@@ -50,7 +50,7 @@ Para parar o servidor, use `Ctrl+C` ou `kill <pid>`. As requisições em andamen
 - **Enquadramento:** um objeto JSON por linha, terminado em `\n` (JSON Lines). O JSON não pode conter quebras de linha.
 - **Ciclo da conexão:** uma requisição por conexão. O cliente conecta, envia uma linha e recebe uma linha, e o servidor fecha a conexão.
 - **Limite:** linhas com mais de 1024 caracteres recebem `REQUISICAO_MUITO_GRANDE`.
-- **Timeout:** se o cliente não enviar a linha completa em 5 segundos, a conexão é fechada **sem resposta**.
+- **Timeout:** se o cliente passar 5 segundos sem enviar dados antes de completar a linha, a conexão é fechada **sem resposta**. O prazo recomeça a cada dado recebido, então não é um limite para a requisição inteira.
 - O campo `microchip` deve ser uma **string** JSON. Um número (`"microchip": 76987654321017`) é recusado com `REQUISICAO_MALFORMADA`, porque perderia o zero à esquerda do código do país (o Brasil é `076`).
 - Campos desconhecidos na requisição são ignorados.
 
@@ -117,7 +117,7 @@ Respostas esperadas, no estado atual:
 
 Depois da integração da validação de domínio, a primeira requisição responderá `{"valido":true,...,"nomePais":"Brasil"}`.
 
-No Fedora, o `nc` é o `nmap-ncat`. Se ele não sair sozinho após a resposta, use `nc --recv-only localhost 7700` ou pressione `Ctrl+C`; o que importa é a linha recebida.
+No Fedora, o `nc` é o `nmap-ncat`: ele envia a linha, recebe a resposta e sai sozinho. Se outra variante do netcat não sair sozinha, pressione `Ctrl+C`; o que importa é a linha recebida.
 
 ## 5. Aviso: a regra dos dígitos verificadores não é a da ISO 11784
 
