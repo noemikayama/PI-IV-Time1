@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação do modo painel profissional do treinador e
+// mensagem própria para dados que não são um objeto de filtros.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação dos filtros de período e de cavalo do dashboard.
@@ -9,7 +14,6 @@
 
 import {ObjectId} from "mongodb";
 import {AppError} from "../../../shared/errors/AppError";
-import {asRecord} from "../../authentication/shared";
 import type {DashboardFiltros, DashboardPeriodo} from "../types";
 
 const PERIODOS: readonly DashboardPeriodo[] = [
@@ -21,7 +25,11 @@ const PERIODOS: readonly DashboardPeriodo[] = [
   "ANUAL",
 ];
 
-const ALLOWED_FIELDS: readonly string[] = ["periodo", "cavaloId"];
+const ALLOWED_FIELDS: readonly string[] = [
+  "periodo",
+  "cavaloId",
+  "painelProfissional",
+];
 
 /** Cria um erro de argumento inválido com a mensagem informada.
  * @param {string} message Mensagem do erro.
@@ -68,17 +76,36 @@ function parseCavaloId(value: unknown): ObjectId | null {
   return new ObjectId(value);
 }
 
+/** Valida o modo do treinador; ausente equivale ao painel desativado
+ * (visão dos cavalos).
+ * @param {unknown} value Valor recebido.
+ * @return {boolean} true para o painel profissional.
+ */
+function parsePainelProfissional(value: unknown): boolean {
+  if (value === undefined || value === null) return false;
+  if (typeof value !== "boolean") {
+    throw invalid("O painel profissional deve ser true ou false.");
+  }
+  return value;
+}
+
 /** Valida os filtros do dashboard. Sem dados, assume o padrão da tela:
- * todos os cavalos e desde sempre.
+ * todos os cavalos, desde sempre e painel profissional desativado.
  * @param {unknown} data Dados recebidos pelo endpoint.
  * @return {DashboardFiltros} Filtros validados.
  */
 export function validateDashboardFilters(data: unknown): DashboardFiltros {
-  const record = asRecord(data ?? {});
+  const value = data ?? {};
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw invalid("Filtros do dashboard inválidos.");
+  }
+  const record = value as Record<string, unknown>;
   assertOnlyFilters(record);
 
+  // As regras de cada perfil sobre o painel ficam nos services.
   return {
     periodo: parsePeriodo(record.periodo),
     cavaloId: parseCavaloId(record.cavaloId),
+    painelProfissional: parsePainelProfissional(record.painelProfissional),
   };
 }

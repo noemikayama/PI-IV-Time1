@@ -5,6 +5,10 @@
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da edição do perfil do treinador.
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da consulta resumida usada pela home e pelo
+// dashboard.
 //
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -29,3 +33,7 @@ export {createTrainerAttachmentUpload} from
 export {removeTrainerAttachment} from
   "./handlers/removeTrainerAttachment";
 export {updateTrainerProfile} from "./handlers/updateTrainerProfile";
+export {
+  findTrainerHomeSource,
+} from "./repositories/trainerRepository";
+export type {TrainerHomeSource} from "./types";

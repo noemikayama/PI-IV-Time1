@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 29/10/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Exportação da edição do perfil do treinador.
-//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da edição do perfil do responsável.

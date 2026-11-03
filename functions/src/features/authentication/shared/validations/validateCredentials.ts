@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 29/10/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Mensagem opcional em asRecord, para campos aninhados.
-//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do nome completo (nome + sobrenome) e dos campos

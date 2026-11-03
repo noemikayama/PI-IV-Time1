@@ -2,12 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Filtro de cavalo compartilhado com o treinador e recusa do
+// painel profissional, que é exclusivo dele.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Criação do service do dashboard do responsável.
 // -----------------------------------------------------------------------------
 
-import type {ObjectId} from "mongodb";
 import {AppError} from "../../../shared/errors/AppError";
 import {findGuardianHomeSource} from "../../authentication/guardian";
 import {
@@ -22,6 +26,7 @@ import {
   toTreinoRecente,
   toTreinosRealizados,
 } from "./dashboardMappers";
+import {resolveHorseScope, toHorseOptions} from "./dashboardHorses";
 import {resolveDashboardWindow} from "./dashboardPeriod";
 
 /** Monta o dashboard do responsável no período e no cavalo escolhidos.
@@ -39,23 +44,22 @@ export async function getGuardianDashboard(
   if (!guardian || guardian.situacaoCadastral !== "ATIVO") {
     throw new AppError("permission-denied", "Conta inativa ou inexistente.");
   }
-
-  // Filtrar por um cavalo que não é do responsável equivale a não existir.
-  const selected = filtros.cavaloId ?
-    guardian.cavalos.find((horse) => horse._id.equals(filtros.cavaloId)) :
-    null;
-  if (filtros.cavaloId && !selected) {
-    throw new AppError("not-found", "Cavalo não encontrado.");
+  if (filtros.painelProfissional) {
+    throw new AppError(
+      "invalid-argument",
+      "O painel profissional é exclusivo do treinador."
+    );
   }
 
-  const horseIds: ObjectId[] = selected ?
-    [selected._id] :
-    guardian.cavalos.map((horse) => horse._id);
+  const {selected, horseIds} = resolveHorseScope(
+    guardian.cavalos,
+    filtros.cavaloId
+  );
 
   const window = resolveDashboardWindow(filtros.periodo);
   const dashboard = await aggregateHorseDashboard(
     horseIds,
-    window.range,
+    window,
     DASHBOARD_LIST_LIMIT
   );
   const {indicadores, ultimosTreinos, ultimosFeedbacks} = dashboard;
@@ -66,9 +70,7 @@ export async function getGuardianDashboard(
     inicio: window.inicio,
     fim: window.fim,
     cavaloId: selected ? String(selected._id) : null,
-    cavalos: guardian.cavalos
-      .map((horse) => ({id: String(horse._id), nome: horse.nome}))
-      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
+    cavalos: toHorseOptions(guardian.cavalos),
     possuiDados: indicadores.previstos > 0 ||
       ultimosTreinos.length > 0 ||
       ultimosFeedbacks.length > 0,

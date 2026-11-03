@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 30/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Dashboard do treinador.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Endpoint callable do dashboard de evolução.
@@ -22,14 +26,16 @@ import {
 import {
   getGuardianDashboard,
 } from "../services/getGuardianDashboardService";
+import {
+  getTrainerDashboard,
+} from "../services/getTrainerDashboardService";
 import type {DashboardResult} from "../types";
 import {
   validateDashboardFilters,
 } from "../validations/validateDashboardFilters";
 
 // Atende os dois perfis, então usa requireAuthentication e escolhe o
-// dashboard pelo role, como em getHome. O treinador entra aqui quando as
-// funções de treino dele existirem.
+// dashboard pelo role, como em getHome.
 export const getDashboard = onCall(
   defaultFunctionOptions,
   async (request): Promise<DashboardResult> => {
@@ -40,6 +46,8 @@ export const getDashboard = onCall(
       switch (user.role) {
       case ROLES.guardian:
         return await getGuardianDashboard(user.uid, filtros);
+      case ROLES.trainer:
+        return await getTrainerDashboard(user.uid, filtros);
       default:
         throw new AppError(
           "permission-denied",
