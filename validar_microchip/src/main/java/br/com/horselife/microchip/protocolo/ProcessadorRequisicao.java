@@ -49,17 +49,26 @@ public final class ProcessadorRequisicao {
             return erro(CodigoErro.COMANDO_DESCONHECIDO);
         }
         String microchip = requisicao.microchip();
-        ResultadoValidacao validacao = validador.validar(microchip);
-        if (validacao.valido()) {
-            Resposta resposta = Resposta.valida(microchip, validacao.codigoPais(), validacao.nomePais());
-            return new Resultado(VALIDAR_MICROCHIP, UtilitarioJson.escrever(resposta), DESFECHO_VALIDO);
+        try {
+            ResultadoValidacao validacao = validador.validar(microchip);
+            if (validacao.valido()) {
+                Resposta resposta = Resposta.valida(microchip, validacao.codigoPais(), validacao.nomePais());
+                return new Resultado(VALIDAR_MICROCHIP, UtilitarioJson.escrever(resposta), DESFECHO_VALIDO);
+            }
+            Resposta resposta = Resposta.invalida(microchip, validacao.codigoErro());
+            return new Resultado(VALIDAR_MICROCHIP, UtilitarioJson.escrever(resposta), validacao.codigoErro().name());
+        } catch (RuntimeException e) {
+            LOGGER.log(Level.SEVERE, "Falha inesperada ao validar o microchip.", e);
+            return erro(VALIDAR_MICROCHIP, CodigoErro.ERRO_INTERNO);
         }
-        Resposta resposta = Resposta.invalida(microchip, validacao.codigoErro());
-        return new Resultado(VALIDAR_MICROCHIP, UtilitarioJson.escrever(resposta), validacao.codigoErro().name());
     }
 
     public Resultado erro(CodigoErro codigo) {
-        return new Resultado(null, UtilitarioJson.escrever(Resposta.erroProtocolo(codigo)), codigo.name());
+        return erro(null, codigo);
+    }
+
+    private Resultado erro(String comando, CodigoErro codigo) {
+        return new Resultado(comando, UtilitarioJson.escrever(Resposta.erroProtocolo(codigo)), codigo.name());
     }
 
     public record Resultado(String comando, String respostaJson, String desfecho) {

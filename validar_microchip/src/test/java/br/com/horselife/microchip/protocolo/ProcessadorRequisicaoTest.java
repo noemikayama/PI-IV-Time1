@@ -10,8 +10,11 @@ import br.com.horselife.microchip.modelos.ResultadoValidacao;
 import br.com.horselife.microchip.modelos.Validador;
 import br.com.horselife.microchip.protocolo.ProcessadorRequisicao.Resultado;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -119,6 +122,27 @@ class ProcessadorRequisicaoTest {
                 resultado.respostaJson());
         assertFalse(resultado.respostaJson().contains("segredo"));
         assertFalse(resultado.respostaJson().contains("Exception"));
+        assertEquals("ERRO_INTERNO", resultado.desfecho());
+    }
+
+    static Stream<Named<Validador>> validadoresComFalhaInesperada() {
+        return Stream.of(
+                Named.of("validador lança exceção", m -> {
+                    throw new IllegalStateException("falha no validador");
+                }),
+                Named.of("validador devolve null", m -> null),
+                Named.of("resultado inválido sem código de erro", m -> new ResultadoValidacao(false, null, null, null)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("validadoresComFalhaInesperada")
+    void deveManterComandoReconhecidoQuandoValidacaoFalharInesperadamente(Validador validador) {
+        ProcessadorRequisicao processador = new ProcessadorRequisicao(validador);
+
+        Resultado resultado = processador.processar(
+                "{\"comando\":\"VALIDAR_MICROCHIP\",\"microchip\":\"076987654321017\"}");
+
+        assertEquals("VALIDAR_MICROCHIP", resultado.comando());
         assertEquals("ERRO_INTERNO", resultado.desfecho());
     }
 
