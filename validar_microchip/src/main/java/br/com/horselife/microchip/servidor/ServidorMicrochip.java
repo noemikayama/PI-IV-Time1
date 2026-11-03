@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,8 +24,9 @@ public final class ServidorMicrochip implements AutoCloseable {
     private final Duration timeoutLeitura;
     private final ProcessadorRequisicao processador;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-    private final AtomicBoolean encerrado = new AtomicBoolean(false);
-    private volatile ServerSocket servidorSocket;
+    private final Object trava = new Object();
+    private ServerSocket servidorSocket;
+    private boolean encerrado;
 
     public ServidorMicrochip(int porta, Duration timeoutLeitura, ProcessadorRequisicao processador) {
         this.porta = porta;
@@ -35,25 +35,37 @@ public final class ServidorMicrochip implements AutoCloseable {
     }
 
     public void iniciar() throws IOException {
-        servidorSocket = new ServerSocket(porta);
-        Thread.ofPlatform()
-                .name("aceitador-microchip")
-                .daemon(false)
-                .start(this::aceitarConexoes);
-        LOGGER.log(Level.INFO, "Servidor de microchip escutando na porta {0}.", String.valueOf(portaLocal()));
+        synchronized (trava) {
+            if (servidorSocket != null || encerrado) {
+                throw new IllegalStateException("O servidor já foi iniciado ou encerrado.");
+            }
+            ServerSocket socket = new ServerSocket(porta);
+            servidorSocket = socket;
+            Thread.ofPlatform()
+                    .name("aceitador-microchip")
+                    .daemon(false)
+                    .start(() -> aceitarConexoes(socket));
+            LOGGER.log(Level.INFO, "Servidor de microchip escutando na porta {0}.",
+                    String.valueOf(socket.getLocalPort()));
+        }
     }
 
     public int portaLocal() {
-        return servidorSocket.getLocalPort();
+        synchronized (trava) {
+            if (servidorSocket == null) {
+                throw new IllegalStateException("O servidor ainda não foi iniciado.");
+            }
+            return servidorSocket.getLocalPort();
+        }
     }
 
-    private void aceitarConexoes() {
-        while (!servidorSocket.isClosed()) {
+    private void aceitarConexoes(ServerSocket socketDeEscuta) {
+        while (!socketDeEscuta.isClosed()) {
             Socket socket;
             try {
-                socket = servidorSocket.accept();
+                socket = socketDeEscuta.accept();
             } catch (IOException e) {
-                if (servidorSocket.isClosed()) {
+                if (socketDeEscuta.isClosed()) {
                     break;
                 }
                 LOGGER.log(Level.WARNING, "Falha ao aceitar conexão.", e);
@@ -68,11 +80,16 @@ public final class ServidorMicrochip implements AutoCloseable {
     }
 
     public void encerrar() {
-        if (!encerrado.compareAndSet(false, true)) {
-            return;
+        ServerSocket socket;
+        synchronized (trava) {
+            if (encerrado) {
+                return;
+            }
+            encerrado = true;
+            socket = servidorSocket;
         }
-        if (servidorSocket != null) {
-            fecharSilenciosamente(servidorSocket);
+        if (socket != null) {
+            fecharSilenciosamente(socket);
         }
         executor.shutdown();
         try {

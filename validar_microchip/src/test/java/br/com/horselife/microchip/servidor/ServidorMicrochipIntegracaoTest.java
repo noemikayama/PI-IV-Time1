@@ -198,6 +198,28 @@ class ServidorMicrochipIntegracaoTest {
     }
 
     @Test
+    void naoDeveIniciarDepoisDeEncerrar() {
+        ServidorMicrochip servidor = criarServidor(0, VALIDO, TIMEOUT_PADRAO);
+        servidor.encerrar();
+
+        assertThrows(IllegalStateException.class, servidor::iniciar);
+    }
+
+    @Test
+    void naoDeveIniciarDuasVezes() throws IOException {
+        ServidorMicrochip servidor = iniciarServidor(VALIDO, TIMEOUT_PADRAO);
+
+        assertThrows(IllegalStateException.class, servidor::iniciar);
+    }
+
+    @Test
+    void deveRecusarConsultaDePortaAntesDeIniciar() {
+        ServidorMicrochip servidor = criarServidor(0, VALIDO, TIMEOUT_PADRAO);
+
+        assertThrows(IllegalStateException.class, servidor::portaLocal);
+    }
+
+    @Test
     void deveRegistrarPortaSemSeparadorDeMilhar() throws IOException {
         Logger logger = Logger.getLogger(ServidorMicrochip.class.getName());
         List<String> mensagens = new CopyOnWriteArrayList<>();
