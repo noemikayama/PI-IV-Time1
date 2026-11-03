@@ -2,6 +2,7 @@
 package br.com.horselife.microchip.servidor;
 
 import br.com.horselife.microchip.modelos.CodigoErro;
+import br.com.horselife.microchip.modelos.Requisicao;
 import br.com.horselife.microchip.protocolo.ProcessadorRequisicao;
 import br.com.horselife.microchip.protocolo.ProcessadorRequisicao.Resultado;
 import br.com.horselife.microchip.utilitarios.LeitorLinhaLimitada;
@@ -65,7 +66,7 @@ final class TratadorConexao implements Runnable {
     }
 
     private Resultado atender(BufferedReader leitor) throws IOException {
-        Leitura leitura = LeitorLinhaLimitada.lerLinha(leitor, ServidorMicrochip.LIMITE_CARACTERES);
+        Leitura leitura = LeitorLinhaLimitada.lerLinha(leitor, Requisicao.LIMITE_CARACTERES);
         if (leitura.excedeuLimite()) {
             return processador.erro(CodigoErro.REQUISICAO_MUITO_GRANDE);
         }

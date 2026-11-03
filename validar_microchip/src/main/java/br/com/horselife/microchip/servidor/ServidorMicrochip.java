@@ -15,8 +15,6 @@ import java.util.logging.Logger;
 
 public final class ServidorMicrochip implements AutoCloseable {
 
-    static final int LIMITE_CARACTERES = 1024;
-
     private static final Logger LOGGER = Logger.getLogger(ServidorMicrochip.class.getName());
     private static final long ESPERA_ENCERRAMENTO_SEGUNDOS = 10;
     private static final Duration PAUSA_APOS_FALHA = Duration.ofMillis(100);

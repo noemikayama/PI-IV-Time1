@@ -213,6 +213,28 @@ class ServidorMicrochipIntegracaoTest {
     }
 
     @Test
+    void deveProcessarLinhaComExatamente1024Caracteres() throws IOException {
+        ServidorMicrochip servidor = iniciarServidor(VALIDO, TIMEOUT_PADRAO);
+
+        String resposta = enviar(servidor.portaLocal(), "x".repeat(1024));
+
+        assertEquals(
+                "{\"valido\":false,\"erro\":{\"codigo\":\"REQUISICAO_MALFORMADA\",\"mensagem\":\"A requisição não é um JSON válido.\"}}",
+                resposta);
+    }
+
+    @Test
+    void deveRecusarLinhaCom1025Caracteres() throws IOException {
+        ServidorMicrochip servidor = iniciarServidor(VALIDO, TIMEOUT_PADRAO);
+
+        String resposta = enviar(servidor.portaLocal(), "x".repeat(1025));
+
+        assertEquals(
+                "{\"valido\":false,\"erro\":{\"codigo\":\"REQUISICAO_MUITO_GRANDE\",\"mensagem\":\"A requisição excede o limite de 1024 caracteres.\"}}",
+                resposta);
+    }
+
+    @Test
     void deveFecharConexaoOciosaAposTimeout() throws IOException {
         ServidorMicrochip servidor = iniciarServidor(VALIDO, Duration.ofMillis(200));
 

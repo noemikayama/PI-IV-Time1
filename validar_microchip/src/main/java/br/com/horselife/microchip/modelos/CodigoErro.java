@@ -11,7 +11,7 @@ public enum CodigoErro {
     DIGITO_VERIFICADOR_INVALIDO("Os dígitos verificadores não conferem."),
     REQUISICAO_MALFORMADA("A requisição não é um JSON válido."),
     COMANDO_DESCONHECIDO("O comando informado não é suportado."),
-    REQUISICAO_MUITO_GRANDE("A requisição excede o limite de 1024 caracteres."),
+    REQUISICAO_MUITO_GRANDE("A requisição excede o limite de " + Requisicao.LIMITE_CARACTERES + " caracteres."),
     ERRO_INTERNO("Erro interno no servidor.");
 
     private final String mensagem;
