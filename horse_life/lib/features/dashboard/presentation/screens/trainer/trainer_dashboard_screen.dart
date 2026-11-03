@@ -1,61 +1,107 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 30/10/2026 - Dashboard Trainer com alternância entre cavalos próprios e painel profissional.
+//
+// Data: 30/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Dashboard Trainer com alternância entre cavalos próprios e painel profissional.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Remoção dos painéis simulados e fallback fictício da Sidebar; dados reais obrigatórios.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import '../../widgets/dashboard_text_styles.dart';
-import '../../widgets/dashboard_training_content.dart';
-import '../../widgets/trainer_professional_content.dart';
+import '../../../data/repositories/dashboard_repository.dart';
+import '../../widgets/dashboard_live_training_content.dart';
+import '../../widgets/dashboard_live_professional_content.dart';
 
+/// Alterna o painel de cavalos próprios e os indicadores profissionais do Trainer.
 class TrainerDashboardScreen extends StatefulWidget {
-  const TrainerDashboardScreen({super.key,required this.onLogout,this.onHome,
-    this.homeFuture,this.empty = false});
+  const TrainerDashboardScreen({
+    super.key,
+    required this.onLogout,
+    this.onHome,
+    required this.homeFuture,
+    required this.repository,
+  });
   final Future<void> Function() onLogout;
   final VoidCallback? onHome;
-  final Future<TrainerHomeData>? homeFuture;
-  final bool empty;
+  final Future<TrainerHomeData> homeFuture;
+  final DashboardRepository repository;
   @override
-  State<TrainerDashboardScreen> createState()=>_TrainerDashboardScreenState();
+  State<TrainerDashboardScreen> createState() => _TrainerDashboardScreenState();
 }
 
 class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
-  bool _professional=false;
-  late Future<TrainerHomeData> _mockFuture;
+  bool _professional = false;
   @override
-  void initState() {
-    super.initState();
-    _mockFuture=Future.value(const TrainerHomeData(
-      trainerName:'Treinador (mock)',specialty:null,todayTrainings:[],weeklyFeedbacksDone:0,
-      weeklyFeedbacksTotal:0,activePlans:7,weeklyTrainingsCompleted:0,
-      weeklyTrainingsPlanned:0,createdExercises:16,horses:[],totalLinkedHorses:12,clients:[]));
-  }
-  @override
-  Widget build(BuildContext context)=>Scaffold(
-    backgroundColor:Theme.of(context).scaffoldBackgroundColor,
-    appBar:const HomeAppBar(),
-    drawer:TrainerSidebar(onLogout:widget.onLogout,homeFuture:widget.homeFuture ?? _mockFuture),
-    bottomNavigationBar:HomeBottomNavBar(selectedIndex:3,onItemSelected:(index){
-      if(index==0){if(widget.onHome!=null){widget.onHome!();}else{Navigator.of(context).maybePop();}}
-    }),
-    body:Center(child:ConstrainedBox(constraints:const BoxConstraints(maxWidth:540),
-      child:ListView(padding:const EdgeInsets.fromLTRB(20,20,20,32),children:[
-        Text('Evolução',textAlign:TextAlign.center,style:DashboardTextStyles.pageTitle(context)),
-        const SizedBox(height:24),
-        Row(children:[
-          Switch(value:_professional,activeColor:Colors.white,
-            activeTrackColor:const Color(0xFF027068),
-            onChanged:(value)=>setState(()=>_professional=value)),
-          const SizedBox(width:8),
-          const Flexible(child:Text('Painel profissional',style:TextStyle(fontFamily:'Urbanist',fontSize:20))),
-        ]),
-        const SizedBox(height:18),
-        if(_professional)
-          TrainerProfessionalContent(forceEmpty:widget.empty)
-        else
-          DashboardTrainingContent(empty:widget.empty),
-      ]))),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    appBar: const HomeAppBar(),
+    drawer: TrainerSidebar(
+      onLogout: widget.onLogout,
+      homeFuture: widget.homeFuture,
+    ),
+    bottomNavigationBar: HomeBottomNavBar(
+      selectedIndex: 3,
+      onItemSelected: (index) {
+        if (index == 0) {
+          if (widget.onHome != null) {
+            widget.onHome!();
+          } else {
+            Navigator.of(context).maybePop();
+          }
+        }
+      },
+    ),
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 540),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          children: [
+            Text(
+              'Evolução',
+              textAlign: TextAlign.center,
+              style: DashboardTextStyles.pageTitle(context),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Switch(
+                  value: _professional,
+                  activeColor: Colors.white,
+                  activeTrackColor: const Color(0xFF027068),
+                  onChanged: (value) => setState(() => _professional = value),
+                ),
+                const SizedBox(width: 8),
+                const Flexible(
+                  child: Text(
+                    'Painel profissional',
+                    style: TextStyle(fontFamily: 'Urbanist', fontSize: 20),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            if (_professional)
+              DashboardLiveProfessionalContent(repository: widget.repository)
+            else
+              DashboardLiveTrainingContent(repository: widget.repository),
+          ],
+        ),
+      ),
+    ),
   );
 }

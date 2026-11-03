@@ -1,12 +1,27 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 29/10/2026 - Card de treinos realizados com donut modular.
-// 30/10/2026 - Ajustes de margens, legenda e total segundo protótipo Figma.
+//
+// Data: 29/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Card de treinos realizados com donut modular.
+//
+// Data: 30/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Ajustes de margens, legenda e total segundo protótipo Figma.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'dashboard_donut_chart.dart';
 import 'dashboard_text_styles.dart';
 
+/// Mostra o total de treinos e o donut dos percentuais de realização.
 class DashboardTrainingCard extends StatelessWidget {
   const DashboardTrainingCard({
     super.key,

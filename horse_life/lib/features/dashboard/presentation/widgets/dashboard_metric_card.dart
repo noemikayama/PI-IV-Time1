@@ -1,10 +1,25 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 29/10/2026 - Card modular de indicadores.
-// 30/10/2026 - Ajuste de alinhamento e proporções conforme protótipo Figma.
+//
+// Data: 29/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Card modular de indicadores.
+//
+// Data: 30/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Ajuste de alinhamento e proporções conforme protótipo Figma.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'dashboard_text_styles.dart';
 
+/// Apresenta um indicador percentual com título e fundo em degradê.
 class DashboardMetricCard extends StatelessWidget {
   const DashboardMetricCard({
     super.key,

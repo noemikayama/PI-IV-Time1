@@ -1,26 +1,43 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 29/10/2026 - Cards independentes de treinos e feedbacks, com rolagem horizontal.
-// 30/10/2026 - Refinamento Figma: tipografia, espaçamento, ícones, botão em degradê.
+//
+// Data: 29/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Cards independentes de treinos e feedbacks, com rolagem horizontal.
+//
+// Data: 30/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Refinamento Figma: tipografia, espaçamento, ícones, botão em degradê.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Exclusão de treinos e feedbacks fictícios; cards renderizam apenas registros retornados pelo backend.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import '../../data/dashboard_mock_data.dart';
 import 'dashboard_text_styles.dart';
 
+/// Mostra registros reais recentes com rolagem lateral e estado vazio.
 class DashboardRecentList extends StatelessWidget {
   const DashboardRecentList({
     super.key,
     required this.title,
-    required this.trainings,
-    this.feedbacks = const [],
     this.feedback = false,
     this.onShowAll,
     this.onItemTap,
+    this.liveTrainings = const [],
+    this.liveFeedbacks = const [],
   });
   final String title;
-  final List<DashboardTraining> trainings;
-  final List<DashboardFeedback> feedbacks;
   final bool feedback;
+  final List<Map<String, dynamic>> liveTrainings, liveFeedbacks;
   final VoidCallback? onShowAll, onItemTap;
 
   String _date(DateTime d) =>
@@ -28,7 +45,7 @@ class DashboardRecentList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final count = feedback ? feedbacks.length : trainings.length;
+    final count = feedback ? liveFeedbacks.length : liveTrainings.length;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
       decoration: BoxDecoration(
@@ -84,8 +101,8 @@ class DashboardRecentList extends StatelessWidget {
                     itemBuilder: (context, index) => SizedBox(
                       width: cardWidth,
                       child: feedback
-                          ? _feedbackCard(feedbacks[index])
-                          : _trainingCard(trainings[index]),
+                          ? _liveFeedbackCard(liveFeedbacks[index])
+                          : _liveTrainingCard(liveTrainings[index]),
                     ),
                   ),
                 );
@@ -131,30 +148,29 @@ class DashboardRecentList extends StatelessWidget {
     ),
   );
 
-  Widget _trainingCard(DashboardTraining training) => _card(
-    title: training.name,
+  Widget _liveTrainingCard(Map<String, dynamic> item) => _card(
+    title: item['nomeTreino']?.toString() ?? '',
     details: [
-      _detail(Icons.pets, DashboardMockData.horseName(training.horseId)),
-      _detail(Icons.assignment_outlined, training.plan),
-      _detail(Icons.event_available_outlined, _date(training.date)),
+      _detail(Icons.pets, item['nomeCavalo']?.toString() ?? ''),
+      _detail(Icons.assignment_outlined, item['nomePlano']?.toString() ?? ''),
+      _detail(Icons.event_available_outlined, _liveDate(item['data'])),
     ],
     buttonLabel: 'Ver treino',
     buttonIcon: Icons.open_in_new,
   );
-
-  Widget _feedbackCard(DashboardFeedback item) {
-    final training = DashboardMockData.trainingById(item.trainingId);
-    if (training == null) return const SizedBox.shrink();
-    return _card(
-      title: training.name,
-      details: [
-        _detail(Icons.feedback_outlined, training.name),
-        _detail(Icons.assignment_outlined, training.plan),
-        _detail(Icons.event_available_outlined, _date(item.date)),
-      ],
-      buttonLabel: 'Ver feedback',
-      buttonIcon: Icons.open_in_new,
-    );
+  Widget _liveFeedbackCard(Map<String, dynamic> item) => _card(
+    title: item['nomeTreino']?.toString() ?? '',
+    details: [
+      _detail(Icons.feedback_outlined, item['nomeTreino']?.toString() ?? ''),
+      _detail(Icons.assignment_outlined, item['nomePlano']?.toString() ?? ''),
+      _detail(Icons.event_available_outlined, _liveDate(item['data'])),
+    ],
+    buttonLabel: 'Ver feedback',
+    buttonIcon: Icons.open_in_new,
+  );
+  String _liveDate(Object? date) {
+    final parsed = DateTime.tryParse(date?.toString() ?? '');
+    return parsed == null ? '' : _date(parsed);
   }
 
   Widget _card({

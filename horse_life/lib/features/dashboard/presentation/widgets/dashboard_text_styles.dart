@@ -1,9 +1,20 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 29/10/2026 - Estilos tipográficos reutilizáveis do Dashboard,
-//                baseados nas famílias configuradas no AppTheme.
+//
+// Data: 29/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Estilos tipográficos reutilizáveis do Dashboard,
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 
+/// Centraliza a tipografia League Spartan e Urbanist aplicada nos dashboards.
 abstract final class DashboardTextStyles {
   /// Título principal: League Spartan Bold, 32 px, line-height 100%.
   static TextStyle pageTitle(BuildContext context) =>

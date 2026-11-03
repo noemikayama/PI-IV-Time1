@@ -1,10 +1,22 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 30/10/2026 - Donut reutilizável para status de planos profissionais.
+//
+// Data: 30/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Donut reutilizável para status de planos profissionais.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
+/// Desenha o gráfico de distribuição dos planos do profissional.
 class DashboardPlansDonut extends StatelessWidget {
   const DashboardPlansDonut({
     super.key,

@@ -1,6 +1,17 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 29/10/2026 - Modularização do Dashboard Guardian e preparação para dados da Cloud Function.
+//
+// Data: 29/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Modularização do Dashboard Guardian e preparação para dados da Cloud Function.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';

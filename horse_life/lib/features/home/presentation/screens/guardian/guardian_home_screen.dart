@@ -1,6 +1,7 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// 01/11/2026 - Navegação Home ↔ Dashboard por perfil com repository injetável.
 //
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
@@ -25,9 +26,17 @@
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Implementação da estrutura inicial da Home do Responsável,
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Dashboard acessado pela Home passa a utilizar repository real,
+// independentemente do modo de teste da Home.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:horse_life/features/dashboard/dashboard_composition.dart';
+import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
+import 'package:horse_life/features/dashboard/presentation/screens/guardian/guardian_dashboard_screen.dart';
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
@@ -43,6 +52,7 @@ class GuardianHomeScreen extends StatefulWidget {
     this.mockScenario,
     this.loader,
     this.onRegisterHorse,
+    this.dashboardRepository,
     super.key,
   });
 
@@ -55,6 +65,9 @@ class GuardianHomeScreen extends StatefulWidget {
 
   // Navegação futura para o cadastro de cavalos.
   final VoidCallback? onRegisterHorse;
+
+  /// Injete um repository fake em testes; no aplicativo usa Firebase.
+  final DashboardRepository? dashboardRepository;
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
@@ -74,7 +87,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   Future<GuardianHomeData> _fetchHome() => _loader.fetchHome();
 
   void _configureLoader() {
-    _loader = widget.loader ??
+    _loader =
+        widget.loader ??
         HomeComposition.guardian(mockScenario: widget.mockScenario);
   }
 
@@ -99,6 +113,25 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     }
   }
 
+  void _onNavigationSelected(int index) {
+    if (index == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => GuardianDashboardScreen(
+            onLogout: widget.onLogout,
+            onHome: () => Navigator.of(context).pop(),
+            homeFuture: _homeFuture,
+            // Dashboard sempre usa dados reais (o mock da Home é independente).
+            repository:
+                widget.dashboardRepository ?? DashboardComposition.production(),
+          ),
+        ),
+      );
+      return;
+    }
+    // As demais rotas serão integradas pelas respectivas features.
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,11 +153,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
         selectedIndex: _selectedIndex,
-        onItemSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        onItemSelected: _onNavigationSelected,
       ),
     );
   }

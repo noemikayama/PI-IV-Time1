@@ -1,15 +1,36 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 30/10/2026 - Painel profissional modular com períodos, métricas e donut de planos.
+//
+// Data: 30/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Painel profissional modular com períodos, métricas e donut de planos.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Remoção dos valores profissionais simulados; apresentação recebe somente dados mapeados da Function.
+//
+// Data: 03/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+//
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import '../../data/trainer_dashboard_mock_data.dart';
+import '../../data/models/trainer_professional_snapshot.dart';
 import 'dashboard_plans_donut.dart';
 import 'dashboard_text_styles.dart';
 
+/// Exibe métricas profissionais recebidas do backend e permite filtrar período.
 class TrainerProfessionalContent extends StatefulWidget {
-  const TrainerProfessionalContent({super.key, this.forceEmpty = false});
-  final bool forceEmpty;
+  const TrainerProfessionalContent({
+    super.key,
+    required this.liveData,
+    this.onPeriodChanged,
+  });
+  final TrainerProfessionalSnapshot liveData;
+  final ValueChanged<String>? onPeriodChanged;
   @override
   State<TrainerProfessionalContent> createState() =>
       _TrainerProfessionalContentState();
@@ -20,9 +41,7 @@ class _TrainerProfessionalContentState
   String _period = 'Desde sempre';
   @override
   Widget build(BuildContext context) {
-    final data = widget.forceEmpty
-        ? TrainerProfessionalSnapshot.empty
-        : TrainerDashboardMockData.forPeriod(_period);
+    final data = widget.liveData;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -302,7 +321,14 @@ class _TrainerProfessionalContentState
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            ...TrainerDashboardMockData.periods.map(
+            ...const [
+              'Desde sempre',
+              'Diário',
+              'Semanal',
+              'Último mês',
+              'Últimos 6 meses',
+              'Último ano',
+            ].map(
               (p) => ListTile(
                 leading: p == _period
                     ? const Icon(Icons.check, color: AppColors.seaGreen)
@@ -315,6 +341,9 @@ class _TrainerProfessionalContentState
         ),
       ),
     );
-    if (selected != null && mounted) setState(() => _period = selected);
+    if (selected != null && mounted) {
+      setState(() => _period = selected);
+      widget.onPeriodChanged?.call(selected);
+    }
   }
 }
