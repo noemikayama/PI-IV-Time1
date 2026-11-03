@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.BindException;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -94,6 +95,48 @@ class ServidorMicrochipIntegracaoTest {
             tarefa.get(limite.toMillis(), TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             return;
+        }
+    }
+
+    private static final class CapturaDeLog implements AutoCloseable {
+
+        private final Logger logger;
+        private final List<String> mensagens = new CopyOnWriteArrayList<>();
+        private final Handler capturador = new Handler() {
+            @Override
+            public void publish(LogRecord registro) {
+                mensagens.add(new SimpleFormatter().formatMessage(registro));
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+
+        CapturaDeLog(Class<?> origem) {
+            logger = Logger.getLogger(origem.getName());
+            logger.addHandler(capturador);
+        }
+
+        boolean registrou(String mensagem) throws InterruptedException {
+            long prazo = System.nanoTime() + Duration.ofSeconds(5).toNanos();
+            while (!mensagens.contains(mensagem) && System.nanoTime() - prazo < 0) {
+                Thread.sleep(10);
+            }
+            return mensagens.contains(mensagem);
+        }
+
+        List<String> mensagens() {
+            return mensagens;
+        }
+
+        @Override
+        public void close() {
+            logger.removeHandler(capturador);
         }
     }
 
@@ -186,6 +229,34 @@ class ServidorMicrochipIntegracaoTest {
         assertNull(respostaOciosa);
         assertTrue(decorrido.compareTo(Duration.ofSeconds(2)) < 0, "demorou " + decorrido);
         assertEquals(RESPOSTA_VALIDA, respostaSeguinte);
+    }
+
+    @Test
+    void deveRegistrarIpComandoEResultadoDaConexaoAtendida() throws Exception {
+        ServidorMicrochip servidor = iniciarServidor(VALIDO, TIMEOUT_PADRAO);
+        String ip = InetAddress.getByName("localhost").getHostAddress();
+
+        try (CapturaDeLog log = new CapturaDeLog(TratadorConexao.class)) {
+            enviar(servidor.portaLocal(), REQUISICAO);
+
+            String esperada = "conexão ip=" + ip + " comando=VALIDAR_MICROCHIP resultado=VALIDO";
+            assertTrue(log.registrou(esperada), () -> "mensagens registradas: " + log.mensagens());
+        }
+    }
+
+    @Test
+    void deveRegistrarTimeoutDeLeituraComoResultadoDaConexao() throws Exception {
+        ServidorMicrochip servidor = iniciarServidor(VALIDO, Duration.ofMillis(200));
+        String ip = InetAddress.getByName("localhost").getHostAddress();
+
+        try (CapturaDeLog log = new CapturaDeLog(TratadorConexao.class)) {
+            try (Socket socket = new Socket("localhost", servidor.portaLocal())) {
+                socket.getInputStream().read();
+            }
+
+            String esperada = "conexão ip=" + ip + " comando=null resultado=TIMEOUT_LEITURA";
+            assertTrue(log.registrou(esperada), () -> "mensagens registradas: " + log.mensagens());
+        }
     }
 
     @Test
@@ -345,31 +416,12 @@ class ServidorMicrochipIntegracaoTest {
     }
 
     @Test
-    void deveRegistrarPortaSemSeparadorDeMilhar() throws IOException {
-        Logger logger = Logger.getLogger(ServidorMicrochip.class.getName());
-        List<String> mensagens = new CopyOnWriteArrayList<>();
-        Handler capturador = new Handler() {
-            @Override
-            public void publish(LogRecord registro) {
-                mensagens.add(new SimpleFormatter().formatMessage(registro));
-            }
-
-            @Override
-            public void flush() {
-            }
-
-            @Override
-            public void close() {
-            }
-        };
-        logger.addHandler(capturador);
-        try {
+    void deveRegistrarPortaSemSeparadorDeMilhar() throws Exception {
+        try (CapturaDeLog log = new CapturaDeLog(ServidorMicrochip.class)) {
             ServidorMicrochip servidor = iniciarServidor(VALIDO, TIMEOUT_PADRAO);
 
             String esperada = "Servidor de microchip escutando na porta " + servidor.portaLocal() + ".";
-            assertTrue(mensagens.contains(esperada), () -> "mensagens registradas: " + mensagens);
-        } finally {
-            logger.removeHandler(capturador);
+            assertTrue(log.registrou(esperada), () -> "mensagens registradas: " + log.mensagens());
         }
     }
 }

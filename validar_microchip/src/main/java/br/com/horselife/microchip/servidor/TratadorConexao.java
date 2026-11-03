@@ -23,6 +23,7 @@ final class TratadorConexao implements Runnable {
 
     private static final Logger LOGGER = Logger.getLogger(TratadorConexao.class.getName());
     private static final int TAMANHO_DRENO = 1024;
+    private static final String TIMEOUT_LEITURA = "TIMEOUT_LEITURA";
 
     private final Socket socket;
     private final Duration timeoutLeitura;
@@ -43,20 +44,24 @@ final class TratadorConexao implements Runnable {
                     new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
             BufferedWriter escritor = new BufferedWriter(
                     new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
+            Resultado resultado;
             try {
-                Resultado resultado = atender(leitor);
-                escrever(escritor, resultado);
-                LOGGER.log(Level.INFO, "conexão ip={0} comando={1} resultado={2}",
-                        new Object[] {ip, resultado.comando(), resultado.desfecho()});
+                resultado = atender(leitor);
             } catch (RuntimeException e) {
                 LOGGER.log(Level.SEVERE, "Falha inesperada na conexão ip=" + ip, e);
-                escrever(escritor, processador.erro(CodigoErro.ERRO_INTERNO));
+                resultado = processador.erro(CodigoErro.ERRO_INTERNO);
             }
+            escrever(escritor, resultado);
+            registrarConexao(Level.INFO, ip, resultado.comando(), resultado.desfecho());
         } catch (SocketTimeoutException e) {
-            LOGGER.log(Level.WARNING, "Tempo de leitura esgotado; conexão ip={0} fechada sem resposta.", ip);
+            registrarConexao(Level.WARNING, ip, null, TIMEOUT_LEITURA);
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Falha de E/S na conexão ip=" + ip, e);
         }
+    }
+
+    private static void registrarConexao(Level nivel, String ip, String comando, String resultado) {
+        LOGGER.log(nivel, "conexão ip={0} comando={1} resultado={2}", new Object[] {ip, comando, resultado});
     }
 
     private Resultado atender(BufferedReader leitor) throws IOException {
