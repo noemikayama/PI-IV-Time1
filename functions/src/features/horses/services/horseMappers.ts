@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: toHorseView substituído por buildHorseProfile (horseProfile.ts).
+// Alteração: Relação TREINADOR explícita na consulta.
+// Alteração: Datas de início e de fim do plano atual.
+// Alteração: Cards da lista de cavalos e início do vínculo de quem consulta.
+// Alteração: relationsOf movido para horseAccess.ts.
+// Alteração: HorseListSource importado de types.
+//
 // Data: 27/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Imagens enviadas com URL assinada de leitura.
@@ -12,75 +21,81 @@
 // -----------------------------------------------------------------------------
 
 import type {
-  HorseDocument,
-  HorseResponsibility,
-  HorseView,
+  GuardianHorseCard,
+  HorseListSource,
+  RefView,
+  TrainerHorseCard,
 } from "../types";
-import {calculateHorseAge} from "./horseAge";
+import {relationsOf} from "./horseAccess";
 import {toHorseImageView} from "./horseImageService";
 
-const toRefView = (ref: {_id: unknown; codigo: number; nome: string}) => ({
+type Ref = {_id: unknown; codigo: number; nome: string};
+
+export const toRefView = (ref: Ref): RefView => ({
   id: String(ref._id),
   codigo: ref.codigo,
   nome: ref.nome,
 });
 
-/** Responsabilidades do usuário sobre o cavalo.
- * @param {HorseDocument} horse Documento do cavalo.
- * @param {string} uid UID do usuário.
- * @return {HorseResponsibility[]} PROPRIETARIO e/ou ATLETA.
+/** Início do vínculo de quem consulta: o cadastro para o proprietário e a
+ * data do vínculo para atleta e treinador. Vínculos gravados antes dessa
+ * data existir usam o cadastro do cavalo.
+ * @param {HorseListSource} horse Cavalo da lista.
+ * @param {string} uid UID de quem consulta.
+ * @return {Date} Início do vínculo.
  */
-export function responsibilitiesOf(
-  horse: HorseDocument,
-  uid: string
-): HorseResponsibility[] {
-  const result: HorseResponsibility[] = [];
-  if (horse.proprietario._id === uid) result.push("PROPRIETARIO");
-  if (horse.atleta?._id === uid) result.push("ATLETA");
-  return result;
+function linkedSince(horse: HorseListSource, uid: string): Date {
+  if (horse.proprietario._id === uid) return horse.criadoEm;
+  if (horse.atleta?._id === uid) {
+    return horse.atleta.vinculadoEm ?? horse.criadoEm;
+  }
+  const trainer = horse.treinadores.find((item) => item._id === uid);
+  return trainer?.vinculadoEm ?? horse.criadoEm;
 }
 
-/** Converte o documento para o app: ObjectId e Date viram string, a idade
- * é calculada no momento da consulta e cada imagem ganha uma URL de leitura.
- * @param {HorseDocument} horse Documento do cavalo.
+/** Campos comuns dos cards: só a primeira imagem ganha URL de leitura.
+ * @param {HorseListSource} horse Cavalo da lista.
  * @param {string} uid UID de quem consulta.
- * @return {Promise<HorseView>} Cavalo no formato do app.
  */
-export async function toHorseView(
-  horse: HorseDocument,
-  uid: string
-): Promise<HorseView> {
+async function toHorseCardBase(horse: HorseListSource, uid: string) {
+  const [first] = horse.imagens;
   return {
     id: horse._id.toHexString(),
-    codigo: horse.codigo,
     nome: horse.nome,
-    dataNascimento: horse.dataNascimento,
-    idade: calculateHorseAge(horse.dataNascimento),
-    raca: horse.raca,
-    pelagem: horse.pelagem,
-    sexo: horse.sexo,
-    imagens: await Promise.all(horse.imagens.map(toHorseImageView)),
+    foto: first ? await toHorseImageView(first) : null,
     modalidade: horse.modalidade ? toRefView(horse.modalidade) : null,
-    limitacoesFisicas: horse.limitacoesFisicas,
-    observacoesSaude: horse.observacoesSaude,
-    historicoLesoes: horse.historicoLesoes,
-    situacaoCadastral: horse.situacaoCadastral,
+    responsabilidades: relationsOf(horse, uid),
+    vinculadoEm: linkedSince(horse, uid).toISOString(),
+  };
+}
+
+/** Card do responsável: traz o treinador do cavalo (único).
+ * @param {HorseListSource} horse Cavalo da lista.
+ * @param {string} uid UID do responsável.
+ * @return {Promise<GuardianHorseCard>} Card do cavalo.
+ */
+export async function toGuardianHorseCard(
+  horse: HorseListSource,
+  uid: string
+): Promise<GuardianHorseCard> {
+  const [trainer] = horse.treinadores;
+  return {
+    ...(await toHorseCardBase(horse, uid)),
+    treinador: trainer ? toRefView(trainer) : null,
+  };
+}
+
+/** Card do treinador: traz o proprietário do cavalo.
+ * @param {HorseListSource} horse Cavalo da lista.
+ * @param {string} uid UID do treinador.
+ * @return {Promise<TrainerHorseCard>} Card do cavalo.
+ */
+export async function toTrainerHorseCard(
+  horse: HorseListSource,
+  uid: string
+): Promise<TrainerHorseCard> {
+  return {
+    ...(await toHorseCardBase(horse, uid)),
     proprietario: toRefView(horse.proprietario),
-    atleta: horse.atleta ? toRefView(horse.atleta) : null,
-    treinadores: horse.treinadores.map(toRefView),
-    planoAtual: horse.planoAtual ? {
-      id: String(horse.planoAtual._id),
-      codigo: horse.planoAtual.codigo,
-      titulo: horse.planoAtual.titulo,
-    } : null,
-    avaliacoes: horse.avaliacoes.map((avaliacao) => ({
-      id: String(avaliacao._id),
-      codigo: avaliacao.codigo,
-      data: avaliacao.data,
-      treinador: toRefView(avaliacao.treinador),
-    })),
-    responsabilidades: responsibilitiesOf(horse, uid),
-    criadoEm: horse.criadoEm.toISOString(),
-    atualizadoEm: horse.atualizadoEm.toISOString(),
   };
 }

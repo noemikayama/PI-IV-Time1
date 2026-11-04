@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Consulta leve da conta (código, nome e situação).
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Edição do perfil do treinador e atualização das cópias do nome.
@@ -35,6 +39,7 @@ import {COLLECTIONS} from "../../../../shared/constants/collections";
 import {nextCode} from "../../../../shared/database/sequence";
 import type {
   AttachmentType,
+  TrainerAccount,
   NewTrainer,
   TrainerDocument,
   TrainerHomeSource,
@@ -71,6 +76,22 @@ export async function findTrainerById(
   return db
     .collection<TrainerDocument>(COLLECTIONS.Treinadores)
     .findOne({_id: uid}, {session});
+}
+
+/** Busca só o necessário para conferir a conta e referenciá-la (código,
+ * nome e situação), sem as listas e os anexos do documento.
+ * @param {string} uid UID do usuário.
+ */
+export async function findTrainerAccount(
+  uid: string
+): Promise<TrainerAccount | null> {
+  const db = await getDatabase();
+  return db
+    .collection<TrainerDocument>(COLLECTIONS.Treinadores)
+    .findOne<TrainerAccount>(
+      {_id: uid},
+      {projection: {codigo: 1, nome: 1, situacaoProfissional: 1}}
+    );
 }
 
 /** Busca os dados mínimos do treinador usados pela home.

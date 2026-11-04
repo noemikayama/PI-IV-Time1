@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da validação de e-mail, usada nos vínculos do cavalo.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do nome completo (nome + sobrenome) e dos campos
@@ -53,7 +57,7 @@ export function asRecord(
  * @param {unknown} email E-mail recebido.
  * @return {string} E-mail sem espaços e em minúsculas.
  */
-function parseEmail(email: unknown): string {
+export function parseEmail(email: unknown): string {
   if (
     typeof email !== "string" ||
     email.length > 254 ||

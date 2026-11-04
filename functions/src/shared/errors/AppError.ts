@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Código failed-precondition, para regras que dependem do
+// estado atual.
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Criação de erro próprio da aplicação.
@@ -14,6 +19,7 @@ export type AppErrorCode =
     | "unauthenticated"
     | "permission-denied"
     | "not-found"
+    | "failed-precondition"
     | "internal";
 
 /** Erro de domínio com código compatível com o HttpsError. */
