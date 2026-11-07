@@ -1,6 +1,21 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 06/11/2026 (cadastro real)
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Home recebe cavalo persistido pela Function registerHorse e
+// atualiza getHome; repositório mock permanece apenas em cenários de teste.
+//
+//
+// Data: 06/11/2026 (correção pós-testes móveis)
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Finalização do fluxo de cadastro sem recarregar a Home com dados
+// remotos após um registro simulado; cavalo aparece apenas na sessão local.
+//
+// Data: 06/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Abertura da feature de cadastro de cavalos pela Home,
+// preservando extensão futura para o perfil e outras telas.
 //
 // Data: 30/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -40,6 +55,9 @@ import 'package:flutter/material.dart';
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
+import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
+import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
 import 'package:horse_life/features/profile/data/repositories/guardian_profile_repository.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
@@ -55,6 +73,7 @@ class GuardianHomeScreen extends StatefulWidget {
     this.mockScenario,
     this.loader,
     this.onRegisterHorse,
+    this.horseRegistrationRepository,
     this.guardianProfileLoader,
     this.onEditGuardianProfile,
     this.onShowAllGuardianHorses,
@@ -68,8 +87,12 @@ class GuardianHomeScreen extends StatefulWidget {
   /// Dependência injetada pela raiz. Se ausente, aplica composição legada.
   final HomeLoader<GuardianHomeData>? loader;
 
-  // Navegação futura para o cadastro de cavalos.
+  // Ponto de extensão para abrir o cadastro por rotas externas.
   final VoidCallback? onRegisterHorse;
+
+  /// Pode receber um repositório fake em testes; sem injeção usa Firebase
+  /// na produção ou mock quando mockScenario está ativo.
+  final HorseRegistrationRepository? horseRegistrationRepository;
 
   /// Fonte injetável do perfil, usada principalmente em testes e composições.
   final GuardianProfileLoader? guardianProfileLoader;
@@ -89,6 +112,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
   // Estado local da navegação inferior.
   int _selectedIndex = 0;
+  // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
+  final List<String> _sessionMockHorses = [];
   late Future<GuardianHomeData> _homeFuture;
 
   late HomeLoader<GuardianHomeData> _loader;
@@ -108,6 +133,38 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     _loader =
         widget.loader ??
         HomeComposition.guardian(mockScenario: widget.mockScenario);
+  }
+
+  /// Mantém a feature independente da Home, retornando ao ponto de origem.
+  Future<void> _openRegisterHorse() async {
+    final result = await Navigator.of(context).push<HorseRegistrationResult>(
+      MaterialPageRoute<HorseRegistrationResult>(
+        builder: (_) => HorseRegistrationScreen(
+          repository:
+              widget.horseRegistrationRepository ??
+              (widget.mockScenario == null
+                  ? null
+                  : const MockHorseRegistrationRepository()),
+        ),
+      ),
+    );
+    if (!mounted || result == null) return;
+    if (!result.isPersisted) {
+      // Não consulta o servidor após um registro que só existe no frontend.
+      // Isso evita erro/desaparecimento da Home durante o teste em celular.
+      setState(() => _sessionMockHorses.add(result.name));
+    } else {
+      // Cadastro real: atualiza a lista do servidor e o estado vazio da Home.
+      _retryHome();
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.warning ??
+              'Cadastro de ${result.name} concluído${result.isPersisted ? '' : ' em modo de demonstração (não salvo no servidor)'}!',
+        ),
+      ),
+    );
   }
 
   void _retryHome() {
@@ -150,12 +207,14 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               onLogout: widget.onLogout,
               onEditGuardianProfile: widget.onEditGuardianProfile,
               onShowAllGuardianHorses: widget.onShowAllGuardianHorses,
+              // O perfil mantém seu callback original: integração em outra etapa.
               onRegisterGuardianHorse: widget.onRegisterHorse,
             )
           : GuardianHomeContent(
               homeFuture: _homeFuture,
               onRetry: _retryHome,
-              onRegisterHorse: widget.onRegisterHorse,
+              sessionMockHorses: _sessionMockHorses,
+              onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
             ),
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
