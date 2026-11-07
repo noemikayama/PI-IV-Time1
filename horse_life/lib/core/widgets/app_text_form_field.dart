@@ -2,9 +2,18 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de configuração e montagem do campo.
+//
+// Data: 04/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão de FocusNode e do modo somente leitura para permitir o
+// controle de foco e a exibição de campos não editáveis.
+//
 // Data: 02/11/2026
 // Autor: Noemi Kayama - RA 25004140
-// Alteração: Inclusão do labelText no InputDecoration para exibir o hintText 
+// Alteração: Inclusão do labelText no InputDecoration para exibir o hintText
 // como rótulo do campo.
 //
 // Data: 16/10/2026
@@ -30,11 +39,12 @@
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
+// --- Contratos de eventos ----------------------------------------------------
+// Os aliases deixam explícito o valor entregue durante a digitação e o envio.
 typedef AppTextFormFieldChangedCallback = void Function(String value);
 typedef AppTextFormFieldSubmittedCallback = void Function(String value);
 
-// Campo de formulário configurável que herda a identidade visual do tema em
-// diferentes tipos de entrada.
+/// Campo reutilizável que centraliza comportamento e identidade visual.
 class AppTextFormField extends StatelessWidget {
   const AppTextFormField({
     required this.controller,
@@ -44,33 +54,46 @@ class AppTextFormField extends StatelessWidget {
     this.obscureText = false,
     this.onChanged,
     this.onFieldSubmitted,
+    this.focusNode,
+    this.readOnly = false,
     this.suffixIcon,
     this.textInputAction,
     this.validator,
     super.key,
   });
 
-  // Contrato de conteúdo, comportamento e validação recebido pela tela.
+  // --- Configuração do campo -------------------------------------------------
   final TextEditingController controller;
   final String hintText;
   final Iterable<String>? autofillHints;
   final TextInputType? keyboardType;
   final bool obscureText;
-  // Permite que telas atualizem validações e indicadores enquanto há digitação.
+
+  /// Notifica a tela enquanto o conteúdo é alterado.
   final AppTextFormFieldChangedCallback? onChanged;
+
+  /// Notifica a tela quando o usuário conclui a edição pelo teclado.
   final AppTextFormFieldSubmittedCallback? onFieldSubmitted;
+
+  /// Permite que a tela mova o foco programaticamente para este campo.
+  final FocusNode? focusNode;
+
+  /// Mantém o conteúdo visível e selecionável, mas impede sua edição.
+  final bool readOnly;
   final Widget? suffixIcon;
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
 
-  // Montagem do campo e de seus estados visuais.
+  // --- Composição visual -----------------------------------------------------
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Mantém o comportamento do campo configurável sem repetir seu estilo.
+    // Encaminha as opções funcionais e aplica o estilo compartilhado do app.
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
+      readOnly: readOnly,
       autofillHints: autofillHints,
       keyboardType: keyboardType,
       obscureText: obscureText,
