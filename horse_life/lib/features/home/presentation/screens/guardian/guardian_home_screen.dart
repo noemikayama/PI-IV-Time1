@@ -12,6 +12,11 @@
 // Alteração: Cadastro de cavalos aberto pela rota da feature, sem acoplamento
 // às etapas do formulário.
 //
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Migração do estado da navegação inferior de índice numérico para
+// HomeNavigationDestination, preservando o acesso ao perfil do responsável.
+//
 // Data: 06/11/2026 (cadastro real)
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Home recebe cavalo persistido pela Function registerHorse e
@@ -138,10 +143,12 @@ class GuardianHomeScreen extends StatefulWidget {
 }
 
 class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
-  // --- Estado e dependências -------------------------------------------------
-  // A Future é compartilhada entre o conteúdo e o menu para evitar requisições
-  // duplicadas durante reconstruções da tela.
-  int _selectedIndex = 0;
+  // A fonte real é usada por padrão; cenários mock ficam restritos aos testes.
+
+  // Estado local da navegação inferior.
+  HomeNavigationDestination _selectedDestination =
+      HomeNavigationDestination.home;
+  late Future<GuardianHomeData> _homeFuture;
 
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
   final List<String> _sessionMockHorses = [];
@@ -257,8 +264,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
       ),
-      // O último item alterna do painel inicial para o perfil do responsável.
-      body: _selectedIndex == 4
+      // Área reservada aos cards futuros.
+      body: _selectedDestination == HomeNavigationDestination.profile
           ? GuardianProfileScreen(
               loadGuardianProfile: _fetchGuardianProfile,
               onLogout: widget.onLogout,
@@ -279,12 +286,9 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             ),
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        selectedDestination: _selectedDestination,
+        onDestinationSelected: (destination) =>
+            setState(() => _selectedDestination = destination),
       ),
     );
   }

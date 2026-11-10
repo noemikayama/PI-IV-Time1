@@ -2,6 +2,11 @@
 # -----------------------------------------------------------------------------
 # HISTÓRICO DE ALTERAÇÕES
 #
+# Data: 06/11/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão do pdfrx 2.4.7 para renderização nativa dos documentos PDF
+# anexados aos perfis profissionais.
+#
 # Data: 20/10/2026
 # Autor: Noemi Kayama - RA 25004140
 # Alteração: Inclusão do Cloud Functions e do Firebase Authentication para o
@@ -58,6 +63,7 @@ dependencies:
   file_selector: ^1.1.0
   country_state_city: ^0.1.6
   http: ^1.6.0
+  pdfrx: 2.4.7
   material_symbols_icons: ^4.2960.0
 
 dev_dependencies:
