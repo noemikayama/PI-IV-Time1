@@ -10,6 +10,9 @@
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Itens de 'cavalos' e 'clientes' tipados pela feature de
 // cavalos, que mantém as duas listas.
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Situação profissional editável no perfil do treinador.
 //
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -159,8 +162,16 @@ export type TrainerHomeSource = Pick<
 // O nome completo já vem composto a partir do nome e do sobrenome.
 // O envio de PDFs continua em createTrainerAttachmentUpload e
 // confirmTrainerAttachment; aqui os anexos só podem ser removidos.
+// Situações que o próprio treinador pode escolher. INATIVO é exclusão lógica
+// da conta e não é alterado pela edição do perfil.
+export type EditableProfessionalStatus = Exclude<
+  TrainerDocument["situacaoProfissional"],
+  "INATIVO"
+>;
+
 export type UpdateTrainerProfileInput = {
     nome?: string;
+    situacaoProfissional?: EditableProfessionalStatus;
     regioesAtendimento?: {
         adicionar: ServiceRegion[];
         remover: ServiceRegion[];
@@ -173,6 +184,7 @@ export type UpdateTrainerProfileInput = {
 // 'regioesAtendimento' é a lista final; os anexos são os caminhos a remover.
 export type TrainerProfileChanges = {
     nome?: string;
+    situacaoProfissional?: EditableProfessionalStatus;
     regioesAtendimento?: ServiceRegion[];
     removerExperiencia?: string;
     removerCertificacoes: string[];
@@ -182,6 +194,7 @@ export type TrainerProfileChanges = {
 export type UpdateTrainerProfileResult = Pick<
   TrainerProfile,
   | "nome"
+  | "situacaoProfissional"
   | "experiencias"
   | "certificacoes"
   | "regioesAtendimento"
