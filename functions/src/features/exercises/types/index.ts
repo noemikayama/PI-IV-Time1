@@ -1,0 +1,29 @@
+// RESPONSÁVEL: Miguel Afonso Castro de Almeida - 25016044
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 07/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos tipos de exercício para o módulo.
+// -----------------------------------------------------------------------------
+
+export type {
+  ExerciseDetailsInput,
+  ExerciseDocument,
+  ExerciseHorseRef,
+  ExerciseImageContentType,
+  ExerciseMaterial,
+  ExerciseMediaContentType,
+  ExerciseMediaField,
+  ExerciseMediaFileInput,
+  ExerciseMediaUploadInput,
+  ExerciseMediaUploadResult,
+  ExerciseMediaView,
+  ExercisePrivacy,
+  ExerciseRegistrant,
+  ExerciseRegistrationInput,
+  ExerciseRegistrationResult,
+  ExerciseTrainerRef,
+  ExerciseVideoContentType,
+  NewExercise,
+} from "./exercise";

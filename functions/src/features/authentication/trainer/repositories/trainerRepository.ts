@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Atualização do nome do treinador também em
+// exercicios.treinador.
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Edição do perfil do treinador e atualização das cópias do nome.
@@ -210,7 +215,8 @@ export async function updateTrainerProfileDocument(
     );
 }
 
-/** Atualiza o nome do treinador nas cópias de cavalos e registros de treino.
+/** Atualiza o nome do treinador nas cópias de cavalos, registros de treino e
+ * exercícios.
  * Só altera as cópias com nome diferente, então pode ser chamada sempre.
  * @param {string} uid UID do treinador.
  * @param {string} nome Novo nome.
@@ -243,6 +249,13 @@ export async function renameTrainerRefs(
     {arrayFilters: [{"avaliacao.treinador._id": uid}], session}
   );
   await db.collection(COLLECTIONS.RegistrosTreino).updateMany(
+    {"treinador._id": uid, "treinador.nome": {$ne: nome}},
+    {$set: {"treinador.nome": nome}},
+    {session}
+  );
+  // Usa idx_exercicios_treinador. O atualizadoEm do exercício não muda: o
+  // conteúdo dele continua o mesmo.
+  await db.collection(COLLECTIONS.Exercicios).updateMany(
     {"treinador._id": uid, "treinador.nome": {$ne: nome}},
     {$set: {"treinador.nome": nome}},
     {session}

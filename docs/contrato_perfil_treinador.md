@@ -64,8 +64,8 @@ tabela (`email`, `senha`, `modalidades`, `uid`...) é recusado.
 - Tudo é gravado em uma única transação: se uma regra falhar, nada é alterado.
   O PDF removido só é apagado do Storage depois da gravação.
 - O novo nome também é atualizado no Firebase Authentication, em
-  `cavalos.treinadores`, `cavalos.avaliacoes.treinador` e
-  `registros_treino.treinador`.
+  `cavalos.treinadores`, `cavalos.avaliacoes.treinador`,
+  `registros_treino.treinador` e `exercicios.treinador`.
 
 Resposta (mesmo formato de `getTrainerProfile`):
 

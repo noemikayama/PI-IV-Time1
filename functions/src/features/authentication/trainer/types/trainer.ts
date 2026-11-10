@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: _id dos cavalos do perfil como string hexadecimal.
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos da edição do perfil do treinador.
@@ -101,13 +105,15 @@ export type TrainerRegistrationResult = {
     email: string;
 };
 
-// Datas viram string ISO: o callable não serializa 'Date'.
+// Datas viram string ISO e ObjectId vira string hexadecimal: o callable não
+// serializa 'Date' nem 'ObjectId'.
 export type TrainerProfile = Omit<
   TrainerDocument,
-  "criadoEm" | "atualizadoEm" | "experiencias" | "certificacoes"
+  "criadoEm" | "atualizadoEm" | "experiencias" | "certificacoes" | "cavalos"
 > & {
     experiencias: TrainerAttachmentView | null;
     certificacoes: TrainerAttachmentView[];
+    cavalos: {_id: string; codigo: string; nome: string}[];
     criadoEm: string;
     atualizadoEm: string;
 };

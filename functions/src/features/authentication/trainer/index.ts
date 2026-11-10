@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da consulta do treinador, usada pelo cadastro de
+// exercícios.
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da edição do perfil do treinador.
@@ -34,6 +39,7 @@ export {removeTrainerAttachment} from
   "./handlers/removeTrainerAttachment";
 export {updateTrainerProfile} from "./handlers/updateTrainerProfile";
 export {
+  findTrainerById,
   findTrainerHomeSource,
 } from "./repositories/trainerRepository";
 export type {TrainerHomeSource} from "./types";

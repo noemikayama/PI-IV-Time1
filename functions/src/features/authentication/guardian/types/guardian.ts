@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: _id dos cavalos e das modalidades do perfil como string
+// hexadecimal.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos da edição do perfil do responsável.
@@ -64,10 +69,19 @@ export type GuardianRegistrationResult = {
     email: string;
 };
 
+// Datas viram string ISO e ObjectId vira string hexadecimal: o callable não
+// serializa 'Date' nem 'ObjectId'.
 export type GuardianProfile = Omit<
   GuardianDocument,
-  "criadoEm" | "atualizadoEm"
+  "criadoEm" | "atualizadoEm" | "cavalos" | "modalidades"
 > & {
+    cavalos: {
+        _id: string;
+        codigo: string;
+        nome: string;
+        responsabilidades: string[];
+    }[];
+    modalidades: {_id: string; codigo: number; nome: string}[];
     criadoEm: string;
     atualizadoEm: string;
 };

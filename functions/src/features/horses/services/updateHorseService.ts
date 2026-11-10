@@ -57,7 +57,8 @@ export async function updateHorseService(
 
   const updated = await runInTransaction(async (session) => {
     const horse = await updateHorseDocument(input.id, update, session);
-    // O nome é copiado em responsaveis.cavalos e treinadores.cavalos.
+    // O nome é copiado em responsaveis.cavalos, treinadores.cavalos e
+    // exercicios.cavalo.
     // Decidido na transação: uma leitura anterior pode estar desatualizada.
     if (horse && fields.nome !== undefined) {
       await renameHorseRefs(horse._id, horse.nome, session);

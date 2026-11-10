@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Atualização do nome do cavalo também em exercicios.cavalo.
+//
 // Data: 27/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Inclusão e remoção dos caminhos das imagens do cavalo.
@@ -189,7 +193,8 @@ export async function addHorseToGuardian(
   }
 }
 
-/** Atualiza o nome do cavalo nas cópias de responsaveis e treinadores.
+/** Atualiza o nome do cavalo nas cópias de responsaveis, treinadores e
+ * exercicios.
  * Só altera as cópias com nome diferente, então pode ser chamada sempre.
  * @param {ObjectId} id _id do cavalo.
  * @param {string} nome Novo nome.
@@ -212,6 +217,13 @@ export async function renameHorseRefs(
     collections.map((collection) =>
       db.collection(collection).updateMany(filter, update, options)
     )
+  );
+  // Em exercicios a referência é um objeto, não uma lista. O atualizadoEm do
+  // exercício não muda: o conteúdo dele continua o mesmo.
+  await db.collection(COLLECTIONS.Exercicios).updateMany(
+    {"cavalo._id": id, "cavalo.nome": {$ne: nome}},
+    {$set: {"cavalo.nome": nome}},
+    {session}
   );
 }
 
