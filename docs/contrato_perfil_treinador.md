@@ -9,13 +9,14 @@ pelo app.
 | Ação na tela | Callable |
 | --- | --- |
 | Carregar os dados | `getTrainerProfile` |
-| Primeiro nome, sobrenome, regiões, remover PDF | `updateTrainerProfile` |
+| Primeiro nome, sobrenome, situação profissional, regiões, remover PDF | `updateTrainerProfile` |
 | Adicionar PDF de experiência ou certificação | `createTrainerAttachmentUpload` + envio + `confirmTrainerAttachment` |
 | Alterar senha | `requestPasswordReset` com o e-mail do treinador |
 
 Ao tocar em **Salvar alterações**, chame nesta ordem:
 
-1. `updateTrainerProfile` com o nome, as regiões e os PDFs removidos;
+1. `updateTrainerProfile` com o nome, a situação profissional, as regiões e
+   os PDFs removidos;
 2. o envio de cada PDF novo (mesmo fluxo do cadastro, ver
    [fluxo_cadastro_profissional.md](fluxo_cadastro_profissional.md)).
 
@@ -40,6 +41,7 @@ tabela (`email`, `senha`, `modalidades`, `uid`...) é recusado.
 {
   "nome": "Ana",
   "sobrenome": "Souza",
+  "situacaoProfissional": "AFASTADO",
   "regioesAtendimento": {
     "adicionar": [{ "estado": "MG", "cidade": "Uberaba" }],
     "remover": [{ "estado": "SP", "cidade": "Ribeirão Preto" }]
@@ -52,6 +54,7 @@ tabela (`email`, `senha`, `modalidades`, `uid`...) é recusado.
 | Campo | Regra |
 | --- | --- |
 | `nome`, `sobrenome` | Enviados juntos e gravados como `"<nome> <sobrenome>"` (3 a 120 caracteres). Nome igual ao atual não é alteração. |
+| `situacaoProfissional` | `DISPONIVEL`, `AFASTADO` ou `INDISPONIVEL`. `INATIVO` é recusado: é a exclusão lógica da conta e bloquearia o acesso do próprio treinador. Situação igual à atual não é alteração. |
 | `regioesAtendimento.adicionar` | Mesmo formato do cadastro (`estado` com 2 letras maiúsculas, `cidade`, `complemento` opcional). Região já cadastrada ou repetida na lista retorna `invalid-argument`. |
 | `regioesAtendimento.remover` | Região como devolvida por `getTrainerProfile`. Região inexistente retorna `not-found`. As demais regiões são mantidas. |
 | `experiencias.remover` | `caminho` atual da experiência. |
@@ -72,6 +75,7 @@ Resposta (mesmo formato de `getTrainerProfile`):
 ```json
 {
   "nome": "Ana Souza",
+  "situacaoProfissional": "AFASTADO",
   "experiencias": null,
   "certificacoes": [{ "caminho": "/arquivos/treinadores/<uid>/certificacao_2.pdf", "url": "https://..." }],
   "regioesAtendimento": [{ "estado": "SP", "cidade": "Campinas" }, { "estado": "MG", "cidade": "Uberaba" }],

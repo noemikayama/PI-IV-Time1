@@ -6,6 +6,13 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição do card local pelo ProfileHorseCard compartilhado,
 // com suporte à imagem remota e ao fallback visual.
+// Alteração: Documentação dos blocos de carregamento, edição, estados visuais e
+// componentes da tela de perfil.
+//
+// Data: 04/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração do fluxo de edição com os dados do perfil, recarga após
+// atualização e correção da recriação assíncrona no tratamento de falhas.
 //
 // Data: 30/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -29,20 +36,27 @@ import '../../data/models/guardian_profile_data.dart';
 /// Assinatura da função assíncrona que fornece o perfil do responsável.
 typedef GuardianProfileLoader = Future<GuardianProfileData> Function();
 
+/// Abre a edição e informa se os dados foram efetivamente atualizados.
+typedef GuardianProfileEditRequested =
+    Future<bool> Function(GuardianProfileData profile);
+
 /// Exibe a identidade, os cavalos e as ações do perfil do responsável.
 class GuardianProfileScreen extends StatefulWidget {
   const GuardianProfileScreen({
     required this.loadGuardianProfile,
     required this.onLogout,
     this.onEditGuardianProfile,
+    this.onEditGuardianProfileData,
     this.onShowAllGuardianHorses,
     this.onRegisterGuardianHorse,
     super.key,
   });
 
+  // --- Dados e ações externas -----------------------------------------------
   final GuardianProfileLoader loadGuardianProfile;
   final Future<void> Function() onLogout;
   final VoidCallback? onEditGuardianProfile;
+  final GuardianProfileEditRequested? onEditGuardianProfileData;
   final VoidCallback? onShowAllGuardianHorses;
   final VoidCallback? onRegisterGuardianHorse;
 
@@ -52,28 +66,39 @@ class GuardianProfileScreen extends StatefulWidget {
 
 /// Mantém a requisição do perfil e coordena recarga e ações indisponíveis.
 class _GuardianProfileScreenState extends State<GuardianProfileScreen> {
+  // --- Estado de carregamento ------------------------------------------------
   // A Future é armazenada para impedir novas requisições a cada rebuild.
   late Future<GuardianProfileData> _guardianProfileFuture;
+
+  // Future.sync também transforma erros síncronos da fonte em erros da Future.
+  Future<GuardianProfileData> _loadGuardianProfile() {
+    return Future<GuardianProfileData>.sync(widget.loadGuardianProfile);
+  }
 
   @override
   void initState() {
     super.initState();
-    _guardianProfileFuture = widget.loadGuardianProfile();
+    _guardianProfileFuture = _loadGuardianProfile();
   }
 
   @override
   void didUpdateWidget(covariant GuardianProfileScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.loadGuardianProfile != widget.loadGuardianProfile) {
-      _guardianProfileFuture = widget.loadGuardianProfile();
+      _guardianProfileFuture = _loadGuardianProfile();
     }
   }
 
-  // Recarrega explicitamente os dados após uma falha.
+  // Recarrega explicitamente os dados após uma falha ou edição concluída.
   void _retryGuardianProfile() {
-    setState(() => _guardianProfileFuture = widget.loadGuardianProfile());
+    final nextProfile = _loadGuardianProfile();
+    if (!mounted) return;
+    setState(() {
+      _guardianProfileFuture = nextProfile;
+    });
   }
 
+  // --- Ações da tela ---------------------------------------------------------
   // Mantém ações ainda não conectadas compreensíveis para o usuário.
   void _showGuardianActionUnavailable(String action) {
     ScaffoldMessenger.of(context)
@@ -83,6 +108,24 @@ class _GuardianProfileScreenState extends State<GuardianProfileScreen> {
       );
   }
 
+  // Prefere a edição que recebe o perfil; mantém o callback antigo como
+  // compatibilidade para composições que ainda controlam sua própria rota.
+  Future<void> _editGuardianProfile(GuardianProfileData profile) async {
+    final editWithData = widget.onEditGuardianProfileData;
+    if (editWithData != null) {
+      final wasUpdated = await editWithData(profile);
+      if (wasUpdated && mounted) _retryGuardianProfile();
+      return;
+    }
+    final edit = widget.onEditGuardianProfile;
+    if (edit != null) {
+      edit();
+      return;
+    }
+    _showGuardianActionUnavailable('A edição de perfil');
+  }
+
+  // --- Estados visuais -------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<GuardianProfileData>(
@@ -94,6 +137,7 @@ class _GuardianProfileScreenState extends State<GuardianProfileScreen> {
         if (snapshot.hasError) {
           return _GuardianProfileError(onRetry: _retryGuardianProfile);
         }
+        // O fallback impede que uma resposta concluída sem dados quebre a tela.
         final guardianProfile =
             snapshot.data ??
             const GuardianProfileData(
@@ -104,9 +148,7 @@ class _GuardianProfileScreenState extends State<GuardianProfileScreen> {
         return _GuardianProfileBody(
           guardianProfile: guardianProfile,
           onLogout: widget.onLogout,
-          onEditGuardianProfile:
-              widget.onEditGuardianProfile ??
-              () => _showGuardianActionUnavailable('A edição de perfil'),
+          onEditGuardianProfile: () => _editGuardianProfile(guardianProfile),
           onShowAllGuardianHorses:
               widget.onShowAllGuardianHorses ??
               () => _showGuardianActionUnavailable('A lista de cavalos'),
@@ -135,6 +177,7 @@ class _GuardianProfileBody extends StatelessWidget {
   final VoidCallback onShowAllGuardianHorses;
   final VoidCallback onRegisterGuardianHorse;
 
+  // --- Identidade, ações e cavalos ------------------------------------------
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

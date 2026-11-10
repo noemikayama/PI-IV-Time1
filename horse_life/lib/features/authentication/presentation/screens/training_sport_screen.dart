@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 09/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Uso do dropdown compartilhado, preservando a busca remota e o
+// visual da seleção de modalidades.
+//
 // Data: 27/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos e segmentos do código de autenticação,
@@ -23,6 +28,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
+import '../../../../core/widgets/app_dropdown_field.dart';
 import '../../application/controllers/registration_controller.dart';
 import '../../application/states/registration_draft.dart';
 import '../../data/repositories/training_sport_repository.dart';
@@ -241,101 +247,19 @@ class _TrainingSportScreenState extends State<TrainingSportScreen> {
     }
 
     // O InputDecorator mantém o dropdown consistente com os demais formulários.
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: _isMenuOpen ? 'Selecionar Modalidade' : null,
-        labelStyle: const TextStyle(color: AppColors.seaGreen),
-        filled: true,
-        fillColor: const Color(0xFFE9E9E9),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 4),
-        enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(
-            color: _isMenuOpen ? AppColors.seaGreen : Colors.transparent,
-            width: 2,
-          ),
-          borderRadius: const BorderRadius.all(Radius.circular(18)),
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          key: const Key('training-sport-dropdown'),
-          value: _selectedSport,
-          isExpanded: true,
-          borderRadius: const BorderRadius.all(Radius.circular(18)),
-          menuMaxHeight: 320,
-          dropdownColor: Colors.white,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColors.text,
-            size: 32,
-          ),
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: AppColors.text,
-            fontSize: 20,
-          ),
-          itemHeight: null,
-          // A representação fechada aceita quebra de linhas para nomes longos.
-          selectedItemBuilder: (context) => [
-            for (final sport in _sports)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(sport, softWrap: true),
-              ),
-          ],
-          // No menu aberto, a opção atual recebe contraste e ícone de seleção.
-          items: [
-            for (final sport in _sports)
-              DropdownMenuItem<String>(
-                value: sport,
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 52),
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: sport == _selectedSport
-                        ? AppColors.seaGreen
-                        : Colors.transparent,
-                    borderRadius: const BorderRadius.all(Radius.circular(13)),
-                  ),
-                  child: Row(
-                    children: [
-                      if (sport == _selectedSport) ...[
-                        const Icon(
-                          Icons.check_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      Expanded(
-                        child: Text(
-                          sport,
-                          softWrap: true,
-                          style: TextStyle(
-                            color: sport == _selectedSport
-                                ? Colors.white
-                                : AppColors.text,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-          onTap: () => setState(() => _isMenuOpen = true),
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() {
-              _selectedSport = value;
-              _isMenuOpen = false;
-            });
-          },
-        ),
-      ),
+    return AppDropdownField<String>(
+      style: AppDropdownStyle.rounded,
+      label: 'Selecionar Modalidade',
+      dropdownKey: const Key('training-sport-dropdown'),
+      value: _selectedSport,
+      options: _sports,
+      labelFor: (sport) => sport,
+      isOpen: _isMenuOpen,
+      onTap: () => setState(() => _isMenuOpen = true),
+      onChanged: (value) => setState(() {
+        _selectedSport = value;
+        _isMenuOpen = false;
+      }),
     );
   }
 }

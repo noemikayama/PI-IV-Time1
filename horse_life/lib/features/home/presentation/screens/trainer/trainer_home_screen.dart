@@ -11,6 +11,15 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da aba de perfil do treinador com o repositório
 // Firebase, carregamento dos dados e encerramento da sessão autenticada.
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de dependências, estado, carregamento e
+// navegação da Home do treinador.
+//
+// Data: 04/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ocultação do conteúdo da Home ao selecionar a área de perfil na
+// navegação inferior e ajuste da formatação do carregador.
 //
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
@@ -89,7 +98,8 @@ class TrainerHomeScreen extends StatefulWidget {
     this.requestTrainerPasswordReset,
   });
 
-  /// null: Firebase real; 'normal', 'empty' ou 'error': Mock API.
+  // --- Fontes de dados -------------------------------------------------------
+  /// `null` usa o Firebase; os demais cenários habilitam dados simulados.
   final String? mockScenario;
 
   /// Preferencialmente injetado pela raiz do aplicativo.
@@ -144,6 +154,7 @@ class TrainerHomeScreen extends StatefulWidget {
 }
 
 class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
+  // --- Estado compartilhado --------------------------------------------------
   late Future<TrainerHomeData> _homeFuture;
   HomeNavigationDestination _selectedDestination =
       HomeNavigationDestination.home;
@@ -222,6 +233,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     _homeFuture = _fetchHome();
   }
 
+  /// Substitui a Future armazenada para executar uma nova tentativa.
   void _retry() => setState(() => _homeFuture = _fetchHome());
 
   @override
@@ -235,6 +247,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     }
   }
 
+  // --- Composição visual e navegação ----------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(

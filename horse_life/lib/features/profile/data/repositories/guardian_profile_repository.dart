@@ -6,6 +6,13 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Mapeamento da primeira URL de imagem válida retornada para cada
 // cavalo vinculado ao perfil do responsável.
+// Alteração: Documentação dos contratos, integração remota, validação das
+// respostas e conversão dos dados do perfil.
+//
+// Data: 04/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão da atualização do perfil e separação da fonte remota do
+// Firebase para permitir injeção, validação e testes do repositório.
 //
 // Data: 30/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -23,32 +30,99 @@ import '../models/guardian_profile_data.dart';
 
 /// Contrato de acesso aos dados do perfil do responsável.
 abstract interface class GuardianProfileRepository {
+  /// Carrega os dados usados na visualização do perfil.
   Future<GuardianProfileData> getGuardianProfile();
+
+  /// Persiste apenas os campos de nome permitidos pelo contrato atual.
+  Future<GuardianProfileUpdate> updateGuardianProfile({
+    required String firstName,
+    required String lastName,
+  });
 }
 
-/// Obtém o perfil pela Cloud Function `getGuardianProfile`.
-class FirebaseGuardianProfileRepository implements GuardianProfileRepository {
-  FirebaseGuardianProfileRepository({FirebaseFunctions? functions})
-    : _functions =
-          functions ??
-          FirebaseFunctions.instanceFor(region: 'southamerica-east1');
+/// Fronteira remota que mantém o SDK do Firebase fora do repositório testável.
+abstract interface class GuardianProfileRemoteDataSource {
+  /// Retorna a resposta bruta da callable de consulta.
+  Future<Object?> getGuardianProfile();
 
-  final FirebaseFunctions _functions;
+  /// Retorna a resposta bruta da callable de atualização.
+  Future<Object?> updateGuardianProfile(Map<String, String> input);
+}
+
+/// Implementação remota das callables de perfil.
+final class FirebaseGuardianProfileRemoteDataSource
+    implements GuardianProfileRemoteDataSource {
+  const FirebaseGuardianProfileRemoteDataSource();
+
+  // A instância regional é obtida somente quando uma operação é executada.
+  FirebaseFunctions get _functions =>
+      FirebaseFunctions.instanceFor(region: 'southamerica-east1');
 
   @override
-  Future<GuardianProfileData> getGuardianProfile() async {
+  Future<Object?> getGuardianProfile() async {
     final response = await _functions
         .httpsCallable('getGuardianProfile')
-        .call<dynamic>(<String, dynamic>{});
-    if (response.data is! Map) {
+        .call<Object?>(const <String, dynamic>{});
+    return response.data;
+  }
+
+  @override
+  Future<Object?> updateGuardianProfile(Map<String, String> input) async {
+    final response = await _functions
+        .httpsCallable('updateGuardianProfile')
+        .call<Object?>(input);
+    return response.data;
+  }
+}
+
+/// Obtém e atualiza o perfil pelas Cloud Functions.
+class FirebaseGuardianProfileRepository implements GuardianProfileRepository {
+  const FirebaseGuardianProfileRepository({
+    GuardianProfileRemoteDataSource remote =
+        const FirebaseGuardianProfileRemoteDataSource(),
+  }) : _remote = remote;
+
+  final GuardianProfileRemoteDataSource _remote;
+
+  // --- Consulta e conversão do perfil ---------------------------------------
+  @override
+  Future<GuardianProfileData> getGuardianProfile() async {
+    final response = await _remote.getGuardianProfile();
+    if (response is! Map) {
       throw const FormatException('Resposta inválida da Cloud Function.');
     }
-    return mapGuardianProfile(Map<String, dynamic>.from(response.data as Map));
+    return mapGuardianProfile(Map<String, dynamic>.from(response));
+  }
+
+  // --- Atualização e validação da resposta ----------------------------------
+  @override
+  Future<GuardianProfileUpdate> updateGuardianProfile({
+    required String firstName,
+    required String lastName,
+  }) async {
+    final response = await _remote.updateGuardianProfile({
+      // Remove espaços externos antes de cruzar a fronteira da aplicação.
+      'nome': firstName.trim(),
+      'sobrenome': lastName.trim(),
+    });
+    if (response is! Map) {
+      throw const FormatException('Resposta inválida da Cloud Function.');
+    }
+    // A atualização só é considerada válida quando os dois campos de
+    // confirmação esperados podem ser convertidos com segurança.
+    final data = Map<String, dynamic>.from(response);
+    final name = _asText(data['nome']).trim();
+    final updatedAt = DateTime.tryParse(_asText(data['atualizadoEm']));
+    if (name.isEmpty || updatedAt == null) {
+      throw const FormatException('Resposta inválida da Cloud Function.');
+    }
+    return GuardianProfileUpdate(name: name, updatedAt: updatedAt);
   }
 }
 
 /// Converte a resposta da API em dados seguros para apresentação.
 GuardianProfileData mapGuardianProfile(Map<String, dynamic> json) {
+  // --- Conversão dos cavalos vinculados -------------------------------------
   final horses = _asList(json['cavalos'])
       .map((item) {
         final horse = _asMap(item);
@@ -64,6 +138,7 @@ GuardianProfileData mapGuardianProfile(Map<String, dynamic> json) {
       })
       .toList(growable: false);
 
+  // --- Conversão dos dados principais --------------------------------------
   return GuardianProfileData(
     name: _withFallback(json['nome'], 'Usuário HorseLife'),
     email: _withFallback(json['email'], 'usuario@email.com'),
