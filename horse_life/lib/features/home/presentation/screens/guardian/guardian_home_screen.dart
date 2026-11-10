@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Migração do estado da navegação inferior de índice numérico para
+// HomeNavigationDestination, preservando o acesso ao perfil do responsável.
+//
 // Data: 30/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do carregamento e das ações do perfil do responsável.
@@ -88,7 +93,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // A fonte real é usada por padrão; cenários mock ficam restritos aos testes.
 
   // Estado local da navegação inferior.
-  int _selectedIndex = 0;
+  HomeNavigationDestination _selectedDestination =
+      HomeNavigationDestination.home;
   late Future<GuardianHomeData> _homeFuture;
 
   late HomeLoader<GuardianHomeData> _loader;
@@ -144,7 +150,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         homeFuture: _homeFuture,
       ),
       // Área reservada aos cards futuros.
-      body: _selectedIndex == 4
+      body: _selectedDestination == HomeNavigationDestination.profile
           ? GuardianProfileScreen(
               loadGuardianProfile: _fetchGuardianProfile,
               onLogout: widget.onLogout,
@@ -159,12 +165,9 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             ),
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        selectedDestination: _selectedDestination,
+        onDestinationSelected: (destination) =>
+            setState(() => _selectedDestination = destination),
       ),
     );
   }
