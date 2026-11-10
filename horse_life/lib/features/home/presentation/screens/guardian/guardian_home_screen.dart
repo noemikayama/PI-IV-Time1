@@ -1,6 +1,11 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 10/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Cadastro de cavalos aberto pela rota da feature, sem acoplamento
+// às etapas do formulário.
+//
 // Data: 06/11/2026 (cadastro real)
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Home recebe cavalo persistido pela Function registerHorse e
@@ -57,7 +62,7 @@ import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
 import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
-import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
+import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
 import 'package:horse_life/features/profile/data/repositories/guardian_profile_repository.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
@@ -138,14 +143,12 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   /// Mantém a feature independente da Home, retornando ao ponto de origem.
   Future<void> _openRegisterHorse() async {
     final result = await Navigator.of(context).push<HorseRegistrationResult>(
-      MaterialPageRoute<HorseRegistrationResult>(
-        builder: (_) => HorseRegistrationScreen(
-          repository:
-              widget.horseRegistrationRepository ??
-              (widget.mockScenario == null
-                  ? null
-                  : const MockHorseRegistrationRepository()),
-        ),
+      HorseRegistrationFlowRoute.build(
+        repository:
+            widget.horseRegistrationRepository ??
+            (widget.mockScenario == null
+                ? null
+                : const MockHorseRegistrationRepository()),
       ),
     );
     if (!mounted || result == null) return;

@@ -27,7 +27,10 @@ abstract class HorseRegistrationRemoteService {
 
   Future<Map<String, dynamic>> registerHorse(Map<String, Object?> payload);
 
-  Future<HorseImageUploadTicket> prepareImage(String horseId, String contentType);
+  Future<HorseImageUploadTicket> prepareImage(
+    String horseId,
+    String contentType,
+  );
 
   Future<void> sendImage(HorseImageUploadTicket ticket, Uint8List bytes);
 

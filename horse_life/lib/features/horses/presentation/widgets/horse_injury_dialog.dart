@@ -1,6 +1,10 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 09/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Ícone do calendário substituído pelo Material Symbols event.
+//
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Formulário de lesões isolado para evitar que campos grandes
@@ -8,6 +12,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
 import '../../data/models/horse_registration_draft.dart';
@@ -93,7 +98,7 @@ class _HorseInjuryDialogState extends State<HorseInjuryDialog> {
           Center(
             child: OutlinedButton.icon(
               onPressed: _selectDate,
-              icon: const Icon(Icons.calendar_today_outlined),
+              icon: const Icon(Symbols.event),
               label: Text(
                 _injuryDate == null
                     ? 'Selecionar data da lesão'

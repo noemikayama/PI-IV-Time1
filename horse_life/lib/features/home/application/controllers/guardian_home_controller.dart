@@ -23,6 +23,6 @@ class GuardianHomeController implements HomeLoader<GuardianHomeData> {
   GuardianHomeController(this.repository);
 
   @override
-  Future<GuardianHomeData> fetchHome() async => (await repository.getHome())
-      .toViewData(); // Traduz o contrato da API para a apresentação.
+  Future<GuardianHomeData> fetchHome() async =>
+      (await repository.getHome()).toViewData(); // Traduz o contrato da API para a apresentação.
 }

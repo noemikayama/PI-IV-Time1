@@ -1,15 +1,20 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 09/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reutilização do AppDropdownField compartilhado com o treinador.
+// Mantidos a API e o estilo da feature para não alterar as demais telas.
+//
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Seleção reutilizável com destaque verde e check do protótipo.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_dropdown_field.dart';
 
-/// Mantém a mesma seleção visual para relação, sexo e modalidade.
+/// Adaptador que mantém a assinatura usada no cadastro de cavalos.
 class HorseChoiceField<T> extends StatelessWidget {
   const HorseChoiceField({
     required this.label,
@@ -27,68 +32,12 @@ class HorseChoiceField<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
 
   @override
-  Widget build(BuildContext context) => Theme(
-    data: Theme.of(context).copyWith(
-      highlightColor: Colors.transparent,
-      splashColor: AppColors.pearlAqua.withValues(alpha: 0.18),
-      focusColor: Colors.transparent,
-      hoverColor: Colors.transparent,
-    ),
-    child: DropdownButtonFormField<T>(
-      key: ValueKey('horse-select-$label'),
-      initialValue: value,
-      isExpanded: true,
-      dropdownColor: AppColors.whiteSmoke,
-      borderRadius: BorderRadius.circular(10),
-      menuMaxHeight: 370,
-      icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.prussianBlue),
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: AppColors.alabasterGray.withValues(alpha: 0.35),
-        border: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.seaGreen, width: 2),
-        ),
-      ),
-      selectedItemBuilder: (context) => [
-        for (final item in options)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(name(item), overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.prussianBlue,
-                fontWeight: FontWeight.w600)),
-          ),
-      ],
-      items: [
-        for (final item in options)
-          DropdownMenuItem<T>(
-            value: item,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              decoration: BoxDecoration(
-                color: item == value ? AppColors.seaGreen : Colors.transparent,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Row(children: [
-                if (item == value) ...[
-                  const Icon(Icons.check, color: Colors.white, size: 19),
-                  const SizedBox(width: 5),
-                ],
-                Expanded(child: Text(name(item),
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: item == value ? FontWeight.w700 : FontWeight.w500,
-                    color: item == value ? Colors.white : AppColors.prussianBlue,
-                  ),
-                )),
-              ]),
-            ),
-          ),
-      ],
-      onChanged: (selected) {
-        if (selected != null) onChanged(selected);
-      },
-    ),
+  Widget build(BuildContext context) => AppDropdownField<T>(
+    label: label,
+    dropdownKey: ValueKey('horse-select-$label'),
+    value: value,
+    options: options,
+    labelFor: name,
+    onChanged: onChanged,
   );
 }
