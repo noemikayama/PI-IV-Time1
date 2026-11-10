@@ -3,6 +3,16 @@
 // HISTÓRICO DE ALTERAÇÕES
 // 01/11/2026 - Navegação Home ↔ Dashboard por perfil com repository injetável.
 //
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de estado, carregamento, edição de perfil
+// e composição da interface.
+//
+// Data: 04/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração da tela de edição do perfil, com controlador para
+// atualização dos dados e solicitação de redefinição de senha.
+//
 // Data: 30/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do carregamento e das ações do perfil do responsável.
@@ -49,8 +59,11 @@ import 'package:horse_life/features/dashboard/presentation/screens/guardian/guar
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
+import 'package:horse_life/features/authentication/data/repositories/firebase_password_reset_repository.dart';
+import 'package:horse_life/features/profile/application/controllers/guardian_profile_controller.dart';
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
 import 'package:horse_life/features/profile/data/repositories/guardian_profile_repository.dart';
+import 'package:horse_life/features/profile/presentation/screens/guardian_profile_edit_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/guardian_home_data.dart';
@@ -97,31 +110,54 @@ class GuardianHomeScreen extends StatefulWidget {
 }
 
 class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
-  // A fonte real é usada por padrão; cenários mock ficam restritos aos testes.
-
-  // Estado local da navegação inferior.
+  // --- Estado e dependências -------------------------------------------------
+  // A Future é compartilhada entre o conteúdo e o menu para evitar requisições
+  // duplicadas durante reconstruções da tela.
   int _selectedIndex = 0;
   late Future<GuardianHomeData> _homeFuture;
-
   late HomeLoader<GuardianHomeData> _loader;
+
+  // O repositório é criado sob demanda e reutilizado no carregamento e edição.
   FirebaseGuardianProfileRepository? _guardianProfileRepository;
 
+  FirebaseGuardianProfileRepository get _profileRepository =>
+      _guardianProfileRepository ??= const FirebaseGuardianProfileRepository();
+
+  // --- Carregamento da Home e do perfil -------------------------------------
   Future<GuardianHomeData> _fetchHome() => _loader.fetchHome();
 
-  // Reutiliza o repositório real entre reconstruções quando não há injeção.
+  // Prioriza a fonte injetada; na aplicação, consulta o Firebase.
   Future<GuardianProfileData> _fetchGuardianProfile() {
     final injectedLoader = widget.guardianProfileLoader;
     if (injectedLoader != null) return injectedLoader();
-    _guardianProfileRepository ??= FirebaseGuardianProfileRepository();
-    return _guardianProfileRepository!.getGuardianProfile();
+    return _profileRepository.getGuardianProfile();
   }
 
+  // --- Fluxo de edição -------------------------------------------------------
+  // Abre o formulário com o perfil já carregado e informa se houve alteração.
+  Future<bool> _openGuardianProfileEditor(GuardianProfileData profile) async {
+    final wasUpdated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => GuardianProfileEditScreen(
+          profile: profile,
+          controller: GuardianProfileController(
+            profileRepository: _profileRepository,
+            passwordResetRepository: const FirebasePasswordResetRepository(),
+          ),
+        ),
+      ),
+    );
+    return wasUpdated ?? false;
+  }
+
+  // --- Ciclo de vida do carregador ------------------------------------------
   void _configureLoader() {
     _loader =
         widget.loader ??
         HomeComposition.guardian(mockScenario: widget.mockScenario);
   }
 
+  /// Refaz a consulta da Home após uma falha apresentada ao usuário.
   void _retryHome() {
     setState(() => _homeFuture = _fetchHome());
   }
@@ -162,6 +198,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     // As demais rotas serão integradas pelas respectivas features.
   }
 
+  // --- Composição visual e navegação ----------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,12 +211,15 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
       ),
-      // Área reservada aos cards futuros.
+      // O último item alterna do painel inicial para o perfil do responsável.
       body: _selectedIndex == 4
           ? GuardianProfileScreen(
               loadGuardianProfile: _fetchGuardianProfile,
               onLogout: widget.onLogout,
               onEditGuardianProfile: widget.onEditGuardianProfile,
+              onEditGuardianProfileData: widget.onEditGuardianProfile == null
+                  ? _openGuardianProfileEditor
+                  : null,
               onShowAllGuardianHorses: widget.onShowAllGuardianHorses,
               onRegisterGuardianHorse: widget.onRegisterHorse,
             )

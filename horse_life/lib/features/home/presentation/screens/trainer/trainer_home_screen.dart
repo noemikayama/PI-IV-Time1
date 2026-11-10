@@ -3,6 +3,16 @@
 // HISTÓRICO DE ALTERAÇÕES
 // 01/11/2026 - Navegação Home ↔ Dashboard por perfil com repository injetável.
 //
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de dependências, estado, carregamento e
+// navegação da Home do treinador.
+//
+// Data: 04/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ocultação do conteúdo da Home ao selecionar a área de perfil na
+// navegação inferior e ajuste da formatação do carregador.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Atualização das importações de HomeAppBar, HomeBottomNavBar e
@@ -40,6 +50,7 @@ import '../../../data/repositories/trainer_repository.dart';
 import '../../../home_composition.dart';
 import '../../widgets/trainer_home_content.dart';
 
+/// Coordena os dados, ações e navegação da área inicial do treinador.
 class TrainerHomeScreen extends StatefulWidget {
   const TrainerHomeScreen({
     super.key,
@@ -57,7 +68,8 @@ class TrainerHomeScreen extends StatefulWidget {
     this.dashboardRepository,
   });
 
-  /// null: Firebase real; 'normal', 'empty' ou 'error': Mock API.
+  // --- Fontes de dados -------------------------------------------------------
+  /// `null` usa o Firebase; os demais cenários habilitam dados simulados.
   final String? mockScenario;
 
   /// Preferencialmente injetado pela raiz do aplicativo.
@@ -65,6 +77,8 @@ class TrainerHomeScreen extends StatefulWidget {
 
   /// Injeção opcional de repositório (por exemplo, em testes).
   final TrainerRepository? repository;
+
+  // --- Ações fornecidas pela composição do aplicativo -----------------------
   final Future<void> Function() onLogout;
   final ValueChanged<TrainerTraining>? onViewTraining;
   final ValueChanged<TrainerHorse>? onSelectHorse;
@@ -82,14 +96,16 @@ class TrainerHomeScreen extends StatefulWidget {
 }
 
 class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
+  // --- Estado compartilhado --------------------------------------------------
   late Future<TrainerHomeData> _homeFuture;
   int _selectedIndex = 0;
-
   late HomeLoader<TrainerHomeData> _loader;
 
   /// A sidebar e o conteúdo usam uma única Future, evitando chamadas duplicadas.
   Future<TrainerHomeData> _fetchHome() => _loader.fetchHome();
 
+  // --- Seleção da fonte de dados --------------------------------------------
+  // Respeita dependências injetadas antes de recorrer à composição padrão.
   void _configureLoader() {
     _loader =
         widget.loader ??
@@ -106,6 +122,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     _homeFuture = _fetchHome();
   }
 
+  /// Substitui a Future armazenada para executar uma nova tentativa.
   void _retry() => setState(() => _homeFuture = _fetchHome());
 
   @override
@@ -138,6 +155,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     widget.onNavigationSelected?.call(index);
   }
 
+  // --- Composição visual e navegação ----------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,16 +165,20 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
       ),
-      body: TrainerHomeContent(
-        homeFuture: _homeFuture,
-        onRetry: _retry,
-        onViewTraining: widget.onViewTraining,
-        onSelectHorse: widget.onSelectHorse,
-        onSelectClient: widget.onSelectClient,
-        onShowAllTrainings: widget.onShowAllTrainings,
-        onShowAllHorses: widget.onShowAllHorses,
-        onShowAllClients: widget.onShowAllClients,
-      ),
+      // Enquanto o perfil do treinador não é implementado, o item mantém a
+      // estrutura da tela e oculta apenas o conteúdo da Home.
+      body: _selectedIndex == 4
+          ? const SizedBox.shrink()
+          : TrainerHomeContent(
+              homeFuture: _homeFuture,
+              onRetry: _retry,
+              onViewTraining: widget.onViewTraining,
+              onSelectHorse: widget.onSelectHorse,
+              onSelectClient: widget.onSelectClient,
+              onShowAllTrainings: widget.onShowAllTrainings,
+              onShowAllHorses: widget.onShowAllHorses,
+              onShowAllClients: widget.onShowAllClients,
+            ),
       bottomNavigationBar: HomeBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationSelected,
