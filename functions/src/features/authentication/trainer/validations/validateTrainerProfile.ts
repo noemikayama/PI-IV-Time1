@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação da situação profissional (sem INATIVO).
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação dos dados da edição do perfil do treinador.
@@ -11,18 +15,29 @@ import {AppError} from "../../../../shared/errors/AppError";
 import {asRecord, assertAllowedFields, parseFullName} from "../../shared";
 import {MAX_CERTIFICATIONS} from "../constants/attachments";
 import {MAX_SERVICE_REGIONS} from "../constants/serviceRegions";
-import type {ServiceRegion, UpdateTrainerProfileInput} from "../types";
+import type {
+  EditableProfessionalStatus,
+  ServiceRegion,
+  UpdateTrainerProfileInput,
+} from "../types";
 import {parseCaminho} from "./validateTrainerAttachment";
 import {parseRegion} from "./validateTrainerRegistration";
 
-// _id, codigo, email, senha, situacaoProfissional, modalidades, cavalos,
-// clientes e as datas são recusados.
+// _id, codigo, email, senha, modalidades, cavalos, clientes e as datas são
+// recusados.
 const EDITABLE_FIELDS = [
   "nome",
   "sobrenome",
+  "situacaoProfissional",
   "regioesAtendimento",
   "experiencias",
   "certificacoes",
+];
+
+const PROFESSIONAL_STATUSES: readonly EditableProfessionalStatus[] = [
+  "DISPONIVEL",
+  "AFASTADO",
+  "INDISPONIVEL",
 ];
 
 /** Cria um erro de argumento inválido com a mensagem informada.
@@ -31,6 +46,21 @@ const EDITABLE_FIELDS = [
  */
 function invalid(message: string): AppError {
   return new AppError("invalid-argument", message);
+}
+
+/** Valida a situação profissional escolhida pelo treinador. INATIVO é
+ * exclusão lógica da conta e não é aceito aqui.
+ * @param {unknown} value Valor recebido.
+ * @return {EditableProfessionalStatus} Situação validada.
+ */
+function parseProfessionalStatus(value: unknown): EditableProfessionalStatus {
+  if (!PROFESSIONAL_STATUSES.includes(value as EditableProfessionalStatus)) {
+    throw invalid(
+      "Situação profissional inválida. Use DISPONIVEL, AFASTADO ou " +
+        "INDISPONIVEL."
+    );
+  }
+  return value as EditableProfessionalStatus;
 }
 
 /** Valida uma lista de regiões; ausente vale como lista vazia.
@@ -93,6 +123,11 @@ export function validateTrainerProfileUpdate(
 
   if (record.nome !== undefined || record.sobrenome !== undefined) {
     input.nome = parseFullName(record.nome, record.sobrenome);
+  }
+  if (record.situacaoProfissional !== undefined) {
+    input.situacaoProfissional = parseProfessionalStatus(
+      record.situacaoProfissional
+    );
   }
   if (record.regioesAtendimento !== undefined) {
     input.regioesAtendimento = parseRegionChanges(record.regioesAtendimento);
