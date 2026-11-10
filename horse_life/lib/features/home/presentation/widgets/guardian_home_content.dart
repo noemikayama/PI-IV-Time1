@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 06/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Exibe cavalos de demonstração somente durante a sessão atual,
+// sem depender de novo carregamento da Home após o cadastro mockado.
+//
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Revisão e padronização dos componentes e dados simulados da Home do Responsável, preservando a integração existente.
@@ -23,11 +28,18 @@ import 'guardian_list_card.dart';
 // Mantém a tela separada da fonte dos dados. Não necessita de Firebase.
 /// Organiza os cards consumindo a Future injetada pela Screen, sem acessar Firebase diretamente.
 class GuardianHomeContent extends StatefulWidget {
-  const GuardianHomeContent({super.key, required this.homeFuture, required this.onRetry, this.onRegisterHorse});
+  const GuardianHomeContent({
+    super.key,
+    required this.homeFuture,
+    required this.onRetry,
+    this.onRegisterHorse,
+    this.sessionMockHorses = const [],
+  });
 
   final Future<GuardianHomeData> homeFuture;
   final VoidCallback onRetry;
   final VoidCallback? onRegisterHorse;
+  final List<String> sessionMockHorses;
 
   @override
   State<GuardianHomeContent> createState() => _GuardianHomeContentState();
@@ -37,7 +49,7 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
   @override
   Widget build(BuildContext context) {
     // A mesma Future atende loading, erro e sucesso; tentar novamente é delegado à Screen.
-        return FutureBuilder<GuardianHomeData>(
+    return FutureBuilder<GuardianHomeData>(
       future: widget.homeFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -52,7 +64,10 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                 children: [
                   const Text('Não foi possível carregar os dados da Home.'),
                   const SizedBox(height: 12),
-                  FilledButton(onPressed: widget.onRetry, child: const Text('Tentar novamente')),
+                  FilledButton(
+                    onPressed: widget.onRetry,
+                    child: const Text('Tentar novamente'),
+                  ),
                 ],
               ),
             ),
@@ -74,9 +89,16 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Olá ${data.guardianName}!',
-                        style: theme.textTheme.displaySmall?.copyWith(color: AppColors.prussianBlue)),
-                      Text('Qual será a aventura de hoje?', style: theme.textTheme.bodyLarge),
+                      Text(
+                        'Olá ${data.guardianName}!',
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          color: AppColors.prussianBlue,
+                        ),
+                      ),
+                      Text(
+                        'Qual será a aventura de hoje?',
+                        style: theme.textTheme.bodyLarge,
+                      ),
                       const SizedBox(height: 32),
                       DailyTrainingCard(trainings: data.todayTrainings),
                       const SizedBox(height: 24),
@@ -85,39 +107,58 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                           title: 'Treinos realizados nesta semana',
                           completed: data.weeklyCompleted,
                           total: data.weeklyPlanned,
-                          gradientColors: const [AppColors.seaGreen, AppColors.pearlAqua],
+                          gradientColors: const [
+                            AppColors.seaGreen,
+                            AppColors.pearlAqua,
+                          ],
                         ),
                         const SizedBox(height: 16),
                         TrainingStatsCard(
                           title: 'Treinos realizados este mês',
                           completed: data.monthlyCompleted,
                           total: data.monthlyPlanned,
-                          gradientColors: const [AppColors.goldenApricot, Color(0xFFE7BB87)],
+                          gradientColors: const [
+                            AppColors.goldenApricot,
+                            Color(0xFFE7BB87),
+                          ],
                         ),
                       ] else
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: TrainingStatsCard(
-                              title: 'Treinos realizados nesta semana',
-                              completed: data.weeklyCompleted,
-                              total: data.weeklyPlanned,
-                              gradientColors: const [AppColors.seaGreen, AppColors.pearlAqua],
-                            )),
+                            Expanded(
+                              child: TrainingStatsCard(
+                                title: 'Treinos realizados nesta semana',
+                                completed: data.weeklyCompleted,
+                                total: data.weeklyPlanned,
+                                gradientColors: const [
+                                  AppColors.seaGreen,
+                                  AppColors.pearlAqua,
+                                ],
+                              ),
+                            ),
                             const SizedBox(width: 16),
-                            Expanded(child: TrainingStatsCard(
-                              title: 'Treinos realizados este mês',
-                              completed: data.monthlyCompleted,
-                              total: data.monthlyPlanned,
-                              gradientColors: const [AppColors.goldenApricot, Color(0xFFE7BB87)],
-                            )),
+                            Expanded(
+                              child: TrainingStatsCard(
+                                title: 'Treinos realizados este mês',
+                                completed: data.monthlyCompleted,
+                                total: data.monthlyPlanned,
+                                gradientColors: const [
+                                  AppColors.goldenApricot,
+                                  Color(0xFFE7BB87),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       const SizedBox(height: 24),
                       TrainingStatsCard(
                         title: 'Treinos realizados desde sempre',
                         completed: data.allTimeCompleted,
-                        gradientColors: const [AppColors.tropicalTeal, AppColors.prussianBlue],
+                        gradientColors: const [
+                          AppColors.tropicalTeal,
+                          AppColors.prussianBlue,
+                        ],
                       ),
                       const SizedBox(height: 24),
                       GuardianListCard(
@@ -126,14 +167,18 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                         useHorseAsset: true,
                         maxVisibleItems: 2,
                         showArrow: true,
-                        items: data.horses,
-                        onRegisterHorse: widget.onRegisterHorse ?? () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('A tela de cadastro de cavalos será adicionada futuramente.'),
-                            ),
-                          );
-                        },
+                        items: [...data.horses, ...widget.sessionMockHorses],
+                        onRegisterHorse:
+                            widget.onRegisterHorse ??
+                            () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'A tela de cadastro de cavalos será adicionada futuramente.',
+                                  ),
+                                ),
+                              );
+                            },
                       ),
                       const SizedBox(height: 24),
                       GuardianListCard(
