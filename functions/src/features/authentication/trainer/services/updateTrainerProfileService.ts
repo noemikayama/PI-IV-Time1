@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Edição da situação profissional do treinador.
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Edição do nome, das regiões e dos anexos do treinador.
@@ -96,8 +100,8 @@ function applyRegionChanges(
   return regioes;
 }
 
-/** Confere as alterações com o documento atual. Nome igual ao gravado não é
- * alteração; anexo ou região inexistente gera erro.
+/** Confere as alterações com o documento atual. Nome ou situação igual ao
+ * gravado não é alteração; anexo ou região inexistente gera erro.
  * @param {TrainerDocument} trainer Treinador lido na transação.
  * @param {UpdateTrainerProfileInput} input Alterações validadas.
  * @return {TrainerProfileChanges} Alterações a gravar.
@@ -119,6 +123,10 @@ function resolveChanges(
 
   return {
     nome: input.nome !== trainer.nome ? input.nome : undefined,
+    situacaoProfissional:
+      input.situacaoProfissional !== trainer.situacaoProfissional ?
+        input.situacaoProfissional :
+        undefined,
     regioesAtendimento: input.regioesAtendimento &&
       applyRegionChanges(trainer.regioesAtendimento, input.regioesAtendimento),
     removerExperiencia: input.experiencias?.remover,
@@ -132,6 +140,7 @@ function resolveChanges(
  */
 function hasChanges(changes: TrainerProfileChanges): boolean {
   return changes.nome !== undefined ||
+    changes.situacaoProfissional !== undefined ||
     changes.regioesAtendimento !== undefined ||
     changes.removerExperiencia !== undefined ||
     changes.removerCertificacoes.length > 0;
@@ -157,7 +166,8 @@ async function deleteRemovedFiles(
   );
 }
 
-/** Altera o nome, as regiões de atendimento e remove anexos do treinador.
+/** Altera o nome, a situação profissional e as regiões de atendimento e
+ * remove anexos do treinador.
  * A senha tem fluxo próprio (requestPasswordReset) e o envio de PDFs usa
  * createTrainerAttachmentUpload/confirmTrainerAttachment.
  * @param {string} uid UID do usuário autenticado.
@@ -218,6 +228,7 @@ export async function updateTrainerProfileService(
 
   return {
     nome: trainer.nome,
+    situacaoProfissional: trainer.situacaoProfissional,
     ...(await toAttachmentViews(trainer)),
     regioesAtendimento: trainer.regioesAtendimento,
     atualizadoEm: trainer.atualizadoEm.toISOString(),

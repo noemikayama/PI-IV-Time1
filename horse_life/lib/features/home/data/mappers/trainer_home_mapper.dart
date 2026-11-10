@@ -17,29 +17,31 @@ import '../models/trainer_home_data.dart';
 /// Mantém nomes e detalhes de serialização do backend fora dos widgets.
 extension TrainerHomeToViewData on TrainerHomeModel {
   TrainerHomeData toViewData() => TrainerHomeData(
-        trainerName: name,
-        specialty: specialty,
-        totalLinkedHorses: totalHorses,
-        todayTrainings: todayTrainings
-            .map((training) => TrainerTraining(
-                  id: training.recordId,
-                  title: training.title,
-                  horseName: training.horseName,
-                  planName: training.planName,
-                  status: training.status,
-                ))
-            .toList(growable: false),
-        weeklyFeedbacksDone: feedbacksWeek.completed,
-        weeklyFeedbacksTotal: feedbacksWeek.total,
-        activePlans: activePlans ?? 0,
-        weeklyTrainingsCompleted: trainingsWeek.completed,
-        weeklyTrainingsPlanned: trainingsWeek.total,
-        createdExercises: createdExercises,
-        horses: horses
-            .map((horse) => TrainerHorse(id: horse.id, name: horse.name))
-            .toList(growable: false),
-        clients: clients
-            .map((client) => TrainerClient(id: client.id, name: client.name))
-            .toList(growable: false),
-      );
+    trainerName: name,
+    specialty: specialty,
+    totalLinkedHorses: totalHorses,
+    todayTrainings: todayTrainings
+        .map(
+          (training) => TrainerTraining(
+            id: training.recordId,
+            title: training.title,
+            horseName: training.horseName,
+            planName: training.planName,
+            status: training.status,
+          ),
+        )
+        .toList(growable: false),
+    weeklyFeedbacksDone: feedbacksWeek.completed,
+    weeklyFeedbacksTotal: feedbacksWeek.total,
+    activePlans: activePlans ?? 0,
+    weeklyTrainingsCompleted: trainingsWeek.completed,
+    weeklyTrainingsPlanned: trainingsWeek.total,
+    createdExercises: createdExercises,
+    horses: horses
+        .map((horse) => TrainerHorse(id: horse.id, name: horse.name))
+        .toList(growable: false),
+    clients: clients
+        .map((client) => TrainerClient(id: client.id, name: client.name))
+        .toList(growable: false),
+  );
 }
