@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Gravação da situação profissional na edição do perfil.
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Edição do perfil do treinador e atualização das cópias do nome.
@@ -187,6 +191,12 @@ export async function updateTrainerProfileDocument(
 
   if (changes.nome !== undefined) {
     update.$set = {...update.$set, nome: changes.nome};
+  }
+  if (changes.situacaoProfissional !== undefined) {
+    update.$set = {
+      ...update.$set,
+      situacaoProfissional: changes.situacaoProfissional,
+    };
   }
   if (changes.regioesAtendimento) {
     update.$set = {
