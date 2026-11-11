@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 11/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura do link da barra lateral do treinador que abre o
+// formulário de cadastro de exercícios.
+//
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do cenário de navegação e do carregador falso da Home
@@ -17,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
+import 'package:horse_life/features/exercises/presentation/screens/exercise_type_selection_screen.dart';
 import 'package:horse_life/features/home/application/controllers/home_loader.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
@@ -47,6 +53,38 @@ void main() {
     expect(find.text('Treinos do dia'), findsNothing);
     expect(find.text('Perfil'), findsOneWidget);
   });
+
+  // --- Navegação para cadastro de exercícios --------------------------------
+  testWidgets(
+    'opens exercise creation flow when tapping Cadastrar exercício in TrainerSidebar',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainerHomeScreen(
+            loader: _TrainerHomeLoader(),
+            onLogout: () async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Abrir menu'));
+      await tester.pumpAndSettle();
+
+      final createExerciseTile = find.byKey(
+        const Key('trainer-sidebar-create-exercise'),
+      );
+      expect(createExerciseTile, findsOneWidget);
+      expect(find.text('Cadastrar exercício'), findsOneWidget);
+
+      await tester.tap(createExerciseTile);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExerciseTypeSelectionScreen), findsOneWidget);
+      expect(find.text('Tipo de exercício'), findsOneWidget);
+    },
+  );
 }
 
 /// Carregador estável que evita acesso a serviços externos durante o teste.

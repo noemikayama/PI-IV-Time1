@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 11/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Substituição do primeiro item provisório da barra lateral pelo
+// link funcional para o fluxo de cadastro de exercícios.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Migração do componente para core/widgets com ajuste dos imports.
@@ -25,6 +30,7 @@
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
+import 'package:horse_life/features/exercises/presentation/routes/exercise_registration_flow_route.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 
 class TrainerSidebar extends StatefulWidget {
@@ -32,10 +38,15 @@ class TrainerSidebar extends StatefulWidget {
     super.key,
     required this.onLogout,
     required this.homeFuture,
+    this.onCreateExercise,
   });
 
   final Future<void> Function() onLogout;
   final Future<TrainerHomeData> homeFuture;
+
+  /// Callback opcional que permite sobrescrever a abertura do fluxo de cadastro
+  /// de exercícios em composições externas ou testes.
+  final VoidCallback? onCreateExercise;
 
   @override
   State<TrainerSidebar> createState() => _TrainerSidebarState();
@@ -44,8 +55,26 @@ class TrainerSidebar extends StatefulWidget {
 class _TrainerSidebarState extends State<TrainerSidebar> {
   bool _isLoggingOut = false;
 
-  // Itens provisórios do protótipo; substituir ao integrar as respectivas rotas.
-  static const List<String> _menuItems = ['Item 1', 'Item 1', 'Item 1', 'Item 1'];
+  // Itens provisórios remanescentes do protótipo; substituir ao integrar as respectivas rotas.
+  static const List<String> _placeholderMenuItems = [
+    'Item 1',
+    'Item 1',
+    'Item 1',
+  ];
+
+  // Fecha o menu lateral e direciona o treinador ao fluxo de criação de exercícios.
+  void _handleCreateExercise() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+
+    final onCreateExercise = widget.onCreateExercise;
+    if (onCreateExercise != null) {
+      onCreateExercise();
+      return;
+    }
+
+    navigator.push(ExerciseRegistrationFlowRoute.build());
+  }
 
   Future<void> _handleLogout() async {
     if (_isLoggingOut) return;
@@ -130,7 +159,24 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
               const SizedBox(height: 18),
               const Divider(color: AppColors.alabasterGray),
               const SizedBox(height: 12),
-              ..._menuItems.map(
+              ListTile(
+                key: const Key('trainer-sidebar-create-exercise'),
+                contentPadding: EdgeInsets.zero,
+                minTileHeight: 48,
+                leading: const Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                title: Text(
+                  'Cadastrar exercício',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+                onTap: _handleCreateExercise,
+              ),
+              ..._placeholderMenuItems.map(
                 (item) => ListTile(
                   contentPadding: EdgeInsets.zero,
                   minTileHeight: 48,

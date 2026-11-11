@@ -2,12 +2,18 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 11/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte opcional a inputFormatters e múltiplas linhas (minLines e
+// maxLines) para reutilização do componente na revisão de cadastro de exercícios.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Extração do campo editável usado na revisão de dados.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../app/theme/app_colors.dart';
 
@@ -24,6 +30,9 @@ class EditableReviewField extends StatelessWidget {
     required this.validator,
     required this.textInputAction,
     this.keyboardType,
+    this.inputFormatters,
+    this.minLines,
+    this.maxLines = 1,
     this.obscureText = false,
     this.externalEdit = false,
     this.leadingAction,
@@ -40,6 +49,9 @@ class EditableReviewField extends StatelessWidget {
   final FormFieldValidator<String> validator;
   final TextInputAction textInputAction;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? minLines;
+  final int? maxLines;
   final bool obscureText;
   final bool externalEdit;
   final Widget? leadingAction;
@@ -59,6 +71,9 @@ class EditableReviewField extends StatelessWidget {
       enableSuggestions: !obscureText,
       autocorrect: !obscureText,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      minLines: obscureText ? 1 : minLines,
+      maxLines: obscureText ? 1 : maxLines,
       textInputAction: textInputAction,
       validator: validator,
       onFieldSubmitted: (_) => onToggleEditing(),

@@ -148,7 +148,6 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Estado local da navegação inferior.
   HomeNavigationDestination _selectedDestination =
       HomeNavigationDestination.home;
-  late Future<GuardianHomeData> _homeFuture;
 
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
   final List<String> _sessionMockHorses = [];
