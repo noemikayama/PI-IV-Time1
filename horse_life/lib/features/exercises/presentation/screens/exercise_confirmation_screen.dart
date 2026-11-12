@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Restrição obrigatória de submissão do exercício quando não houver
+// ao menos uma orientação cadastrada.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela final de revisão e confirmação do cadastro de
@@ -173,6 +178,13 @@ class _ExerciseConfirmationScreenState
     if (_isSubmitting) return;
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
+
+    if (_guidelines.isEmpty) {
+      _showError(
+        'Adicione pelo menos uma orientação para cadastrar o exercício.',
+      );
+      return;
+    }
 
     final updatedDraft = _buildUpdatedDraft();
     final onSubmitted = widget.onSubmitted;

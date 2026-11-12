@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão de teste validando o bloqueio de avanço quando não há
+// orientações adicionadas.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação dos testes da etapa de orientações do exercício, cobrindo
@@ -81,6 +86,35 @@ void main() {
       expect(find.byType(ExerciseDurationScreen), findsOneWidget);
       expect(find.text('Duração padrão'), findsOneWidget);
       expect(find.bySemanticsLabel('Etapa 4 de 7'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'blocks navigation and displays snackbar if no guidelines have been added',
+    (tester) async {
+      await tester.pumpWidget(
+        buildApp(
+          const ExerciseGuidelinesScreen(
+            draft: GenericExerciseRegistrationDraft(
+              name: 'Trote Alongado',
+              description: 'Alternar trote e galope',
+            ),
+          ),
+        ),
+      );
+
+      final continueButton = find.byKey(
+        const Key('continue-exercise-guidelines'),
+      );
+      await tester.ensureVisible(continueButton);
+      await tester.tap(continueButton);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ExerciseDurationScreen), findsNothing);
+      expect(
+        find.text('Adicione pelo menos uma orientação para continuar.'),
+        findsOneWidget,
+      );
     },
   );
 }

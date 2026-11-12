@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão de teste validando o bloqueio de submissão do exercício
+// quando a lista de orientações fica vazia na tela de revisão.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação dos testes da tela de revisão final do cadastro de
@@ -134,6 +139,50 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Calvino'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'restricts submission and displays error when all guidelines are removed',
+    (tester) async {
+      var submitted = false;
+
+      await tester.pumpWidget(
+        buildApp(
+          ExerciseConfirmationScreen(
+            draft: const GenericExerciseRegistrationDraft(
+              name: 'Trote e Galope',
+              description: 'Descrição',
+              defaultDurationMinutes: 15,
+              guidelines: ['Manter contato leve com as rédeas'],
+            ),
+            onSubmitted: (_) => submitted = true,
+          ),
+        ),
+      );
+
+      expect(find.text('Manter contato leve com as rédeas'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('remove-exercise-review-guideline-0')),
+      );
+      await tester.pump();
+
+      expect(find.text('Manter contato leve com as rédeas'), findsNothing);
+      expect(find.text('Nenhuma orientação adicionada.'), findsOneWidget);
+
+      final submitButton = find.byKey(
+        const Key('submit-exercise-registration'),
+      );
+      await tester.ensureVisible(submitButton);
+      await tester.tap(submitButton);
+      await tester.pump();
+
+      expect(submitted, isFalse);
+      expect(
+        find.text('Adicione pelo menos uma orientação para cadastrar o exercício.'),
+        findsOneWidget,
+      );
     },
   );
 }

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação de presença obrigatória de ao menos uma orientação no
+// payload antes do envio à Cloud Function.
+//
 // Data: 10/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do adapter Firebase para submissão do cadastro de
@@ -33,14 +38,22 @@ final class FirebaseExerciseRegistrationRepository
   Future<void> registerExercise({
     required ExerciseRegistrationDraft draft,
   }) async {
+    final cleanGuidelines = draft.guidelines
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+
+    if (cleanGuidelines.isEmpty) {
+      throw const ExerciseRegistrationFailure(
+        'O exercício deve conter pelo menos uma orientação.',
+      );
+    }
+
     final data = <String, Object?>{
       'nome': draft.name.trim(),
       'descricao': draft.description.trim(),
       'tipo': draft.exerciseType.name,
-      'orientacoes': draft.guidelines
-          .map((item) => item.trim())
-          .where((item) => item.isNotEmpty)
-          .toList(growable: false),
+      'orientacoes': cleanGuidelines,
       if (draft.defaultDurationMinutes != null)
         'duracaoPadraoMinutos': draft.defaultDurationMinutes,
       'materiais': draft.materials

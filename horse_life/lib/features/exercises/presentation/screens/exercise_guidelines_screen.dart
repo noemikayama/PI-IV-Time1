@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação obrigatória da etapa de orientações do exercício,
+// impedindo o avanço caso nenhuma orientação tenha sido adicionada.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da etapa de orientações do exercício, permitindo adicionar,
@@ -116,8 +121,19 @@ class _ExerciseGuidelinesScreenState extends State<ExerciseGuidelinesScreen> {
     setState(() => _guidelines.removeAt(index));
   }
 
-  // Consolida as orientações no draft e avança para a etapa de duração padrão.
+  // Consolida as orientações no draft e avança para a etapa de duração padrão,
+  // impedindo o avanço caso nenhuma orientação tenha sido cadastrada.
   void _continue() {
+    if (_guidelines.isEmpty) {
+      AppSnackBar.show(
+        context,
+        backgroundColor: AppColors.error,
+        icon: Icons.error_outline_rounded,
+        message: 'Adicione pelo menos uma orientação para continuar.',
+      );
+      return;
+    }
+
     final updatedDraft = widget.draft.withGuidelines(_guidelines);
     final onContinue = widget.onContinue;
     if (onContinue != null) {
