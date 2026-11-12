@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Criação da API tipada HomeNavigationDestination, mantendo a API
+// baseada em índices para compatibilidade com as telas existentes.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Migração do componente para core/widgets mantendo o design e comportamento.
@@ -24,17 +29,33 @@
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
+/// Destinos compartilhados por todas as telas autenticadas.
+enum HomeNavigationDestination { home, trainings, horses, dashboard, profile }
+
 /// Barra inferior controlada pela Screen; recebe índice ativo e callback de seleção.
 class HomeBottomNavBar extends StatelessWidget {
   const HomeBottomNavBar({
-    required this.selectedIndex,
-    required this.onItemSelected,
+    this.selectedDestination,
+    this.onDestinationSelected,
+    this.selectedIndex,
+    this.onItemSelected,
     super.key,
-  });
+  }) : assert(
+         selectedDestination != null || selectedIndex != null,
+         'Informe o destino ou o índice selecionado.',
+       ),
+       assert(
+         onDestinationSelected != null || onItemSelected != null,
+         'Informe o callback de navegação.',
+       );
 
-  // Estado e ação recebidos da Home.
-  final int selectedIndex;
-  final ValueChanged<int> onItemSelected;
+  /// API tipada preferencial, reutilizável em qualquer tela do fluxo.
+  final HomeNavigationDestination? selectedDestination;
+  final ValueChanged<HomeNavigationDestination>? onDestinationSelected;
+
+  /// Compatibilidade com as telas antigas que ainda trabalham com índice.
+  final int? selectedIndex;
+  final ValueChanged<int>? onItemSelected;
 
   // Configurações do ícone personalizado.
   static const double _horseIconWidth = 36;
@@ -78,11 +99,17 @@ class HomeBottomNavBar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8, 10, 8, 12),
           child: Row(
             children: List.generate(_labels.length, (index) {
-              final isSelected = selectedIndex == index;
+              final currentIndex =
+                  selectedDestination?.index ?? selectedIndex ?? 0;
+              final isSelected = currentIndex == index;
 
               return Expanded(
                 child: InkWell(
-                  onTap: () => onItemSelected(index),
+                  onTap: () {
+                    final destination = HomeNavigationDestination.values[index];
+                    onDestinationSelected?.call(destination);
+                    onItemSelected?.call(index);
+                  },
                   borderRadius: BorderRadius.circular(24),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
@@ -148,4 +175,3 @@ class HomeBottomNavBar extends StatelessWidget {
     );
   }
 }
-

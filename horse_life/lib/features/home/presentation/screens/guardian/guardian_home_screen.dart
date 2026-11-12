@@ -1,8 +1,37 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 01/11/2026 - Navegação Home ↔ Dashboard por perfil com repository injetável.
 //
+// Data: 10/11/2026 (organização após integração)
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Organização dos imports e comentários; integração do botão
+// de cadastro também no estado vazio do perfil do responsável.
+//
+// Data: 10/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Cadastro de cavalos aberto pela rota da feature, sem acoplamento
+// às etapas do formulário.
+//
+// Data: 06/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Migração do estado da navegação inferior de índice numérico para
+// HomeNavigationDestination, preservando o acesso ao perfil do responsável.
+//
+// Data: 06/11/2026 (cadastro real)
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Home recebe cavalo persistido pela Function registerHorse e
+// atualiza getHome; repositório mock permanece apenas em cenários de teste.
+//
+// Data: 06/11/2026 (correção pós-testes móveis)
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Finalização do fluxo de cadastro sem recarregar a Home com dados
+// remotos após um registro simulado; cavalo aparece apenas na sessão local.
+//
+// Data: 06/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Abertura da feature de cadastro de cavalos pela Home,
+// preservando extensão futura para o perfil e outras telas.
+
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de estado, carregamento, edição de perfil
@@ -12,6 +41,10 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da tela de edição do perfil, com controlador para
 // atualização dos dados e solicitação de redefinição de senha.
+//
+// Data: 01/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Navegação Home - Dashboard por perfil com repository injetável
 //
 // Data: 30/10/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -39,7 +72,8 @@
 //
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Revisão de compatibilidade da Home com os cards e cenários simulados; estrutura e comportamentos existentes preservados.
+// Alteração: Revisão de compatibilidade da Home com os cards e cenários
+// simulados; estrutura e comportamentos existentes preservados.
 //
 // Data: 13/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -53,6 +87,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/guardian/guardian_dashboard_screen.dart';
@@ -60,23 +95,32 @@ import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/authentication/data/repositories/firebase_password_reset_repository.dart';
+import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
+import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
+import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
 import 'package:horse_life/features/profile/application/controllers/guardian_profile_controller.dart';
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
 import 'package:horse_life/features/profile/data/repositories/guardian_profile_repository.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_edit_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
+
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/guardian_home_data.dart';
 import '../../../home_composition.dart';
 import '../../widgets/guardian_home_content.dart';
 
-/// Coordena fonte de dados, estado de navegação e compartilhamento da Future entre corpo e sidebar.
+/// Coordena os dados e a navegação da Home do responsável.
+///
+/// A mesma Future alimenta o conteúdo e a barra lateral, evitando buscas
+/// duplicadas durante a reconstrução da tela.
 class GuardianHomeScreen extends StatefulWidget {
   const GuardianHomeScreen({
     required this.onLogout,
     this.mockScenario,
     this.loader,
     this.onRegisterHorse,
+    this.horseRegistrationRepository,
     this.dashboardRepository,
     this.guardianProfileLoader,
     this.onEditGuardianProfile,
@@ -84,18 +128,22 @@ class GuardianHomeScreen extends StatefulWidget {
     super.key,
   });
 
-  // Informe normal, empty ou completed apenas em testes.
-  // Null ativa as Cloud Functions reais.
+  // Use normal, empty ou completed nos testes. Null usa os dados reais.
   final String? mockScenario;
 
-  /// Dependência injetada pela raiz. Se ausente, aplica composição legada.
+  /// Carregador da Home. Quando ausente, usa a composição padrão.
   final HomeLoader<GuardianHomeData>? loader;
 
-  // Navegação futura para o cadastro de cavalos.
+  // Permite que a aplicação forneça outra rota para o cadastro de cavalos.
   final VoidCallback? onRegisterHorse;
+
+  /// Repositório opcional para testes; normalmente, usa Firebase.
+  /// Se mockScenario estiver ativo, utiliza o repositório simulado.
+  final HorseRegistrationRepository? horseRegistrationRepository;
 
   /// Injete um repository fake em testes; no aplicativo usa Firebase.
   final DashboardRepository? dashboardRepository;
+
   /// Fonte injetável do perfil, usada principalmente em testes e composições.
   final GuardianProfileLoader? guardianProfileLoader;
 
@@ -105,15 +153,21 @@ class GuardianHomeScreen extends StatefulWidget {
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
+
   @override
   State<GuardianHomeScreen> createState() => _GuardianHomeScreenState();
 }
 
 class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
-  // --- Estado e dependências -------------------------------------------------
-  // A Future é compartilhada entre o conteúdo e o menu para evitar requisições
-  // duplicadas durante reconstruções da tela.
-  int _selectedIndex = 0;
+  // A fonte real é usada por padrão; cenários mock ficam restritos aos testes.
+
+  // Estado local da navegação inferior.
+  HomeNavigationDestination _selectedDestination =
+      HomeNavigationDestination.home;
+  late Future<GuardianHomeData> _homeFuture;
+
+  // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
+  final List<String> _sessionMockHorses = [];
   late Future<GuardianHomeData> _homeFuture;
   late HomeLoader<GuardianHomeData> _loader;
 
@@ -155,6 +209,40 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     _loader =
         widget.loader ??
         HomeComposition.guardian(mockScenario: widget.mockScenario);
+  }
+
+  /// Mantém a feature independente da Home, retornando ao ponto de origem.
+  Future<void> _openRegisterHorse() async {
+    final result = await Navigator.of(context).push<HorseRegistrationResult>(
+      HorseRegistrationFlowRoute.build(
+        repository:
+            widget.horseRegistrationRepository ??
+            (widget.mockScenario == null
+                ? null
+                : const MockHorseRegistrationRepository()),
+      ),
+    );
+    if (!mounted || result == null) return;
+
+    if (result.isPersisted) {
+      // Cadastro real: atualiza a lista de cavalos consultando o servidor.
+      _retryHome();
+    } else {
+      // Cadastro mockado: exibe o nome só na sessão, sem consultar o servidor.
+      setState(() => _sessionMockHorses.add(result.name));
+    }
+
+    // Mostra a mensagem retornada pela feature ou uma confirmação padrão.
+    final message =
+        result.warning ??
+        (result.isPersisted
+            ? 'Cadastro de ${result.name} concluído!'
+            : 'Cadastro de ${result.name} concluído em modo de demonstração '
+                  '(não salvo no servidor)!');
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Refaz a consulta da Home após uma falha apresentada ao usuário.
@@ -211,8 +299,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
       ),
-      // O último item alterna do painel inicial para o perfil do responsável.
-      body: _selectedIndex == 4
+      // Área reservada aos cards futuros.
+      body: _selectedDestination == HomeNavigationDestination.profile
           ? GuardianProfileScreen(
               loadGuardianProfile: _fetchGuardianProfile,
               onLogout: widget.onLogout,
@@ -221,15 +309,21 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
                   ? _openGuardianProfileEditor
                   : null,
               onShowAllGuardianHorses: widget.onShowAllGuardianHorses,
-              onRegisterGuardianHorse: widget.onRegisterHorse,
+              // O perfil usa o mesmo fluxo de cadastro aberto pela Home.
+              onRegisterGuardianHorse:
+                  widget.onRegisterHorse ?? _openRegisterHorse,
             )
           : GuardianHomeContent(
               homeFuture: _homeFuture,
               onRetry: _retryHome,
-              onRegisterHorse: widget.onRegisterHorse,
+              sessionMockHorses: _sessionMockHorses,
+              onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
             ),
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
+        selectedDestination: _selectedDestination,
+        onDestinationSelected: (destination) =>
+            setState(() => _selectedDestination = destination),
         selectedIndex: _selectedIndex,
         onItemSelected: _onNavigationSelected,
       ),

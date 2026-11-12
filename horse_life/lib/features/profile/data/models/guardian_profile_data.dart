@@ -4,6 +4,8 @@
 //
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão da URL opcional da imagem no resumo de cavalo para uso no
+// card compartilhado pelos perfis de responsável e treinador.
 // Alteração: Documentação dos modelos e dos campos usados no fluxo de perfil.
 //
 // Data: 04/11/2026
@@ -23,12 +25,17 @@
 
 /// Resumo de um cavalo exibido no perfil do responsável.
 class GuardianProfileHorse {
-  const GuardianProfileHorse({required this.name, required this.relationship});
+  const GuardianProfileHorse({
+    required this.name,
+    required this.relationship,
+    this.imageUrl,
+  });
 
   final String name;
 
   /// Papel do responsável em relação ao cavalo, pronto para exibição.
   final String relationship;
+  final String? imageUrl;
 }
 
 /// Dados necessários para montar a tela de perfil do responsável.

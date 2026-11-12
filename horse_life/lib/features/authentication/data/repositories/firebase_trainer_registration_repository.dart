@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 09/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Reutilização do protocolo de URL assinada para enviar experiência
+// e certificações de um treinador que já possui sessão autenticada.
+//
 // Data: 27/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos e segmentos do código de autenticação,
@@ -96,6 +101,30 @@ final class FirebaseTrainerRegistrationRepository
 
   FirebaseFunctions get _functions =>
       FirebaseFunctions.instanceFor(region: _region);
+
+  /// Envia um novo documento para um treinador que já está autenticado.
+  ///
+  /// Reutiliza o mesmo protocolo do cadastro: cria a URL assinada, transfere
+  /// os bytes e confirma o caminho definitivo no perfil.
+  Future<void> uploadTrainerAttachment(
+    TrainerAttachmentType type,
+    TrainerDocument document,
+  ) async {
+    final isPdf = document.name.toLowerCase().endsWith('.pdf');
+    if (!isPdf || !TrainerDocumentLimits.acceptsSize(document.sizeInBytes)) {
+      throw const RegistrationFailure(
+        'Cada documento deve ser um PDF de até 10 MB.',
+      );
+    }
+
+    try {
+      await _sendDocument(type, document);
+    } on RegistrationFailure {
+      rethrow;
+    } catch (_) {
+      throw const RegistrationFailure.connection();
+    }
+  }
 
   // O cadastro possui duas fases independentes:
   // 1. criação da conta e dos dados profissionais pela callable;
