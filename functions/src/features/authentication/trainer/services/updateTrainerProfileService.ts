@@ -205,8 +205,8 @@ export async function updateTrainerProfileService(
     if (!updated) {
       throw new AppError("permission-denied", "Cadastro inativo.");
     }
-    // O nome é copiado em cavalos (treinadores/avaliacoes) e
-    // registros_treino.
+    // O nome é copiado em cavalos (treinadores/avaliacoes),
+    // registros_treino e exercicios.
     if (resolved.nome !== undefined) {
       await renameTrainerRefs(uid, updated.nome, session);
     }

@@ -2,6 +2,13 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validade das URLs vinda de shared/constants/files.ts;
+// conferência do "%PDF-" com hasSignature.
+// Alteração: A URL de envio de certificação só aceita caminho livre, e o
+// caminho pula envios ainda em andamento.
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Conferência do caminho, carga do treinador ativo e conversão dos
@@ -19,19 +26,23 @@
 import type {ClientSession} from "mongodb";
 import {
   createReadUrl,
-  createUploadUrl,
+  createSignedUpload,
   deleteObject,
+  findFreePath,
   getObjectInfo,
-  readFirstBytes,
+  hasSignature,
 } from "../../../../shared/config/storage";
+import {
+  READ_URL_TTL_MS,
+  UNCONFIRMED_FILE_TTL_MS,
+  UPLOAD_URL_TTL_MS,
+} from "../../../../shared/constants/files";
 import {AppError} from "../../../../shared/errors/AppError";
 import {
   ATTACHMENT_CONTENT_TYPE,
   ATTACHMENT_MAX_BYTES,
   ATTACHMENT_ROOT,
   MAX_CERTIFICATIONS,
-  READ_URL_TTL_MS,
-  UPLOAD_URL_TTL_MS,
 } from "../constants/attachments";
 import {
   addTrainerCertification,
@@ -95,23 +106,40 @@ export function assertOwnedPath(
   if (!valid) throw new AppError("invalid-argument", "Caminho inválido.");
 }
 
-/** Escolhe o menor índice livre para uma nova certificação.
+/** Escolhe o caminho da nova certificação: o menor índice que não está
+ * gravado no treinador nem reservado por um envio em andamento.
+ * @param {string} uid UID do usuário.
  * @param {string[]} certificacoes Caminhos já gravados.
- * @return {number} Menor índice livre.
+ * @return {Promise<string>} Caminho livre.
  */
-function nextCertificationIndex(certificacoes: string[]): number {
+async function nextCertificationPath(
+  uid: string,
+  certificacoes: string[]
+): Promise<string> {
   const used = new Set(
     certificacoes.map(
       (path) => Number(/certificacao_(\d+)\.pdf$/.exec(path)?.[1])
     )
   );
+  const candidates: string[] = [];
   for (let i = 1; i <= MAX_CERTIFICATIONS; i++) {
-    if (!used.has(i)) return i;
+    if (!used.has(i)) candidates.push(certificationPath(uid, i));
   }
-  throw new AppError(
-    "invalid-argument",
-    `Limite de ${MAX_CERTIFICATIONS} certificações atingido.`
-  );
+  if (candidates.length === 0) {
+    throw new AppError(
+      "invalid-argument",
+      `Limite de ${MAX_CERTIFICATIONS} certificações atingido.`
+    );
+  }
+
+  const caminho = await findFreePath(candidates, UNCONFIRMED_FILE_TTL_MS);
+  if (!caminho) {
+    throw new AppError(
+      "failed-precondition",
+      "Há envios em andamento. Confirme-os antes de enviar outro arquivo."
+    );
+  }
+  return caminho;
 }
 
 /** Carrega o treinador e garante que a conta está ativa.
@@ -183,24 +211,21 @@ export async function createTrainerAttachmentUploadService(
   input: AttachmentUploadInput
 ): Promise<AttachmentUploadResult> {
   const trainer = await loadActiveTrainer(uid);
-  const caminho = input.tipo === "experiencias" ?
+  const isExperience = input.tipo === "experiencias";
+  const caminho = isExperience ?
     experiencePath(uid) :
-    certificationPath(uid, nextCertificationIndex(trainer.certificacoes));
-  const uploadUrl = await createUploadUrl(
+    await nextCertificationPath(uid, trainer.certificacoes);
+  // A experiência tem caminho fixo e um novo envio a substitui; as
+  // certificações só aceitam caminho livre.
+  const upload = await createSignedUpload(
     caminho,
     ATTACHMENT_CONTENT_TYPE,
     ATTACHMENT_MAX_BYTES,
-    UPLOAD_URL_TTL_MS
+    UPLOAD_URL_TTL_MS,
+    !isExperience
   );
 
-  return {
-    caminho,
-    uploadUrl,
-    headers: {
-      "Content-Type": ATTACHMENT_CONTENT_TYPE,
-      "x-goog-content-length-range": `0,${ATTACHMENT_MAX_BYTES}`,
-    },
-  };
+  return {caminho, ...upload};
 }
 
 /** Confere o arquivo enviado e grava o caminho no MongoDB.
@@ -219,13 +244,11 @@ export async function confirmTrainerAttachmentService(
   const info = await getObjectInfo(caminho);
   if (!info) throw new AppError("not-found", "Arquivo não enviado.");
 
-  const validSize = info.size > 0 && info.size <= ATTACHMENT_MAX_BYTES;
-  const header = validSize ? await readFirstBytes(caminho, 5) : null;
-  if (
-    !validSize ||
-    info.contentType !== ATTACHMENT_CONTENT_TYPE ||
-    header?.toString("latin1") !== "%PDF-"
-  ) {
+  const valid = info.size > 0 &&
+    info.size <= ATTACHMENT_MAX_BYTES &&
+    info.contentType === ATTACHMENT_CONTENT_TYPE &&
+    (await hasSignature(caminho, ATTACHMENT_CONTENT_TYPE));
+  if (!valid) {
     // A experiência reaproveita o caminho: o envio inválido sobrescreveu o
     // arquivo anterior, então a referência também é removida.
     await deleteObject(caminho);

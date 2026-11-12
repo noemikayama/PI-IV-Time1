@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de exercícios e do envio, da confirmação
+// e da remoção de mídias do exercício.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do dashboard de evolução.
@@ -64,3 +69,9 @@ export {
 export {
   getDashboard,
 } from "./features/dashboard";
+export {
+  registerExercise,
+  createExerciseMediaUpload,
+  confirmExerciseMedia,
+  removeExerciseMedia,
+} from "./features/exercises";

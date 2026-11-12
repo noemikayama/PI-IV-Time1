@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Formatos aceitos lidos de IMAGE_CONTENT_TYPES.
+//
 // Data: 27/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação dos dados dos endpoints de imagens do cavalo.
@@ -9,15 +13,13 @@
 
 import {AppError} from "../../../shared/errors/AppError";
 import {asRecord} from "../../authentication/shared";
-import {IMAGE_EXTENSIONS} from "../constants/images";
+import {IMAGE_CONTENT_TYPES} from "../constants/images";
 import type {
   HorseImageContentType,
   HorseImageFileInput,
   HorseImageUploadInput,
 } from "../types";
 import {validateHorseId} from "./validateHorse";
-
-const CONTENT_TYPES = Object.keys(IMAGE_EXTENSIONS) as HorseImageContentType[];
 
 /** Cria um erro de argumento inválido com a mensagem informada.
  * @param {string} message Mensagem do erro.
@@ -32,7 +34,7 @@ function invalid(message: string): AppError {
  * @return {HorseImageContentType} Formato validado.
  */
 function parseContentType(value: unknown): HorseImageContentType {
-  if (!CONTENT_TYPES.includes(value as HorseImageContentType)) {
+  if (!IMAGE_CONTENT_TYPES.includes(value as HorseImageContentType)) {
     throw invalid("Formato de imagem inválido. Use JPEG ou PNG.");
   }
   return value as HorseImageContentType;
