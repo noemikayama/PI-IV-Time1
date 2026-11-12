@@ -18,11 +18,14 @@
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
 //
+// Data: 11/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Uso direto do tema nos títulos das listas de treinos e feedbacks.
+//
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import 'dashboard_text_styles.dart';
 
 /// Mostra registros reais recentes com rolagem lateral e estado vazio.
 class DashboardRecentList extends StatelessWidget {
@@ -60,7 +63,13 @@ class DashboardRecentList extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: DashboardTextStyles.cardTitle(context),
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    height: 1.0,
+                    letterSpacing: 0,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               if (count > 0)

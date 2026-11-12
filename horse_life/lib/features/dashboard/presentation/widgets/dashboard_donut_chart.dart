@@ -8,86 +8,111 @@
 //
 // Data: 03/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+// Alteração: Padronização do cabeçalho histórico e inclusão de comentários
+// pontuais sobre a responsabilidade do arquivo.
 //
+// Data: 11/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Substituição do CustomPainter por fl_chart, mantendo as proporções,
+// a identidade visual do Figma e os valores recebidos do backend.
 // -----------------------------------------------------------------------------
 
-import 'dart:math' as math;
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
-/// Proporções recebidas prontas da fonte de dados; não realiza cálculo de negócio.
+/// Exibe a distribuição de treinos realizados e parciais.
+/// Os percentuais já chegam calculados pela Cloud Function getDashboard.
 class DashboardDonutChart extends StatelessWidget {
   const DashboardDonutChart({
     super.key,
     required this.completedPercent,
     required this.partialPercent,
   });
-  final double completedPercent, partialPercent;
-  @override
-  Widget build(BuildContext context) => AspectRatio(
-    aspectRatio: 1,
-    child: CustomPaint(
-      painter: _DonutPainter(completedPercent, partialPercent),
-    ),
-  );
-}
 
-class _DonutPainter extends CustomPainter {
-  const _DonutPainter(this.completed, this.partial);
-  final double completed, partial;
+  final double completedPercent;
+  final double partialPercent;
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final side = math.min(size.width, size.height);
-    final center = Offset(size.width / 2, size.height / 2);
-    final outerRadius = side * .49;
-    final stroke = side * .23;
-    final rect = Rect.fromCircle(
-      center: center,
-      radius: outerRadius - stroke / 2,
+  Widget build(BuildContext context) {
+    // Mantém a área quadrada e calcula apenas tamanhos visuais do gráfico.
+    return AspectRatio(
+      aspectRatio: 1,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = constraints.biggest.shortestSide;
+          final completed = _positivePercent(completedPercent);
+          final partial = _positivePercent(partialPercent);
+
+          // Não cria uma fatia fictícia quando não existem dados.
+          if (completed + partial == 0) {
+            return const SizedBox.expand();
+          }
+
+          final labelSize = (side * 0.115).clamp(10.0, 22.0).toDouble();
+          final outerRadius = side * 0.49;
+
+          return PieChart(
+            PieChartData(
+              startDegreeOffset: -90,
+              sectionsSpace: 0,
+              centerSpaceRadius: side * 0.26,
+              centerSpaceColor: AppColors.whiteSmoke,
+              pieTouchData: PieTouchData(enabled: false),
+              // A fatia parcial começa no topo, conforme o protótipo.
+              sections: [
+                if (partial > 0)
+                  _section(
+                    value: partial,
+                    color: AppColors.blueSpruce,
+                    outerRadius: outerRadius,
+                    labelSize: labelSize,
+                  ),
+                if (completed > 0)
+                  _section(
+                    value: completed,
+                    color: AppColors.pearlAqua,
+                    outerRadius: outerRadius,
+                    labelSize: labelSize,
+                  ),
+              ],
+            ),
+            // Evita animação no primeiro carregamento ou na troca dos filtros.
+            duration: Duration.zero,
+          );
+        },
+      ),
     );
-    final p = (partial / 100).clamp(0.0, 1.0);
-    final c = (completed / 100).clamp(0.0, 1.0);
-    final total = p + c;
-    final pSweep = total > 0 ? 2 * math.pi * p / total : 0.0;
-    final cSweep = total > 0 ? 2 * math.pi * c / total : 0.0;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke;
-    paint.color = AppColors.blueSpruce;
-    canvas.drawArc(rect, -math.pi / 2, pSweep, false, paint);
-    paint.color = AppColors.pearlAqua;
-    canvas.drawArc(rect, -math.pi / 2 + pSweep, cSweep, false, paint);
-    // Os rótulos acompanham o ângulo central de cada fatia.
-    final labelRadius = outerRadius - stroke / 2;
-    void label(double value, double angle) {
-      if (value <= 0) return;
-      final text = TextPainter(
-        text: TextSpan(
-          text: '${value.round()}%',
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Urbanist',
-            fontSize: side * .115,
-            fontWeight: FontWeight.w400,
-            height: 1.0,
-            letterSpacing: 0,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.center,
-      )..layout();
-      final position =
-          center +
-          Offset(math.cos(angle) * labelRadius, math.sin(angle) * labelRadius);
-      text.paint(canvas, position - Offset(text.width / 2, text.height / 2));
-    }
-
-    label(partial, -math.pi / 2 + pSweep / 2);
-    label(completed, -math.pi / 2 + pSweep + cSweep / 2);
   }
 
-  @override
-  bool shouldRepaint(covariant _DonutPainter old) =>
-      old.completed != completed || old.partial != partial;
+  /// Proteção apenas visual contra valores negativos ou não finitos.
+  static double _positivePercent(double value) {
+    return value.isFinite && value > 0 ? value : 0.0;
+  }
+
+  static PieChartSectionData _section({
+    required double value,
+    required Color color,
+    required double outerRadius,
+    required double labelSize,
+  }) {
+    return PieChartSectionData(
+      value: value,
+      color: color,
+      radius: outerRadius,
+      title: '${value.round()}%',
+      // Os rótulos permanecem horizontais e centralizados no anel.
+      titlePositionPercentageOffset: 0.76,
+      titleStyle: TextStyle(
+        color: Colors.white,
+        fontFamily: 'Urbanist',
+        fontSize: labelSize,
+        fontWeight: FontWeight.w400,
+        height: 1,
+        letterSpacing: 0,
+      ),
+      // Uma fatia muito pequena não comporta um rótulo legível.
+      showTitle: value >= 3,
+    );
+  }
 }

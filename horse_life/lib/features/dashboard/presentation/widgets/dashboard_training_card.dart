@@ -14,12 +14,15 @@
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
 //
+// Data: 11/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Aplicação do tema no título do card, preservando as medidas do Figma.
+//
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'dashboard_donut_chart.dart';
-import 'dashboard_text_styles.dart';
 
 /// Mostra o total de treinos e o donut dos percentuais de realização.
 class DashboardTrainingCard extends StatelessWidget {
@@ -50,7 +53,13 @@ class DashboardTrainingCard extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4),
           child: Text(
             'Treinos\nrealizados',
-            style: DashboardTextStyles.cardTitle(context),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              height: 1.0,
+              letterSpacing: 0,
+              color: Colors.white,
+            ),
           ),
         ),
         const SizedBox(height: 10),

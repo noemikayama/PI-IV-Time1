@@ -14,10 +14,13 @@
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
 //
+// Data: 11/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Uso direto do tema nos títulos e valores percentuais dos cards.
+//
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'dashboard_text_styles.dart';
 
 /// Apresenta um indicador percentual com título e fundo em degradê.
 class DashboardMetricCard extends StatelessWidget {
@@ -46,14 +49,29 @@ class DashboardMetricCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title, style: DashboardTextStyles.cardTitle(context)),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            height: 1.0,
+            letterSpacing: 0,
+            color: Colors.white,
+          ),
+        ),
         Expanded(
           child: Center(
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 value,
-                style: DashboardTextStyles.metricValue(context),
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  fontSize: 54,
+                  fontWeight: FontWeight.w400,
+                  height: 1.0,
+                  letterSpacing: 0,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),

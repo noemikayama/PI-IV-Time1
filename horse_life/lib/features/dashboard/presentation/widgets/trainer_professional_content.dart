@@ -14,13 +14,16 @@
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
 //
+// Data: 11/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Uso direto do tema nos títulos e indicadores do painel profissional.
+//
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import '../../data/models/trainer_professional_snapshot.dart';
 import 'dashboard_plans_donut.dart';
-import 'dashboard_text_styles.dart';
 
 /// Exibe métricas profissionais recebidas do backend e permite filtrar período.
 class TrainerProfessionalContent extends StatefulWidget {
@@ -226,14 +229,29 @@ class _TrainerProfessionalContentState
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(title, style: DashboardTextStyles.cardTitle(context)),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            height: 1.0,
+            letterSpacing: 0,
+            color: Colors.white,
+          ),
+        ),
         Expanded(
           child: Center(
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 value,
-                style: DashboardTextStyles.metricValue(context),
+                style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                  fontSize: 54,
+                  fontWeight: FontWeight.w400,
+                  height: 1.0,
+                  letterSpacing: 0,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -255,7 +273,16 @@ class _TrainerProfessionalContentState
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Planos criados', style: DashboardTextStyles.cardTitle(context)),
+        Text(
+          'Planos criados',
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            height: 1.0,
+            letterSpacing: 0,
+            color: Colors.white,
+          ),
+        ),
         const SizedBox(height: 12),
         Expanded(
           child: Container(

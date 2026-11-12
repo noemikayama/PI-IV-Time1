@@ -14,6 +14,10 @@
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
 //
+// Data: 11/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Uso direto do tema para o título Evolução, sem classe tipográfica extra.
+//
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
@@ -21,7 +25,6 @@ import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
-import '../../widgets/dashboard_text_styles.dart';
 import '../../../data/repositories/dashboard_repository.dart';
 import '../../widgets/dashboard_live_training_content.dart';
 import '../../widgets/dashboard_live_professional_content.dart';
@@ -74,7 +77,12 @@ class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
             Text(
               'Evolução',
               textAlign: TextAlign.center,
-              style: DashboardTextStyles.pageTitle(context),
+              style: Theme.of(context).textTheme.displaySmall!.copyWith(
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+                height: 1.0,
+                letterSpacing: 0,
+              ),
             ),
             const SizedBox(height: 24),
             Row(
