@@ -92,7 +92,7 @@ class TabelaPaisesTest {
         "",
         "codigo;nome\n",
         "076;Brasil\n",
-        "﻿codigo;nome\n076;Brasil\n",
+        "\uFEFFcodigo;nome\n076;Brasil\n",
         "codigo;nome\n76;Brasil\n",
         "codigo;nome\n07a;Brasil\n",
         "codigo;nome\n076,Brasil\n",
