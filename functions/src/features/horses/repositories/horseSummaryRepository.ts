@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Microchip e nome também em exercicios.cavalo (antes feito
+// pelo renameHorseRefs da developer, só com o nome).
+//
 // Data: 02/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Cópias do cavalo fora da coleção 'cavalos', reunidas a partir
@@ -10,8 +15,8 @@
 
 // Cópias do cavalo em outras coleções (DD 5.2, "Manutenção das listas
 // resumidas e cópias"): responsaveis.cavalos, treinadores.cavalos,
-// treinadores.clientes e o campo 'cavalo' de avaliacoes, planos e
-// registros_treino. A fonte da verdade é a coleção 'cavalos'
+// treinadores.clientes e o campo 'cavalo' de avaliacoes, planos,
+// registros_treino e exercicios. A fonte da verdade é a coleção 'cavalos'
 // (horseRepository.ts). Todas as funções rodam em transação, em operações
 // sequenciais: a mesma sessão não deve executar comandos em paralelo.
 import type {ClientSession, Document, ObjectId} from "mongodb";
@@ -218,8 +223,8 @@ export async function setTrainerClients(
 
 /** Atualiza o microchip e o nome do cavalo nas cópias resumidas:
  * responsaveis.cavalos, treinadores.cavalos e o campo 'cavalo' de
- * avaliacoes, planos e registros_treino. Só altera as cópias diferentes,
- * então pode ser chamada sempre.
+ * avaliacoes, planos, registros_treino e exercicios. Só altera as cópias
+ * diferentes, então pode ser chamada sempre.
  * @param {ObjectId} id _id do cavalo.
  * @param {Pick<HorseDocument, "codigo" | "nome">} ref Valores atuais.
  * @param {ClientSession} session Sessão da transação.
@@ -253,6 +258,7 @@ export async function syncHorseRefs(
     COLLECTIONS.Avaliacoes,
     COLLECTIONS.Planos,
     COLLECTIONS.RegistrosTreino,
+    COLLECTIONS.Exercicios,
   ];
   for (const collection of copies) {
     await db.collection(collection).updateMany(

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de exercícios e do envio, da confirmação
+// e da remoção de mídias do exercício.
+//
 // Data: 04/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do desvínculo de atleta ou treinador do cavalo.
@@ -16,10 +21,6 @@
 // Data: 02/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos vínculos e da lista de cavalos.
-// Data: 10/11/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Exportação do cadastro de exercícios e do envio, da confirmação
-// e da remoção de mídias do exercício.
 //
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044

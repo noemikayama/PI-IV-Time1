@@ -95,7 +95,7 @@ export async function updateHorseService(
       session
     );
     // Microchip e nome são copiados em responsaveis, treinadores,
-    // avaliacoes, planos e registros_treino.
+    // avaliacoes, planos, registros_treino e exercicios.
     if (horse && (fields.nome !== undefined || fields.codigo !== undefined)) {
       await syncHorseRefs(horse._id, horse, session);
     }

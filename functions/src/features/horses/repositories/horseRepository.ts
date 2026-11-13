@@ -19,9 +19,6 @@
 // cavalo ativo em findTrainersOfHorses.
 // Alteração: Índices criados pelo helper compartilhado ensureIndexesOnce.
 // Alteração: HorseListSource movido para types/horse.ts.
-// Data: 10/11/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Atualização do nome do cavalo também em exercicios.cavalo.
 //
 // Data: 27/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -238,65 +235,8 @@ export async function removeHorseImage(
   return result.modifiedCount === 1;
 }
 
-/** Acrescenta o cavalo à lista resumida do responsável ativo.
- * @param {string} uid UID do responsável.
- * @param {GuardianHorseRef} horse Referência resumida do cavalo.
- * @param {ClientSession} session Sessão da transação.
- */
-export async function addHorseToGuardian(
-  uid: string,
-  horse: GuardianHorseRef,
-  session: ClientSession
-): Promise<void> {
-  const db = await getDatabase();
-  const result = await db
-    .collection<GuardianHorses>(COLLECTIONS.Responsaveis)
-    .updateOne(
-      {_id: uid, situacaoCadastral: "ATIVO"},
-      {$push: {cavalos: horse}, $set: {atualizadoEm: new Date()}},
-      {session}
-    );
-  // Lançar aqui aborta a transação e desfaz a inserção do cavalo.
-  if (result.matchedCount === 0) {
-    throw new AppError("permission-denied", "Conta inativa ou inexistente.");
-  }
-}
-
-/** Atualiza o nome do cavalo nas cópias de responsaveis, treinadores e
- * exercicios.
- * Só altera as cópias com nome diferente, então pode ser chamada sempre.
- * @param {ObjectId} id _id do cavalo.
- * @param {string} nome Novo nome.
- * @param {ClientSession} session Sessão da transação.
- */
-export async function renameHorseRefs(
-  id: ObjectId,
-  nome: string,
-  session: ClientSession
-): Promise<void> {
-  const db = await getDatabase();
-  const filter = {cavalos: {$elemMatch: {_id: id, nome: {$ne: nome}}}};
-  const update = {
-    $set: {"cavalos.$[cavalo].nome": nome, "atualizadoEm": new Date()},
-  };
-  const options = {arrayFilters: [{"cavalo._id": id}], session};
-
-  const collections = [COLLECTIONS.Responsaveis, COLLECTIONS.Treinadores];
-  await Promise.all(
-    collections.map((collection) =>
-      db.collection(collection).updateMany(filter, update, options)
-    )
-  );
-  // Em exercicios a referência é um objeto, não uma lista. O atualizadoEm do
-  // exercício não muda: o conteúdo dele continua o mesmo.
-  await db.collection(COLLECTIONS.Exercicios).updateMany(
-    {"cavalo._id": id, "cavalo.nome": {$ne: nome}},
-    {$set: {"cavalo.nome": nome}},
-    {session}
-  );
-}
-
-/** Lista os treinadores dos cavalos, em ordem alfabética.
+/** Lista os treinadores dos cavalos ativos, em ordem alfabética. Filtra
+ * pela situação na coleção de origem: os _ids vêm de uma lista resumida.
  * @param {ObjectId[]} horseIds IDs dos cavalos.
  * @param {number} limit Quantidade máxima de treinadores.
  */

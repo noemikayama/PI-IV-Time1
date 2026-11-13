@@ -2,14 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 01/11/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Consulta leve da conta (código, nome e situação).
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Atualização do nome do treinador também em
 // exercicios.treinador.
 // Alteração: Gravação da situação profissional na edição do perfil.
+//
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Consulta leve da conta (código, nome e situação).
 //
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044

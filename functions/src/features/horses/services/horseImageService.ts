@@ -2,17 +2,18 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 02/11/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Conferência da conta ativa do proprietário.
-// Alteração: Verificação de acesso pelo helper central (horseAccess).
-// Alteração: Leitura e acesso pelo getHorseForUser.
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Extensão, assinatura e validade das URLs vindas de
 // shared/constants/files.ts; conferência dos bytes com hasSignature.
 // Alteração: A URL de envio só aceita caminho livre, e o caminho pula
 // envios ainda em andamento.
+//
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Conferência da conta ativa do proprietário.
+// Alteração: Verificação de acesso pelo helper central (horseAccess).
+// Alteração: Leitura e acesso pelo getHorseForUser.
 //
 // Data: 27/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
