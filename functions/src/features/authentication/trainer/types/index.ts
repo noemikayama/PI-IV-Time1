@@ -2,6 +2,9 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do tipo da consulta leve da conta.
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do tipo da situação profissional editável.
@@ -32,6 +35,7 @@ export type {
   TrainerProfile,
   TreinoDiaTreinador,
   HomeTreinador,
+  TrainerAccount,
   TrainerHomeSource,
   AttachmentType,
   TrainerAttachmentView,

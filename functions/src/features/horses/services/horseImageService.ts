@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Conferência da conta ativa do proprietário.
+// Alteração: Verificação de acesso pelo helper central (horseAccess).
+// Alteração: Leitura e acesso pelo getHorseForUser.
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Extensão, assinatura e validade das URLs vindas de
@@ -23,6 +28,7 @@ import {
   getObjectInfo,
   hasSignature,
 } from "../../../shared/config/storage";
+import {ROLES} from "../../../shared/constants/roles";
 import {
   FILE_FORMATS,
   READ_URL_TTL_MS,
@@ -48,6 +54,7 @@ import type {
   HorseImageUploadResult,
   HorseImageView,
 } from "../types";
+import {getHorseForUser, HORSE_RULES} from "./horseAccess";
 
 const IMAGE_INDEX_PATTERN = /imagem_(\d+)\.(jpg|png)$/;
 
@@ -122,7 +129,8 @@ async function nextImagePath(
   return caminho;
 }
 
-/** Carrega o cavalo ativo e garante que o usuário é o proprietário.
+/** Carrega o cavalo ativo e garante que o usuário é o proprietário, com a
+ * conta ativa.
  * @param {string} uid UID do responsável.
  * @param {ObjectId} id _id do cavalo.
  * @return {Promise<HorseDocument>} Cavalo do proprietário.
@@ -131,14 +139,11 @@ async function loadOwnedHorse(
   uid: string,
   id: ObjectId
 ): Promise<HorseDocument> {
-  const horse = await findActiveHorseById(id);
-  if (!horse) throw new AppError("not-found", "Cavalo não encontrado.");
-  if (horse.proprietario._id !== uid) {
-    throw new AppError(
-      "permission-denied",
-      "Apenas o proprietário pode alterar as imagens do cavalo."
-    );
-  }
+  const {horse} = await getHorseForUser(
+    {uid, role: ROLES.guardian},
+    id,
+    HORSE_RULES.alterarImagens
+  );
   return horse;
 }
 

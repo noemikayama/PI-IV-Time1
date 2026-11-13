@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Código failed-precondition, para regras que dependem do
+// estado atual.
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Código 'failed-precondition' (ex.: envios ainda em andamento).

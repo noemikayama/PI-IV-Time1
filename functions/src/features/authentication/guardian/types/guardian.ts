@@ -2,6 +2,14 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipo da consulta leve da conta.
+//
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Itens de 'cavalos' tipados por GuardianHorseRef (feature de
+// cavalos, que mantém a lista).
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: _id dos cavalos e das modalidades do perfil como string
@@ -29,6 +37,7 @@
 // -----------------------------------------------------------------------------
 
 import type {ObjectId} from "mongodb";
+import type {GuardianHorseRef} from "../../../horses";
 import type {Credentials} from "../../shared";
 import type {
   StatusRegistroHome,
@@ -45,12 +54,8 @@ export type GuardianDocument = {
     nome: string;
     email: string;
     situacaoCadastral: "ATIVO" | "INATIVO";
-    cavalos: {
-        _id: ObjectId;
-        codigo: string;
-        nome: string;
-        responsabilidades: string[];
-    }[];
+    // Mantida pela feature de cavalos (DD 5.2).
+    cavalos: GuardianHorseRef[];
     modalidades: {_id: ObjectId; codigo: number; nome: string}[];
     criadoEm: Date;
     atualizadoEm: Date;
@@ -107,6 +112,12 @@ export interface HomeResponsavel {
     cavalos: RefResumo[]; // Prévia limitada; lista completa em "Mostrar tudo".
     treinadores: RefResumo[];
 }
+
+// Projeção usada para conferir a conta e referenciá-la.
+export type GuardianAccount = Pick<
+    GuardianDocument,
+    "_id" | "codigo" | "nome" | "situacaoCadastral"
+>;
 
 export type GuardianHomeSource = Pick<
     GuardianDocument,

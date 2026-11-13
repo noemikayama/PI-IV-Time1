@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do tipo da consulta leve da conta.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos tipos da edição do perfil.
@@ -23,6 +27,7 @@ export type {
   GuardianProfile,
   TreinoDiaResponsavel,
   HomeResponsavel,
+  GuardianAccount,
   GuardianHomeSource,
   GuardianModality,
   UpdateGuardianModalitiesInput,

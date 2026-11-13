@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Nome do atleta (responsavel) na projeção do dia.
+// Alteração: Treinos do dia de um cavalo no plano atual.
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -30,6 +35,7 @@ const NOT_CANCELED = {status: {$ne: "CANCELADO"}};
 const DAY_PROJECTION = {
   "status": 1,
   "plano.titulo": 1,
+  "responsavel.nome": 1,
   "cavalo.nome": 1,
   "treinador.nome": 1,
   "treinamento.titulo": 1,
@@ -90,6 +96,14 @@ export const findDayRecordsByHorses = (
   horseIds: ObjectId[],
   day: DatePeriod
 ) => findDayRecords({"cavalo._id": {$in: horseIds}}, day);
+
+// Aba "Plano atual": só os registros do plano ATIVO do cavalo. Usa
+// idx_registros_cavalo_data.
+export const findDayRecordsByHorsePlan = (
+  horseId: ObjectId,
+  planId: ObjectId,
+  day: DatePeriod
+) => findDayRecords({"cavalo._id": horseId, "plano._id": planId}, day);
 
 export const findDayRecordsByTrainer = (
   trainerId: string,

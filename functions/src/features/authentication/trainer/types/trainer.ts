@@ -2,6 +2,14 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipo da consulta leve da conta.
+//
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Itens de 'cavalos' e 'clientes' tipados pela feature de
+// cavalos, que mantém as duas listas.
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: _id dos cavalos do perfil como string hexadecimal.
@@ -32,7 +40,7 @@
 // Alteração: Definição dos tipos usados no cadastro de treinadores.
 // -----------------------------------------------------------------------------
 
-import type {ObjectId} from "mongodb";
+import type {AccountRef, TrainerHorseRef} from "../../../horses";
 import type {Credentials} from "../../shared";
 import type {
   StatusRegistroHome,
@@ -91,8 +99,9 @@ export type TrainerDocument = {
     experiencias: string | null;
     certificacoes: string[];
     regioesAtendimento: ServiceRegion[];
-    cavalos: {_id: ObjectId; codigo: string; nome: string}[];
-    clientes: {_id: string; codigo: number; nome: string}[];
+    // Mantidas pela feature de cavalos (DD 5.2).
+    cavalos: TrainerHorseRef[];
+    clientes: AccountRef[];
     criadoEm: Date;
     atualizadoEm: Date;
 };
@@ -140,6 +149,12 @@ export interface HomeTreinador {
     cavalos: RefResumo[];
     clientes: RefResumo[];
 }
+
+// Projeção usada para conferir a conta e referenciá-la.
+export type TrainerAccount = Pick<
+    TrainerDocument,
+    "_id" | "codigo" | "nome" | "situacaoProfissional"
+>;
 
 export type TrainerHomeSource = Pick<
     TrainerDocument,
