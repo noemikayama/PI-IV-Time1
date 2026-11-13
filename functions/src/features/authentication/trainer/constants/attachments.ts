@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validade das URLs movida para shared/constants/files.ts.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Regras dos anexos em PDF do treinador.
@@ -9,8 +13,6 @@
 
 export const ATTACHMENT_CONTENT_TYPE = "application/pdf";
 export const ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
-export const UPLOAD_URL_TTL_MS = 10 * 60 * 1000;
-export const READ_URL_TTL_MS = 15 * 60 * 1000;
 
 // Raiz dos arquivos no Storage (formato do DD).
 export const ATTACHMENT_ROOT = "/arquivos/treinadores";

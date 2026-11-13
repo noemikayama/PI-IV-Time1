@@ -19,6 +19,10 @@
 // Alteração: Superfície pública reduzida ao que outras features usam
 // (getHorseForUser, loadHorseAccess, toRefView e HorseAccessRule).
 // Alteração: Exportação de assertActiveAccount para a avaliação.
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da consulta do cavalo ativo, usada pelo cadastro de
+// exercícios.
 //
 // Data: 27/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -48,6 +52,11 @@ export type {
   RefView,
   TrainerHorseRef,
 } from "./types";
+export {
+  findActiveHorseById,
+  findTrainersOfHorses,
+} from "./repositories/horseRepository";
+export type {HorseTrainerRef} from "./types";
 export {registerHorse} from "./handlers/registerHorse";
 export {updateHorse} from "./handlers/updateHorse";
 export {getHorseProfile} from "./handlers/getHorseProfile";

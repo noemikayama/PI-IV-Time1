@@ -4,6 +4,8 @@
 //
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Mapeamento da primeira URL de imagem válida retornada para cada
+// cavalo vinculado ao perfil do responsável.
 // Alteração: Documentação dos contratos, integração remota, validação das
 // respostas e conversão dos dados do perfil.
 //
@@ -131,6 +133,7 @@ GuardianProfileData mapGuardianProfile(Map<String, dynamic> json) {
         return GuardianProfileHorse(
           name: _withFallback(horse['nome'], 'Cavalo sem nome'),
           relationship: _guardianRelationship(responsibilities),
+          imageUrl: _firstImageUrl(horse['imagens']),
         );
       })
       .toList(growable: false);
@@ -143,7 +146,14 @@ GuardianProfileData mapGuardianProfile(Map<String, dynamic> json) {
   );
 }
 
-// --- Normalização e valores padrão ------------------------------------------
+String? _firstImageUrl(dynamic value) {
+  for (final item in _asList(value)) {
+    final url = _asText(_asMap(item)['url']).trim();
+    if (url.isNotEmpty) return url;
+  }
+  return null;
+}
+
 // Traduz as responsabilidades armazenadas no backend para o texto da interface.
 String _guardianRelationship(List<String> responsibilities) {
   final isOwner = responsibilities.contains('PROPRIETARIO');

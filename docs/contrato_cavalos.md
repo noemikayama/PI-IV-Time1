@@ -409,8 +409,15 @@ Para cada imagem, o app:
    minutos;
 4. chama `confirmHorseImage` com `id` e `caminho`.
 
-Envie as imagens uma de cada vez: o backend escolhe o próximo índice livre a
-partir das imagens já confirmadas.
+Envie os headers exatamente como recebidos. A URL só aceita o envio se ainda
+não houver arquivo no caminho: um segundo `PUT` para o mesmo caminho é recusado
+pelo Storage com `412`. Para trocar uma imagem, remova-a e peça uma nova URL.
+
+Prefira enviar as imagens uma de cada vez. O backend escolhe o menor índice
+livre e pula os caminhos de envios feitos e ainda não confirmados. Se dois
+pedidos simultâneos receberem o mesmo caminho, o segundo `PUT` recebe `412`:
+peça outra URL e reenvie. Um envio não confirmado em 30 minutos é considerado
+abandonado e o caminho volta a ficar livre.
 
 | Regra | Valor |
 | --- | --- |
@@ -433,12 +440,15 @@ Resposta:
   "uploadUrl": "https://storage.googleapis.com/...",
   "headers": {
     "Content-Type": "image/jpeg",
-    "x-goog-content-length-range": "0,5242880"
+    "x-goog-content-length-range": "0,5242880",
+    "x-goog-if-generation-match": "0"
   }
 }
 ```
 
-Com 10 imagens confirmadas, retorna `invalid-argument`.
+Com 10 imagens confirmadas, retorna `invalid-argument`. Se todos os índices
+livres estiverem ocupados por envios ainda não confirmados, retorna
+`failed-precondition`.
 
 ### confirmHorseImage
 

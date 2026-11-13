@@ -4,6 +4,8 @@
 //
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição do card local pelo ProfileHorseCard compartilhado,
+// com suporte à imagem remota e ao fallback visual.
 // Alteração: Documentação dos blocos de carregamento, edição, estados visuais e
 // componentes da tela de perfil.
 //
@@ -26,6 +28,7 @@ import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/gradient_button.dart';
 import 'package:horse_life/features/profile/presentation/widgets/profile_identity_header.dart';
+import 'package:horse_life/features/profile/presentation/widgets/profile_horse_card.dart';
 import 'package:horse_life/features/profile/presentation/widgets/red_sign_out_button.dart';
 
 import '../../data/models/guardian_profile_data.dart';
@@ -272,82 +275,11 @@ class _GuardianHorseList extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: horses.length,
         separatorBuilder: (_, _) => const SizedBox(width: 14),
-        itemBuilder: (context, index) =>
-            _GuardianHorseCard(horse: horses[index]),
-      ),
-    );
-  }
-}
-
-/// Apresenta o nome e o vínculo de um cavalo em um cartão resumido.
-class _GuardianHorseCard extends StatelessWidget {
-  const _GuardianHorseCard({required this.horse});
-
-  final GuardianProfileHorse horse;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      width: 190,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 112,
-            width: double.infinity,
-            color: AppColors.alabasterGray,
-            alignment: Alignment.center,
-            child: Image.asset(
-              'assets/black-head-horse.png',
-              width: 66,
-              height: 66,
-              fit: BoxFit.contain,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 10, 3),
-            child: Text(
-              horse.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleLarge,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: const Color(0xFFC6E9E1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                child: Text(
-                  horse.relationship,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ),
-            ),
-          ),
-        ],
+        itemBuilder: (context, index) => ProfileHorseCard(
+          name: horses[index].name,
+          relationship: horses[index].relationship,
+          imageUrl: horses[index].imageUrl,
+        ),
       ),
     );
   }
