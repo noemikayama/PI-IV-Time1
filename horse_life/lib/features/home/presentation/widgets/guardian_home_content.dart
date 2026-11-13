@@ -2,10 +2,9 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 06/11/2026
+// Data: 12/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Exibe cavalos de demonstração somente durante a sessão atual,
-// sem depender de novo carregamento da Home após o cadastro mockado.
+// Alteração: Botão Mostrar tudo dos cavalos abre a listagem compartilhada.
 //
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -33,13 +32,13 @@ class GuardianHomeContent extends StatefulWidget {
     required this.homeFuture,
     required this.onRetry,
     this.onRegisterHorse,
-    this.sessionMockHorses = const [],
+    this.onShowAllHorses,
   });
 
   final Future<GuardianHomeData> homeFuture;
   final VoidCallback onRetry;
   final VoidCallback? onRegisterHorse;
-  final List<String> sessionMockHorses;
+  final VoidCallback? onShowAllHorses;
 
   @override
   State<GuardianHomeContent> createState() => _GuardianHomeContentState();
@@ -163,11 +162,12 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                       const SizedBox(height: 24),
                       GuardianListCard(
                         title: 'Meus cavalos',
+                        onShowAll: widget.onShowAllHorses,
                         icon: Icons.pets,
                         useHorseAsset: true,
                         maxVisibleItems: 2,
                         showArrow: true,
-                        items: [...data.horses, ...widget.sessionMockHorses],
+                        items: data.horses,
                         onRegisterHorse:
                             widget.onRegisterHorse ??
                             () {
