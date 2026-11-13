@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção do componente unificado FormProgressIndicator proveniente
+// de core/widgets.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da etapa de duração padrão do exercício em minutos, com
@@ -13,11 +18,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/widgets/app_text_form_field.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_registration_draft.dart';
-import '../widgets/exercise_progress_indicator.dart';
 import 'exercise_materials_screen.dart';
 
 typedef ExerciseDurationCallback =
@@ -47,12 +52,12 @@ class _ExerciseDurationScreenState extends State<ExerciseDurationScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _durationController;
 
-  ExerciseProgressConfiguration get _progressConfiguration =>
+  FormProgressConfiguration get _progressConfiguration =>
       switch (widget.draft) {
         GenericExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.generic,
+          FormProgressConfiguration.genericExercise,
         SpecificExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.specific,
+          FormProgressConfiguration.specificExercise,
       };
 
   int get _currentStep => switch (widget.draft) {
@@ -147,7 +152,7 @@ class _ExerciseDurationScreenState extends State<ExerciseDurationScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ExerciseProgressIndicator(
+                            FormProgressIndicator(
                               configuration: _progressConfiguration,
                               currentStep: _currentStep,
                             ),

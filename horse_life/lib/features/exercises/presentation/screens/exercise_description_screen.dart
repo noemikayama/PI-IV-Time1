@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção dos widgets compartilhados FormProgressIndicator e
+// AppMultilineTextFormField provenientes de core/widgets.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da etapa de descrição detalhada do exercício, operando
@@ -11,12 +16,12 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/app_multiline_text_form_field.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_registration_draft.dart';
-import '../widgets/exercise_progress_indicator.dart';
 import 'exercise_guidelines_screen.dart';
 
 typedef ExerciseDescriptionCallback =
@@ -47,12 +52,12 @@ class _ExerciseDescriptionScreenState extends State<ExerciseDescriptionScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _descriptionController;
 
-  ExerciseProgressConfiguration get _progressConfiguration =>
+  FormProgressConfiguration get _progressConfiguration =>
       switch (widget.draft) {
         GenericExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.generic,
+          FormProgressConfiguration.genericExercise,
         SpecificExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.specific,
+          FormProgressConfiguration.specificExercise,
       };
 
   int get _currentStep => switch (widget.draft) {
@@ -142,7 +147,7 @@ class _ExerciseDescriptionScreenState extends State<ExerciseDescriptionScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ExerciseProgressIndicator(
+                            FormProgressIndicator(
                               configuration: _progressConfiguration,
                               currentStep: _currentStep,
                             ),
@@ -167,65 +172,15 @@ class _ExerciseDescriptionScreenState extends State<ExerciseDescriptionScreen> {
                             const SizedBox(height: 46),
                             Form(
                               key: _formKey,
-                              child: TextFormField(
-                                key: const Key('exercise-description-input'),
+                              child: AppMultilineTextFormField(
+                                fieldKey: const Key(
+                                  'exercise-description-input',
+                                ),
                                 controller: _descriptionController,
+                                hintText: 'Descrição',
                                 minLines: 6,
                                 maxLines: 8,
-                                keyboardType: TextInputType.multiline,
-                                textInputAction: TextInputAction.newline,
                                 validator: _validateDescription,
-                                cursorColor: theme.colorScheme.primary,
-                                style: textTheme.headlineSmall?.copyWith(
-                                  fontSize: 20,
-                                  height: 1.2,
-                                ),
-                                decoration: InputDecoration(
-                                  hintText: 'Descrição',
-                                  hintStyle: textTheme.headlineSmall?.copyWith(
-                                    color: AppColors.grey,
-                                    fontSize: 20,
-                                  ),
-                                  filled: true,
-                                  fillColor: AppColors.alabasterGray,
-                                  contentPadding: const EdgeInsets.all(20),
-                                  border: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(18),
-                                    ),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  enabledBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(18),
-                                    ),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  focusedBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(18),
-                                    ),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  errorBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(18),
-                                    ),
-                                    borderSide: BorderSide(
-                                      color: AppColors.error,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  focusedErrorBorder: const OutlineInputBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(18),
-                                    ),
-                                    borderSide: BorderSide(
-                                      color: AppColors.error,
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
                               ),
                             ),
                             const SizedBox(height: 50),

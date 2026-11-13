@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção do componente unificado FormProgressIndicator proveniente
+// de core/widgets.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Encadeamento da navegação da etapa de nome para a etapa de
@@ -17,12 +22,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/app_text_form_field.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_registration_draft.dart';
 import '../../data/models/exercise_type.dart';
-import '../widgets/exercise_progress_indicator.dart';
 import 'exercise_description_screen.dart';
 
 typedef ExerciseNameCallback =
@@ -38,7 +43,7 @@ class ExerciseNameScreen extends StatefulWidget {
     this.onBack,
     super.key,
   }) : exerciseType = ExerciseType.generic,
-       progressConfiguration = ExerciseProgressConfiguration.generic,
+       progressConfiguration = FormProgressConfiguration.genericExercise,
        currentStep = 1;
 
   const ExerciseNameScreen.specific({
@@ -48,11 +53,11 @@ class ExerciseNameScreen extends StatefulWidget {
     this.onBack,
     super.key,
   }) : exerciseType = ExerciseType.specific,
-       progressConfiguration = ExerciseProgressConfiguration.specific,
+       progressConfiguration = FormProgressConfiguration.specificExercise,
        currentStep = 2;
 
   final ExerciseType exerciseType;
-  final ExerciseProgressConfiguration progressConfiguration;
+  final FormProgressConfiguration progressConfiguration;
   final int currentStep;
   final ExerciseRegistrationDraft? draft;
   final ExerciseRegistrationController? registrationController;
@@ -154,7 +159,7 @@ class _ExerciseNameScreenState extends State<ExerciseNameScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ExerciseProgressIndicator(
+                            FormProgressIndicator(
                               configuration: widget.progressConfiguration,
                               currentStep: widget.currentStep,
                             ),

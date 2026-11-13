@@ -4,6 +4,11 @@
 //
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção dos widgets centralizados FormProgressIndicator,
+// AppAddItemButton e AppRemovableItemTile provenientes de core/widgets.
+//
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Validação obrigatória da etapa de orientações do exercício,
 // impedindo o avanço caso nenhuma orientação tenha sido adicionada.
 //
@@ -19,14 +24,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/app_item_list_widgets.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_registration_draft.dart';
 import '../widgets/add_exercise_guideline_dialog.dart';
-import '../widgets/exercise_item_list_widgets.dart';
-import '../widgets/exercise_progress_indicator.dart';
 import 'exercise_duration_screen.dart';
 
 typedef ExerciseGuidelinesCallback =
@@ -62,12 +67,12 @@ class _ExerciseGuidelinesScreenState extends State<ExerciseGuidelinesScreen> {
   final ScrollController _guidelinesScrollController = ScrollController();
   late final List<String> _guidelines;
 
-  ExerciseProgressConfiguration get _progressConfiguration =>
+  FormProgressConfiguration get _progressConfiguration =>
       switch (widget.draft) {
         GenericExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.generic,
+          FormProgressConfiguration.genericExercise,
         SpecificExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.specific,
+          FormProgressConfiguration.specificExercise,
       };
 
   int get _currentStep => switch (widget.draft) {
@@ -177,7 +182,7 @@ class _ExerciseGuidelinesScreenState extends State<ExerciseGuidelinesScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ExerciseProgressIndicator(
+                            FormProgressIndicator(
                               configuration: _progressConfiguration,
                               currentStep: _currentStep,
                             ),
@@ -230,7 +235,7 @@ class _ExerciseGuidelinesScreenState extends State<ExerciseGuidelinesScreen> {
 
   // Botão cinza arredondado para acionar o modal de inclusão de orientação.
   Widget _buildAddButton(BuildContext context) {
-    return ExerciseAddItemButton(
+    return AppAddItemButton(
       buttonKey: const Key('add-exercise-guideline'),
       label: 'Adicionar orientação',
       onPressed: _addGuideline,
@@ -256,7 +261,7 @@ class _ExerciseGuidelinesScreenState extends State<ExerciseGuidelinesScreen> {
       separatorBuilder: (_, _) => const SizedBox(height: _itemSpacing),
       itemBuilder: (context, index) {
         final guideline = _guidelines[index];
-        return ExerciseRemovableItemTile(
+        return AppRemovableItemTile(
           key: ValueKey('exercise-guideline-item-$index'),
           icon: Icons.chat_bubble_outline_rounded,
           label: guideline,

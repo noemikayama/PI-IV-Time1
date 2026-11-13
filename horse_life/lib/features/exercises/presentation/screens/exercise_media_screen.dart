@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção dos widgets centralizados FormProgressIndicator,
+// AppAddItemButton e AppRemovableItemTile provenientes de core/widgets.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da etapa de adição de mídias auxiliares (imagens e vídeos)
@@ -15,14 +20,14 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/app_item_list_widgets.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_media.dart';
 import '../../application/states/exercise_registration_draft.dart';
-import '../widgets/exercise_item_list_widgets.dart';
-import '../widgets/exercise_progress_indicator.dart';
 import 'exercise_confirmation_screen.dart';
 
 typedef ExerciseMediaCallback = void Function(ExerciseRegistrationDraft draft);
@@ -115,12 +120,12 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
   late final List<ExerciseMedia> _mediaItems;
   bool _isPicking = false;
 
-  ExerciseProgressConfiguration get _progressConfiguration =>
+  FormProgressConfiguration get _progressConfiguration =>
       switch (widget.draft) {
         GenericExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.generic,
+          FormProgressConfiguration.genericExercise,
         SpecificExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.specific,
+          FormProgressConfiguration.specificExercise,
       };
 
   int get _currentStep => switch (widget.draft) {
@@ -276,7 +281,7 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ExerciseProgressIndicator(
+                            FormProgressIndicator(
                               configuration: _progressConfiguration,
                               currentStep: _currentStep,
                             ),
@@ -302,7 +307,7 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
                               ),
                             ),
                             const SizedBox(height: 46),
-                            ExerciseAddItemButton(
+                            AppAddItemButton(
                               buttonKey: const Key('pick-exercise-media-files'),
                               label: 'Adicionar mídia',
                               semanticsLabel:
@@ -357,7 +362,7 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
           separatorBuilder: (_, _) => const SizedBox(height: _mediaSpacing),
           itemBuilder: (context, index) {
             final media = _mediaItems[index];
-            return ExerciseRemovableItemTile(
+            return AppRemovableItemTile(
               key: ValueKey('exercise-media-item-$index'),
               icon: media.type == ExerciseMediaType.video
                   ? Icons.movie_outlined

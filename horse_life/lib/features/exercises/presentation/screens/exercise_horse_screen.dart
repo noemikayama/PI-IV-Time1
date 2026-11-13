@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção do componente unificado FormProgressIndicator proveniente
+// de core/widgets.
+//
 // Data: 10/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da primeira etapa do fluxo de exercício específico para
@@ -14,13 +19,13 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../core/widgets/app_dropdown_field.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_registration_draft.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/trainer_linked_horse_repository.dart';
-import '../widgets/exercise_progress_indicator.dart';
 import '../widgets/no_linked_horses_dialog.dart';
 import 'exercise_name_screen.dart';
 
@@ -179,9 +184,9 @@ class _ExerciseHorseScreenState extends State<ExerciseHorseScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const ExerciseProgressIndicator(
+                            const FormProgressIndicator(
                               configuration:
-                                  ExerciseProgressConfiguration.specific,
+                                  FormProgressConfiguration.specificExercise,
                               currentStep: 1,
                             ),
                             const SizedBox(height: 52),

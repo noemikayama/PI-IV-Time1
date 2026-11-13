@@ -4,6 +4,11 @@
 //
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção dos componentes centralizados FormProgressIndicator,
+// AppRemovableItemTile e AppReviewSection provenientes de core/widgets.
+//
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Restrição obrigatória de submissão do exercício quando não houver
 // ao menos uma orientação cadastrada.
 //
@@ -19,7 +24,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/app_item_list_widgets.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../../authentication/presentation/widgets/editable_review_field.dart';
@@ -29,8 +36,6 @@ import '../../application/states/exercise_media.dart';
 import '../../application/states/exercise_registration_draft.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/exercise_registration_repository.dart';
-import '../widgets/exercise_item_list_widgets.dart';
-import '../widgets/exercise_progress_indicator.dart';
 
 typedef ExerciseConfirmationSubmittedCallback =
     void Function(ExerciseRegistrationDraft draft);
@@ -75,12 +80,12 @@ class _ExerciseConfirmationScreenState
   late final List<ExerciseMedia> _mediaItems;
   bool _isSubmitting = false;
 
-  ExerciseProgressConfiguration get _progressConfiguration =>
+  FormProgressConfiguration get _progressConfiguration =>
       switch (widget.draft) {
         GenericExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.generic,
+          FormProgressConfiguration.genericExercise,
         SpecificExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.specific,
+          FormProgressConfiguration.specificExercise,
       };
 
   int get _currentStep => switch (widget.draft) {
@@ -264,7 +269,7 @@ class _ExerciseConfirmationScreenState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ExerciseProgressIndicator(
+                            FormProgressIndicator(
                               configuration: _progressConfiguration,
                               currentStep: _currentStep,
                             ),
@@ -430,12 +435,12 @@ class _ExerciseConfirmationScreenState
   }
 
   Widget _buildGuidelinesSection() {
-    return ExerciseReviewSection(
+    return AppReviewSection(
       title: 'Orientações',
       emptyMessage: 'Nenhuma orientação adicionada.',
       children: [
         for (var index = 0; index < _guidelines.length; index++)
-          ExerciseRemovableItemTile(
+          AppRemovableItemTile(
             key: ValueKey('exercise-review-guideline-$index'),
             icon: Icons.chat_bubble_outline_rounded,
             label: _guidelines[index],
@@ -449,12 +454,12 @@ class _ExerciseConfirmationScreenState
   }
 
   Widget _buildMaterialsSection() {
-    return ExerciseReviewSection(
+    return AppReviewSection(
       title: 'Materiais necessários',
       emptyMessage: 'Nenhum material adicionado.',
       children: [
         for (var index = 0; index < _materials.length; index++)
-          ExerciseRemovableItemTile(
+          AppRemovableItemTile(
             key: ValueKey('exercise-review-material-$index'),
             icon: Icons.handyman_outlined,
             label: _materials[index].displayLabel,
@@ -466,12 +471,12 @@ class _ExerciseConfirmationScreenState
   }
 
   Widget _buildMediaSection() {
-    return ExerciseReviewSection(
+    return AppReviewSection(
       title: 'Mídias auxiliares',
       emptyMessage: 'Nenhuma mídia anexada.',
       children: [
         for (var index = 0; index < _mediaItems.length; index++)
-          ExerciseRemovableItemTile(
+          AppRemovableItemTile(
             key: ValueKey('exercise-review-media-$index'),
             icon: _mediaItems[index].type == ExerciseMediaType.video
                 ? Icons.movie_outlined

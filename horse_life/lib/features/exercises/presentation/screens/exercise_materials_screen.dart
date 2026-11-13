@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adoção dos widgets centralizados FormProgressIndicator,
+// AppAddItemButton e AppRemovableItemTile provenientes de core/widgets.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da etapa de materiais necessários e quantidades para a
@@ -14,15 +19,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/app_item_list_widgets.dart';
 import '../../../../core/widgets/app_snack_bar.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../../authentication/presentation/widgets/auth_header.dart';
 import '../../../authentication/presentation/widgets/auth_next_button.dart';
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_material.dart';
 import '../../application/states/exercise_registration_draft.dart';
 import '../widgets/add_exercise_material_dialog.dart';
-import '../widgets/exercise_item_list_widgets.dart';
-import '../widgets/exercise_progress_indicator.dart';
 import 'exercise_media_screen.dart';
 
 typedef ExerciseMaterialsCallback =
@@ -57,12 +62,12 @@ class _ExerciseMaterialsScreenState extends State<ExerciseMaterialsScreen> {
   final ScrollController _materialsScrollController = ScrollController();
   late final List<ExerciseMaterial> _materials;
 
-  ExerciseProgressConfiguration get _progressConfiguration =>
+  FormProgressConfiguration get _progressConfiguration =>
       switch (widget.draft) {
         GenericExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.generic,
+          FormProgressConfiguration.genericExercise,
         SpecificExerciseRegistrationDraft() =>
-          ExerciseProgressConfiguration.specific,
+          FormProgressConfiguration.specificExercise,
       };
 
   int get _currentStep => switch (widget.draft) {
@@ -161,7 +166,7 @@ class _ExerciseMaterialsScreenState extends State<ExerciseMaterialsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ExerciseProgressIndicator(
+                            FormProgressIndicator(
                               configuration: _progressConfiguration,
                               currentStep: _currentStep,
                             ),
@@ -186,7 +191,7 @@ class _ExerciseMaterialsScreenState extends State<ExerciseMaterialsScreen> {
                               ),
                             ),
                             const SizedBox(height: 46),
-                            ExerciseAddItemButton(
+                            AppAddItemButton(
                               buttonKey: const Key('add-exercise-material'),
                               label: 'Adicionar materiais',
                               onPressed: _addMaterial,
@@ -237,7 +242,7 @@ class _ExerciseMaterialsScreenState extends State<ExerciseMaterialsScreen> {
           separatorBuilder: (_, _) => const SizedBox(height: _itemSpacing),
           itemBuilder: (context, index) {
             final material = _materials[index];
-            return ExerciseRemovableItemTile(
+            return AppRemovableItemTile(
               key: ValueKey('exercise-material-item-$index'),
               icon: Icons.handyman_outlined,
               label: material.displayLabel,
