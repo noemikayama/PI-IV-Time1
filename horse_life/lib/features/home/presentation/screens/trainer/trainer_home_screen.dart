@@ -1,7 +1,11 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 01/11/2026 - Navegação Home ↔ Dashboard por perfil com repository injetável.
+//
+// Data: 13/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Correção da navegação para o Dashboard após atualização da developer;
+// manutenção dos destinos tipados e remoção de estado duplicado.
 //
 // Data: 10/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -40,10 +44,6 @@
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Implementação da Home do Profissional com AppBar e navegação
 // compartilhadas, Sidebar exclusiva, Mock API e três cenários de testes.
-// Data: 03/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Dashboard acessado pela Home passa a utilizar repository real,
-// independentemente do modo de teste da Home.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
@@ -80,6 +80,7 @@ class TrainerHomeScreen extends StatefulWidget {
     required this.onLogout,
     this.mockScenario,
     this.loader,
+    this.dashboardRepository,
     this.repository,
     this.onViewTraining,
     this.onSelectHorse,
@@ -104,7 +105,6 @@ class TrainerHomeScreen extends StatefulWidget {
     this.addTrainerServiceArea,
     this.updateTrainerProfile,
     this.requestTrainerPasswordReset,
-    this.dashboardRepository,
   });
 
   // --- Fontes de dados -------------------------------------------------------
@@ -113,6 +113,9 @@ class TrainerHomeScreen extends StatefulWidget {
 
   /// Preferencialmente injetado pela raiz do aplicativo.
   final HomeLoader<TrainerHomeData>? loader;
+
+  /// Fonte opcional para testes; no app usa Firebase.
+  final DashboardRepository? dashboardRepository;
 
   /// Injeção opcional de repositório (por exemplo, em testes).
   final TrainerRepository? repository;
@@ -157,9 +160,6 @@ class TrainerHomeScreen extends StatefulWidget {
   final TrainerServiceAreaAdder? addTrainerServiceArea;
   final TrainerProfileUpdateHandler? updateTrainerProfile;
   final TrainerPasswordResetRequester? requestTrainerPasswordReset;
-
-  /// Repository opcional para testes de navegação.
-  final DashboardRepository? dashboardRepository;
 
   @override
   State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
@@ -259,26 +259,23 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     }
   }
 
-  void _onNavigationSelected(int index) {
-    if (index == 3) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => TrainerDashboardScreen(
-            onLogout: widget.onLogout,
-            onHome: () => Navigator.of(context).pop(),
-            homeFuture: _homeFuture,
-            // Dashboard sempre usa dados reais (o mock da Home é independente).
-            repository:
-                widget.dashboardRepository ?? DashboardComposition.production(),
-          ),
+  // --- Composição visual e navegação ----------------------------------------
+  // Abre o painel do perfil sem alterar o destino atual da Home.
+  // Ao voltar, os dados já carregados da Home continuam disponíveis.
+  Future<void> _openDashboard() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => TrainerDashboardScreen(
+          onLogout: widget.onLogout,
+          onHome: () => Navigator.of(context).pop(),
+          homeFuture: _homeFuture,
+          repository:
+              widget.dashboardRepository ?? DashboardComposition.production(),
         ),
-      );
-      return;
-    }
-    widget.onNavigationSelected?.call(index);
+      ),
+    );
   }
 
-  // --- Composição visual e navegação ----------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -321,11 +318,13 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: _selectedDestination,
         onDestinationSelected: (destination) {
-          setState(() => _selectedDestination = destination);
           widget.onNavigationSelected?.call(destination.index);
+          if (destination == HomeNavigationDestination.dashboard) {
+            _openDashboard();
+            return;
+          }
+          setState(() => _selectedDestination = destination);
         },
-        selectedIndex: _selectedIndex,
-        onItemSelected: _onNavigationSelected,
       ),
     );
   }
