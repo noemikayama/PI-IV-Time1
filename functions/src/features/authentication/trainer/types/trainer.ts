@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: _id dos cavalos do perfil como string hexadecimal.
+// Alteração: Situação profissional editável no perfil do treinador.
+//
 // Data: 02/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipo da consulta leve da conta.
@@ -10,10 +15,6 @@
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Itens de 'cavalos' e 'clientes' tipados pela feature de
 // cavalos, que mantém as duas listas.
-// Data: 10/11/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: _id dos cavalos do perfil como string hexadecimal.
-// Alteração: Situação profissional editável no perfil do treinador.
 //
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044

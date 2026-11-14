@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: _id dos cavalos e das modalidades do perfil como string
+// hexadecimal.
+//
 // Data: 02/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipo da consulta leve da conta.
@@ -10,10 +15,6 @@
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Itens de 'cavalos' tipados por GuardianHorseRef (feature de
 // cavalos, que mantém a lista).
-// Data: 10/11/2026
-// Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: _id dos cavalos e das modalidades do perfil como string
-// hexadecimal.
 //
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
