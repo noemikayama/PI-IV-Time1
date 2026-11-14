@@ -4,6 +4,11 @@
 //
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Desacoplamento da submissão com HorseRegistrationController,
+// isolando completamente as regras de persistência e repositório da tela.
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela autônoma de revisão final e submissão do cadastro de
 // cavalos (etapa 12 de 12), integrando FormProgressIndicator, AuthHeader,
 // campos de revisão com atalhos de edição, seções dinâmicas e botão "Cadastrar cavalo".
@@ -43,9 +48,9 @@ typedef HorseReviewSubmittedCallback =
 class HorseReviewScreen extends StatefulWidget {
   const HorseReviewScreen({
     required this.draft,
+    this.controller,
     this.repository,
     this.microchipValidator,
-    this.controller,
     this.imageSelection = const HorseImageSelectionService(),
     this.onSubmitted,
     this.onBack,
@@ -53,9 +58,9 @@ class HorseReviewScreen extends StatefulWidget {
   });
 
   final HorseRegistrationDraft draft;
+  final HorseRegistrationController? controller;
   final HorseRegistrationRepository? repository;
   final HorseMicrochipValidator? microchipValidator;
-  final HorseRegistrationController? controller;
   final HorseImageSelectionService imageSelection;
   final HorseReviewSubmittedCallback? onSubmitted;
   final VoidCallback? onBack;
@@ -71,16 +76,12 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
   @override
   void initState() {
     super.initState();
-    final repo =
-        widget.repository ?? HorseRegistrationComposition.productionRepository();
-    final validator =
-        widget.microchipValidator ??
-        HorseRegistrationComposition.productionMicrochipValidator();
     _controller =
         widget.controller ??
-        HorseRegistrationController(
-          repository: repo,
-          microchipValidator: validator,
+        HorseRegistrationComposition.productionController(
+          repository: widget.repository,
+          microchipValidator: widget.microchipValidator,
+          initialDraft: widget.draft,
         );
   }
 
@@ -99,9 +100,9 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
       return switch (step) {
         HorseRegistrationStep.name => HorseNameScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: _controller,
           imageSelection: widget.imageSelection,
           onContinue: (_) {
             Navigator.pop(context);
@@ -110,9 +111,9 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
         ),
         HorseRegistrationStep.microchip => HorseMicrochipScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: _controller,
           imageSelection: widget.imageSelection,
           onContinue: (_) {
             Navigator.pop(context);
@@ -121,9 +122,9 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
         ),
         HorseRegistrationStep.birthDate => HorseBirthDateScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: _controller,
           imageSelection: widget.imageSelection,
           onContinue: (_) {
             Navigator.pop(context);
@@ -132,9 +133,9 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
         ),
         HorseRegistrationStep.breed => HorseBreedScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: _controller,
           imageSelection: widget.imageSelection,
           onContinue: (_) {
             Navigator.pop(context);
@@ -143,9 +144,9 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
         ),
         HorseRegistrationStep.coat => HorseCoatScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: _controller,
           imageSelection: widget.imageSelection,
           onContinue: (_) {
             Navigator.pop(context);
@@ -154,9 +155,9 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
         ),
         HorseRegistrationStep.sex => HorseSexScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: _controller,
           imageSelection: widget.imageSelection,
           onContinue: (_) {
             Navigator.pop(context);
@@ -165,9 +166,9 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
         ),
         HorseRegistrationStep.modality => HorseModalityScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: _controller,
           imageSelection: widget.imageSelection,
           onContinue: (_) {
             Navigator.pop(context);
@@ -443,10 +444,10 @@ class _HorseReviewScreenState extends State<HorseReviewScreen> {
                                           Text(
                                             injury.prescription!.trim(),
                                             style: theme.textTheme.bodyMedium
-                                                ?.copyWith(
-                                                  fontSize: 15,
-                                                  color: AppColors.text,
-                                                ),
+                                              ?.copyWith(
+                                                fontSize: 15,
+                                                color: AppColors.text,
+                                              ),
                                           ),
                                         ],
                                       ],

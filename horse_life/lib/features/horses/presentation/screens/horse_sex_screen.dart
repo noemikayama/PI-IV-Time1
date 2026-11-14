@@ -4,6 +4,11 @@
 //
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Desacoplamento da persistência e estado com HorseRegistrationController,
+// repassando o rascunho e o controlador através da navegação para as imagens.
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela autônoma de seleção do sexo do cavalo (etapa 6 de 12),
 // integrando FormProgressIndicator, AuthHeader, AppDropdownField arredondado
 // com opções Macho e Fêmea e botão Seguinte.
@@ -28,9 +33,9 @@ typedef HorseSexCallback = void Function(HorseRegistrationDraft draft);
 class HorseSexScreen extends StatefulWidget {
   const HorseSexScreen({
     required this.draft,
+    this.controller,
     this.repository,
     this.microchipValidator,
-    this.controller,
     this.imageSelection = const HorseImageSelectionService(),
     this.onContinue,
     this.onBack,
@@ -38,9 +43,9 @@ class HorseSexScreen extends StatefulWidget {
   });
 
   final HorseRegistrationDraft draft;
+  final HorseRegistrationController? controller;
   final HorseRegistrationRepository? repository;
   final HorseMicrochipValidator? microchipValidator;
-  final HorseRegistrationController? controller;
   final HorseImageSelectionService imageSelection;
   final HorseSexCallback? onContinue;
   final VoidCallback? onBack;
@@ -82,9 +87,9 @@ class _HorseSexScreenState extends State<HorseSexScreen> {
       MaterialPageRoute<HorseRegistrationResult>(
         builder: (context) => HorseImagesScreen(
           draft: widget.draft,
+          controller: widget.controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: widget.controller,
           imageSelection: widget.imageSelection,
         ),
       ),

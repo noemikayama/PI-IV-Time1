@@ -4,6 +4,11 @@
 //
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Desacoplamento da persistência e estado com HorseRegistrationController,
+// repassando o rascunho e o controlador através da navegação para as observações de saúde.
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela autônoma de limitações físicas do cavalo (etapa 9 de 12),
 // integrando FormProgressIndicator, AuthHeader, AppAddItemButton, AppRemovableItemTile
 // com ícone Symbols.do_not_touch e botão Seguinte.
@@ -32,9 +37,9 @@ typedef HorseLimitationsCallback = void Function(HorseRegistrationDraft draft);
 class HorseLimitationsScreen extends StatefulWidget {
   const HorseLimitationsScreen({
     required this.draft,
+    this.controller,
     this.repository,
     this.microchipValidator,
-    this.controller,
     this.imageSelection = const HorseImageSelectionService(),
     this.onContinue,
     this.onBack,
@@ -42,9 +47,9 @@ class HorseLimitationsScreen extends StatefulWidget {
   });
 
   final HorseRegistrationDraft draft;
+  final HorseRegistrationController? controller;
   final HorseRegistrationRepository? repository;
   final HorseMicrochipValidator? microchipValidator;
-  final HorseRegistrationController? controller;
   final HorseImageSelectionService imageSelection;
   final HorseLimitationsCallback? onContinue;
   final VoidCallback? onBack;
@@ -92,9 +97,9 @@ class _HorseLimitationsScreenState extends State<HorseLimitationsScreen> {
       MaterialPageRoute<HorseRegistrationResult>(
         builder: (context) => HorseHealthNotesScreen(
           draft: widget.draft,
+          controller: widget.controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: widget.controller,
           imageSelection: widget.imageSelection,
         ),
       ),

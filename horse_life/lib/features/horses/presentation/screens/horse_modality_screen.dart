@@ -4,6 +4,11 @@
 //
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Delegação da consulta de modalidades ao HorseRegistrationController,
+// desacoplando o repositório da tela e repassando o estado via navegação.
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela autônoma de seleção da modalidade de treinos do cavalo
 // (etapa 8 de 12), integrando FormProgressIndicator, AuthHeader, AppDropdownField
 // arredondado assíncrono e botão Seguinte.
@@ -29,9 +34,9 @@ typedef HorseModalityCallback = void Function(HorseRegistrationDraft draft);
 class HorseModalityScreen extends StatefulWidget {
   const HorseModalityScreen({
     required this.draft,
+    this.controller,
     this.repository,
     this.microchipValidator,
-    this.controller,
     this.imageSelection = const HorseImageSelectionService(),
     this.onContinue,
     this.onBack,
@@ -39,9 +44,9 @@ class HorseModalityScreen extends StatefulWidget {
   });
 
   final HorseRegistrationDraft draft;
+  final HorseRegistrationController? controller;
   final HorseRegistrationRepository? repository;
   final HorseMicrochipValidator? microchipValidator;
-  final HorseRegistrationController? controller;
   final HorseImageSelectionService imageSelection;
   final HorseModalityCallback? onContinue;
   final VoidCallback? onBack;
@@ -51,7 +56,7 @@ class HorseModalityScreen extends StatefulWidget {
 }
 
 class _HorseModalityScreenState extends State<HorseModalityScreen> {
-  late final HorseRegistrationRepository _repository;
+  late final HorseRegistrationController _controller;
   late Future<List<HorseModality>> _modalitiesFuture;
   HorseModality? _selectedModality;
   bool _isMenuOpen = false;
@@ -59,10 +64,15 @@ class _HorseModalityScreenState extends State<HorseModalityScreen> {
   @override
   void initState() {
     super.initState();
-    _repository =
-        widget.repository ?? HorseRegistrationComposition.productionRepository();
+    _controller =
+        widget.controller ??
+        HorseRegistrationComposition.productionController(
+          repository: widget.repository,
+          microchipValidator: widget.microchipValidator,
+          initialDraft: widget.draft,
+        );
     _selectedModality = widget.draft.modality;
-    _modalitiesFuture = _repository.getModalities();
+    _modalitiesFuture = _controller.fetchModalities();
   }
 
   void _goBack() {
@@ -88,9 +98,9 @@ class _HorseModalityScreenState extends State<HorseModalityScreen> {
       MaterialPageRoute<HorseRegistrationResult>(
         builder: (context) => HorseLimitationsScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: widget.controller,
           imageSelection: widget.imageSelection,
         ),
       ),
@@ -171,7 +181,7 @@ class _HorseModalityScreenState extends State<HorseModalityScreen> {
                                       TextButton(
                                         onPressed: () => setState(() {
                                           _modalitiesFuture =
-                                              _repository.getModalities();
+                                              _controller.fetchModalities();
                                         }),
                                         child: const Text('Tentar novamente'),
                                       ),

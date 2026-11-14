@@ -4,6 +4,11 @@
 //
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Desacoplamento da persistência e estado com HorseRegistrationController,
+// repassando o rascunho e o controlador através da navegação entre as telas.
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela autônoma de relação com o cavalo (etapa preliminar
 // sem barra de progresso), integrando AuthHeader, cabeçalho e botão Seguinte
 // com validação impeditiva de atletas por diálogo padronizado.
@@ -19,6 +24,7 @@ import '../../application/controllers/horse_registration_controller.dart';
 import '../../data/models/horse_registration_draft.dart';
 import '../../data/repositories/horse_microchip_validator.dart';
 import '../../data/repositories/horse_registration_repository.dart';
+import '../../horse_registration_composition.dart';
 import '../services/horse_image_selection_service.dart';
 import '../widgets/horse_registration_alert.dart';
 import 'horse_name_screen.dart';
@@ -52,6 +58,7 @@ class HorseRelationshipScreen extends StatefulWidget {
 }
 
 class _HorseRelationshipScreenState extends State<HorseRelationshipScreen> {
+  late final HorseRegistrationController _controller;
   late final HorseRegistrationDraft _draft;
   late HorseRelationship _selectedRelationship;
   bool _isMenuOpen = false;
@@ -59,7 +66,14 @@ class _HorseRelationshipScreenState extends State<HorseRelationshipScreen> {
   @override
   void initState() {
     super.initState();
-    _draft = widget.draft ?? HorseRegistrationDraft();
+    _controller =
+        widget.controller ??
+        HorseRegistrationComposition.productionController(
+          repository: widget.repository,
+          microchipValidator: widget.microchipValidator,
+          initialDraft: widget.draft,
+        );
+    _draft = widget.draft ?? _controller.draft;
     _selectedRelationship = _draft.relationship;
   }
 
@@ -100,9 +114,7 @@ class _HorseRelationshipScreenState extends State<HorseRelationshipScreen> {
       MaterialPageRoute<HorseRegistrationResult>(
         builder: (context) => HorseNameScreen(
           draft: _draft,
-          repository: widget.repository,
-          microchipValidator: widget.microchipValidator,
-          controller: widget.controller,
+          controller: _controller,
           imageSelection: widget.imageSelection,
         ),
       ),

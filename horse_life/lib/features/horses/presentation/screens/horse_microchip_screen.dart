@@ -4,6 +4,11 @@
 //
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Delegação da validação assíncrona do microchip ao HorseRegistrationController,
+// desacoplando a infraestrutura do repositório da tela e repassando o estado.
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela autônoma de validação e coleta do microchip do cavalo
 // (etapa 2 de 12), integrando FormProgressIndicator, AuthHeader e botão Seguinte
 // com prevenção de travamento em loading na exibição do modal de aviso.
@@ -15,12 +20,12 @@ import 'package:horse_life/core/widgets/app_text_form_field.dart';
 import 'package:horse_life/core/widgets/auth_header.dart';
 import 'package:horse_life/core/widgets/auth_next_button.dart';
 import 'package:horse_life/core/widgets/form_progress_indicator.dart';
-import 'package:horse_life/features/horses/horse_registration_composition.dart';
 
 import '../../application/controllers/horse_registration_controller.dart';
 import '../../data/models/horse_registration_draft.dart';
 import '../../data/repositories/horse_microchip_validator.dart';
 import '../../data/repositories/horse_registration_repository.dart';
+import '../../horse_registration_composition.dart';
 import '../services/horse_image_selection_service.dart';
 import '../widgets/horse_registration_alert.dart';
 import 'horse_birth_date_screen.dart';
@@ -31,9 +36,9 @@ typedef HorseMicrochipCallback = void Function(HorseRegistrationDraft draft);
 class HorseMicrochipScreen extends StatefulWidget {
   const HorseMicrochipScreen({
     required this.draft,
+    this.controller,
     this.repository,
     this.microchipValidator,
-    this.controller,
     this.imageSelection = const HorseImageSelectionService(),
     this.onContinue,
     this.onBack,
@@ -41,9 +46,9 @@ class HorseMicrochipScreen extends StatefulWidget {
   });
 
   final HorseRegistrationDraft draft;
+  final HorseRegistrationController? controller;
   final HorseRegistrationRepository? repository;
   final HorseMicrochipValidator? microchipValidator;
-  final HorseRegistrationController? controller;
   final HorseImageSelectionService imageSelection;
   final HorseMicrochipCallback? onContinue;
   final VoidCallback? onBack;
@@ -54,16 +59,20 @@ class HorseMicrochipScreen extends StatefulWidget {
 
 class _HorseMicrochipScreenState extends State<HorseMicrochipScreen> {
   late final TextEditingController _chipController;
-  late final HorseMicrochipValidator _validator;
+  late final HorseRegistrationController _controller;
   bool _isValidating = false;
 
   @override
   void initState() {
     super.initState();
     _chipController = TextEditingController(text: widget.draft.microchip);
-    _validator =
-        widget.microchipValidator ??
-        HorseRegistrationComposition.productionMicrochipValidator();
+    _controller =
+        widget.controller ??
+        HorseRegistrationComposition.productionController(
+          repository: widget.repository,
+          microchipValidator: widget.microchipValidator,
+          initialDraft: widget.draft,
+        );
   }
 
   @override
@@ -100,7 +109,7 @@ class _HorseMicrochipScreenState extends State<HorseMicrochipScreen> {
 
     setState(() => _isValidating = true);
     try {
-      await _validator.validate(chip);
+      await _controller.validateMicrochip(chip);
     } on HorseMicrochipValidationFailure catch (error) {
       if (!mounted) return;
       setState(() => _isValidating = false);
@@ -137,9 +146,9 @@ class _HorseMicrochipScreenState extends State<HorseMicrochipScreen> {
       MaterialPageRoute<HorseRegistrationResult>(
         builder: (context) => HorseBirthDateScreen(
           draft: widget.draft,
+          controller: _controller,
           repository: widget.repository,
           microchipValidator: widget.microchipValidator,
-          controller: widget.controller,
           imageSelection: widget.imageSelection,
         ),
       ),
