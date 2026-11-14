@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da galeria de exercícios, do tempo total dos
+// exercícios selecionados e do cadastro de treinamentos.
+//
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do cadastro de exercícios e do envio, da confirmação
@@ -97,4 +102,9 @@ export {
   createExerciseMediaUpload,
   confirmExerciseMedia,
   removeExerciseMedia,
+  listExerciseGallery,
+  sumExerciseDurations,
 } from "./features/exercises";
+export {
+  registerTraining,
+} from "./features/training";
