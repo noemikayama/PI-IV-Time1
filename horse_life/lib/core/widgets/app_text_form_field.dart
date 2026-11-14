@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão do parâmetro opcional textCapitalization para suporte à
+// capitalização automática de nomes próprios e títulos.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Inclusão do parâmetro opcional inputFormatters para suportar
@@ -64,6 +69,7 @@ class AppTextFormField extends StatelessWidget {
     this.focusNode,
     this.readOnly = false,
     this.suffixIcon,
+    this.textCapitalization = TextCapitalization.none,
     this.textInputAction,
     this.validator,
     super.key,
@@ -89,6 +95,7 @@ class AppTextFormField extends StatelessWidget {
   /// Mantém o conteúdo visível e selecionável, mas impede sua edição.
   final bool readOnly;
   final Widget? suffixIcon;
+  final TextCapitalization textCapitalization;
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
 
@@ -109,6 +116,7 @@ class AppTextFormField extends StatelessWidget {
       obscuringCharacter: '•',
       onChanged: onChanged,
       onFieldSubmitted: onFieldSubmitted,
+      textCapitalization: textCapitalization,
       textInputAction: textInputAction,
       validator: validator,
       cursorColor: theme.colorScheme.primary,

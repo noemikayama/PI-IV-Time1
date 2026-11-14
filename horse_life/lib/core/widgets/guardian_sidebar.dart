@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição do link funcional "Cadastrar cavalo" na barra lateral do
+// responsável para abertura direta do fluxo de cadastro de cavalos.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Migração do componente para core/widgets com ajuste dos imports.
@@ -25,14 +30,24 @@ import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
+import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
 
 /// Menu lateral que compartilha a Future da Home e mantém o fluxo de logout recebido por callback.
 class GuardianSidebar extends StatefulWidget {
-  const GuardianSidebar({required this.onLogout, this.homeFuture, super.key});
+  const GuardianSidebar({
+    required this.onLogout,
+    this.homeFuture,
+    this.onRegisterHorse,
+    super.key,
+  });
 
   final Future<GuardianHomeData>? homeFuture;
 
   final Future<void> Function() onLogout;
+
+  /// Callback opcional que permite sobrescrever a abertura do fluxo de cadastro
+  /// de cavalos em composições externas ou testes.
+  final VoidCallback? onRegisterHorse;
 
   @override
   State<GuardianSidebar> createState() => _GuardianSidebarState();
@@ -46,8 +61,21 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
     'Item 1',
     'Item 1',
     'Item 1',
-    'Item 1',
   ];
+
+  // Fecha o menu lateral e direciona o responsável ao fluxo de cadastro de cavalos.
+  void _handleRegisterHorse() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+
+    final onRegisterHorse = widget.onRegisterHorse;
+    if (onRegisterHorse != null) {
+      onRegisterHorse();
+      return;
+    }
+
+    navigator.push(HorseRegistrationFlowRoute.build());
+  }
 
   Future<void> _handleLogout() async {
     if (_isLoggingOut) return;
@@ -147,6 +175,25 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
               const Divider(color: AppColors.alabasterGray),
 
               const SizedBox(height: 12),
+
+              ListTile(
+                key: const Key('guardian-sidebar-register-horse'),
+                contentPadding: EdgeInsets.zero,
+                minTileHeight: 50,
+                leading: const Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                title: Text(
+                  'Cadastrar cavalo',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                ),
+                onTap: _handleRegisterHorse,
+              ),
 
               // Itens provisórios.
               ..._menuItems.map(

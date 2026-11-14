@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Reutilização do diálogo padronizado AppInfoDialog de core/widgets.
+//
 // Data: 10/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do modal de alerta exibido quando o treinador tenta criar
@@ -10,8 +14,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
-import '../../../authentication/presentation/widgets/auth_next_button.dart';
+import '../../../../core/widgets/app_info_dialog.dart';
 
 // Exibe o modal impeditivo quando não há animais vinculados ao treinador.
 Future<void> showNoLinkedHorsesDialog(BuildContext context) {
@@ -28,53 +31,15 @@ class NoLinkedHorsesDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Dialog(
-      key: const Key('no-linked-horses-dialog'),
-      backgroundColor: AppColors.whiteSmoke,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(36)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Nenhum animal\nvinculado',
-                textAlign: TextAlign.center,
-                style: textTheme.displaySmall?.copyWith(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                'Para poder criar exercícios específicos para um animal, você '
-                'precisa estar vinculado a ele. Contate o proprietário do '
-                'cavalo para o qual você faria o treino e peça para que ele te '
-                'vincule.',
-                textAlign: TextAlign.left,
-                style: textTheme.headlineSmall?.copyWith(
-                  fontSize: 20,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 32),
-              AuthNextButton(
-                buttonKey: const Key('confirm-no-linked-horses'),
-                label: 'Ok',
-                showArrow: false,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return const AppInfoDialog(
+      dialogKey: Key('no-linked-horses-dialog'),
+      confirmButtonKey: Key('confirm-no-linked-horses'),
+      title: 'Nenhum animal\nvinculado',
+      message:
+          'Para poder criar exercícios específicos para um animal, você '
+          'precisa estar vinculado a ele. Contate o proprietário do '
+          'cavalo para o qual você faria o treino e peça para que ele te '
+          'vincule.',
     );
   }
 }

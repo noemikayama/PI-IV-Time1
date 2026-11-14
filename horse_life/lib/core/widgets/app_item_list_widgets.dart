@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão do parâmetro opcional child no AppRemovableItemTile para
+// permitir conteúdo personalizado com múltiplas linhas (ex.: cards de lesões).
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação dos widgets globais de listas de itens em core/widgets,
@@ -88,9 +93,10 @@ class AppAddItemButton extends StatelessWidget {
 class AppRemovableItemTile extends StatelessWidget {
   const AppRemovableItemTile({
     required this.icon,
-    required this.label,
     required this.removeKey,
     required this.onRemove,
+    this.label,
+    this.child,
     this.minHeight = 64,
     this.maxLines = 1,
     this.iconColor = AppColors.blueSpruce,
@@ -98,10 +104,14 @@ class AppRemovableItemTile extends StatelessWidget {
     this.backgroundColor = const Color(0xFFE9E9E9),
     this.borderRadius = const BorderRadius.all(Radius.circular(18)),
     super.key,
-  });
+  }) : assert(
+         label != null || child != null,
+         'Either label or child must be provided to AppRemovableItemTile',
+       );
 
   final IconData icon;
-  final String label;
+  final String? label;
+  final Widget? child;
   final Key removeKey;
   final VoidCallback? onRemove;
   final double minHeight;
@@ -125,19 +135,20 @@ class AppRemovableItemTile extends StatelessWidget {
           Icon(icon, color: iconColor, size: 28),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              label,
-              maxLines: maxLines,
-              overflow: maxLines != null ? TextOverflow.ellipsis : null,
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontSize: 19, height: 1.2),
-            ),
+            child: child ??
+                Text(
+                  label!,
+                  maxLines: maxLines,
+                  overflow: maxLines != null ? TextOverflow.ellipsis : null,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.copyWith(fontSize: 19, height: 1.2),
+                ),
           ),
           IconButton(
             key: removeKey,
             onPressed: onRemove,
-            tooltip: 'Remover $label',
+            tooltip: label != null ? 'Remover $label' : 'Remover item',
             icon: Icon(
               Icons.delete_rounded,
               color: deleteIconColor,

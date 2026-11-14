@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Injeção opcional do serviço de seleção de imagens para suporte
+// a testes automatizados da etapa de imagens.
+//
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Etapas do cadastro separadas em widgets, regras e layout próprios.
@@ -60,6 +66,7 @@ class HorseRegistrationScreen extends StatefulWidget {
   const HorseRegistrationScreen({
     this.repository,
     this.microchipValidator,
+    this.imageSelection = const HorseImageSelectionService(),
     super.key,
   });
 
@@ -67,6 +74,7 @@ class HorseRegistrationScreen extends StatefulWidget {
 
   /// Somente o microchip poderá consultar a API Java no futuro.
   final HorseMicrochipValidator? microchipValidator;
+  final HorseImageSelectionService imageSelection;
 
   @override
   State<HorseRegistrationScreen> createState() =>
@@ -78,7 +86,7 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _chipController = TextEditingController();
-  final _imageSelection = const HorseImageSelectionService();
+  late final HorseImageSelectionService _imageSelection;
 
   HorseRegistrationStep _step = HorseRegistrationStep.relationship;
   bool _saving = false;
@@ -95,6 +103,7 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
   @override
   void initState() {
     super.initState();
+    _imageSelection = widget.imageSelection;
     // Um único repositório e validador são usados durante todo o cadastro.
     _repository =
         widget.repository ??
@@ -140,15 +149,8 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
         await _submit();
         return;
       }
-      if ((_step == HorseRegistrationStep.name ||
-              _step == HorseRegistrationStep.microchip) &&
+      if (_step == HorseRegistrationStep.name &&
           !(_formKey.currentState?.validate() ?? false)) {
-        if (_step == HorseRegistrationStep.microchip) {
-          await _notice(
-            'Código inválido',
-            'O microchip deve conter exatamente 15 números, sem letras ou espaços.',
-          );
-        }
         return;
       }
 
@@ -158,17 +160,32 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
       try {
         warning = await _stepValidator.validate(_step, _draft);
       } finally {
-        if (mounted && checkingChip)
+        if (mounted && checkingChip) {
           setState(() => _validatingMicrochip = false);
+        }
       }
       if (!mounted) return;
       if (warning != null) {
+        // Libera imediatamente o estado de avanço e carregamento antes de abrir o modal
+        // para garantir que o botão e a tela retornem ao estado interativo sem travar em loading.
+        setState(() {
+          _advancing = false;
+          _validatingMicrochip = false;
+        });
         await _notice(warning.title, warning.message);
         return;
       }
       setState(() => _step = _step.next);
     } finally {
-      _advancing = false;
+      if (mounted) {
+        setState(() {
+          _advancing = false;
+          _validatingMicrochip = false;
+        });
+      } else {
+        _advancing = false;
+        _validatingMicrochip = false;
+      }
     }
   }
 

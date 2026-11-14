@@ -262,6 +262,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       drawer: GuardianSidebar(
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
+        onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
       ),
       // Área reservada aos cards futuros.
       body: _selectedDestination == HomeNavigationDestination.profile

@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura do link "Cadastrar cavalo" na barra lateral do treinador.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Cobertura do link da barra lateral do treinador que abre o
@@ -26,6 +30,7 @@ import 'package:horse_life/features/exercises/presentation/screens/exercise_type
 import 'package:horse_life/features/home/application/controllers/home_loader.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
 
 void main() {
   // --- Navegação para o perfil ----------------------------------------------
@@ -83,6 +88,38 @@ void main() {
 
       expect(find.byType(ExerciseTypeSelectionScreen), findsOneWidget);
       expect(find.text('Tipo de exercício'), findsOneWidget);
+    },
+  );
+
+  // --- Navegação para cadastro de cavalos -----------------------------------
+  testWidgets(
+    'opens horse registration flow when tapping Cadastrar cavalo in TrainerSidebar',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainerHomeScreen(
+            loader: _TrainerHomeLoader(),
+            onLogout: () async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Abrir menu'));
+      await tester.pumpAndSettle();
+
+      final registerHorseTile = find.byKey(
+        const Key('trainer-sidebar-register-horse'),
+      );
+      expect(registerHorseTile, findsOneWidget);
+      expect(find.text('Cadastrar cavalo'), findsOneWidget);
+
+      await tester.tap(registerHorseTile);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HorseRegistrationScreen), findsOneWidget);
+      expect(find.text('Relação com o cavalo'), findsOneWidget);
     },
   );
 }
