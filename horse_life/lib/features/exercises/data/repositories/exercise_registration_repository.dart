@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização do contrato para retornar ExerciseRegistrationResult
+// e exportação do modelo de resultado de cadastro.
+//
 // Data: 10/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do contrato de persistência do cadastro de exercícios e da
@@ -9,11 +14,14 @@
 // -----------------------------------------------------------------------------
 
 import '../../application/states/exercise_registration_draft.dart';
+import '../models/exercise_registration_result.dart';
+
+export '../models/exercise_registration_result.dart';
 
 // Contrato que mantém os detalhes do Firebase Functions fora das telas.
 abstract interface class ExerciseRegistrationRepository {
   // Envia o rascunho consolidado do exercício para persistência no backend.
-  Future<void> registerExercise({
+  Future<ExerciseRegistrationResult> registerExercise({
     required ExerciseRegistrationDraft draft,
   });
 }
@@ -27,4 +35,7 @@ final class ExerciseRegistrationFailure implements Exception {
     : message = 'Erro de conexão com o servidor';
 
   final String message;
+
+  @override
+  String toString() => message;
 }

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação de limites (descrição até 100 caracteres e quantidade
+// entre 1 e 999) conforme contrato do backend.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do modal de adição de material necessário para o
@@ -51,8 +56,12 @@ class _AddExerciseMaterialDialogState extends State<AddExerciseMaterialDialog> {
   }
 
   String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
       return 'Preencha este campo.';
+    }
+    if (trimmed.length > 100) {
+      return 'A descrição deve ter no máximo 100 caracteres.';
     }
     return null;
   }
@@ -63,8 +72,8 @@ class _AddExerciseMaterialDialogState extends State<AddExerciseMaterialDialog> {
       return 'Informe a quantidade.';
     }
     final quantity = int.tryParse(trimmed);
-    if (quantity == null || quantity <= 0) {
-      return 'Informe uma quantidade válida.';
+    if (quantity == null || quantity <= 0 || quantity > 999) {
+      return 'Informe uma quantidade entre 1 e 999.';
     }
     return null;
   }
@@ -77,7 +86,7 @@ class _AddExerciseMaterialDialogState extends State<AddExerciseMaterialDialog> {
   }
 
   void _incrementQuantity() {
-    final nextQuantity = _currentQuantity + 1;
+    final nextQuantity = _currentQuantity < 999 ? _currentQuantity + 1 : 999;
     setState(() {
       _quantityController.text = nextQuantity.toString();
     });

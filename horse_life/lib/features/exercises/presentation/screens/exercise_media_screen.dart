@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Restrição de extensões (JPEG, PNG, MP4) e limites de tamanho
+// (5 MB para fotos, 50 MB para vídeos) conforme contrato das Cloud Functions.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção dos widgets centralizados FormProgressIndicator,
@@ -38,20 +43,19 @@ typedef ExerciseMediaFilePicker = Future<List<XFile>> Function();
 // Permite injetar a leitura do tamanho de arquivo em testes sem depender de disco.
 typedef ExerciseMediaFileSizeLoader = Future<int> Function(XFile file);
 
+const _maxImageBytes = 5 * 1024 * 1024; // 5 MB
+const _maxVideoBytes = 50 * 1024 * 1024; // 50 MB
+const _maxImages = 10;
+const _maxVideos = 3;
+
 const _supportedImageExtensions = <String>{
   'png',
   'jpg',
   'jpeg',
-  'webp',
-  'gif',
 };
 
 const _supportedVideoExtensions = <String>{
   'mp4',
-  'mov',
-  'avi',
-  'mkv',
-  'webm',
 };
 
 const _exerciseMediaTypeGroup = XTypeGroup(
@@ -60,24 +64,12 @@ const _exerciseMediaTypeGroup = XTypeGroup(
     'png',
     'jpg',
     'jpeg',
-    'webp',
-    'gif',
     'mp4',
-    'mov',
-    'avi',
-    'mkv',
-    'webm',
   ],
   mimeTypes: [
     'image/png',
     'image/jpeg',
-    'image/webp',
-    'image/gif',
     'video/mp4',
-    'video/quicktime',
-    'video/x-msvideo',
-    'video/x-matroska',
-    'video/webm',
   ],
 );
 
@@ -179,28 +171,86 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
       final files = await widget.filePicker();
       if (!mounted || files.isEmpty) return;
 
-      final validEntries = <(XFile, ExerciseMediaType)>[];
+      var imageCount =
+          _mediaItems.where((m) => m.type == ExerciseMediaType.image).length;
+      var videoCount =
+          _mediaItems.where((m) => m.type == ExerciseMediaType.video).length;
+
+      final validEntries = <(XFile, ExerciseMediaType, int)>[];
 
       for (final file in files) {
         final mediaType = _classifyMediaFile(file);
         if (mediaType == null) {
           AppSnackBar.show(
-          context,
-          backgroundColor: AppColors.error,
-          icon: Icons.error_outline_rounded,
-          message: 'Somente imagens e vídeos suportados foram adicionados.',
-        );
-        } else {
-          validEntries.add((file, mediaType));
+            context,
+            backgroundColor: AppColors.error,
+            icon: Icons.error_outline_rounded,
+            message:
+                'Formato não suportado. Utilize imagens JPG/PNG ou vídeos MP4.',
+          );
+          continue;
         }
+
+        final size = await (widget.fileSizeLoader?.call(file) ?? file.length());
+
+        if (mediaType == ExerciseMediaType.image) {
+          if (imageCount >= _maxImages) {
+            AppSnackBar.show(
+              context,
+              backgroundColor: AppColors.error,
+              icon: Icons.error_outline_rounded,
+              message: 'Limite máximo de $_maxImages imagens atingido.',
+            );
+            continue;
+          }
+          if (size > _maxImageBytes) {
+            AppSnackBar.show(
+              context,
+              backgroundColor: AppColors.error,
+              icon: Icons.error_outline_rounded,
+              message: 'A foto ${file.name} excede o limite máximo de 5 MB.',
+            );
+            continue;
+          }
+          imageCount++;
+        } else {
+          if (videoCount >= _maxVideos) {
+            AppSnackBar.show(
+              context,
+              backgroundColor: AppColors.error,
+              icon: Icons.error_outline_rounded,
+              message: 'Limite máximo de $_maxVideos vídeos atingido.',
+            );
+            continue;
+          }
+          if (size > _maxVideoBytes) {
+            AppSnackBar.show(
+              context,
+              backgroundColor: AppColors.error,
+              icon: Icons.error_outline_rounded,
+              message: 'O vídeo ${file.name} excede o limite máximo de 50 MB.',
+            );
+            continue;
+          }
+          videoCount++;
+        }
+
+        validEntries.add((file, mediaType, size));
       }
 
       if (validEntries.isEmpty) return;
 
-      final newMediaItems = await Future.wait([
+      final newMediaItems = [
         for (final entry in validEntries)
-          _createExerciseMedia(entry.$1, entry.$2),
-      ]);
+          ExerciseMedia(
+            name: entry.$1.name,
+            path: entry.$1.path,
+            type: entry.$2,
+            sizeInBytes: entry.$3,
+            mimeType: entry.$1.mimeType,
+            readBytes: entry.$1.readAsBytes,
+          ),
+      ];
 
       if (!mounted) return;
       setState(() => _mediaItems.addAll(newMediaItems));

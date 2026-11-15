@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ativação definitiva do FirebaseTrainerLinkedHorseRepository e
+// FirebaseExerciseRegistrationRepository como provedores reais da rota.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção do repositório estático LocalTrainerLinkedHorseRepository
@@ -19,6 +24,7 @@ import 'package:flutter/material.dart';
 
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../data/repositories/firebase_exercise_registration_repository.dart';
+import '../../data/repositories/firebase_trainer_linked_horse_repository.dart';
 import '../../data/repositories/trainer_linked_horse_repository.dart';
 import '../screens/exercise_type_selection_screen.dart';
 
@@ -33,15 +39,12 @@ abstract final class ExerciseRegistrationFlowRoute {
     ExerciseRegistrationController? registrationController,
     TrainerLinkedHorseRepository? horseRepository,
   }) {
-    // Utiliza o mock estático por padrão enquanto a Cloud Function de vínculos
-    // não está pronta; para ativar a busca remota, basta substituir por
-    // `const FirebaseTrainerLinkedHorseRepository()`.
     final resolvedHorseRepository =
-        horseRepository ?? const LocalTrainerLinkedHorseRepository();
+        horseRepository ?? const FirebaseTrainerLinkedHorseRepository();
     final resolvedController =
         registrationController ??
         ExerciseRegistrationController(
-          const FirebaseExerciseRegistrationRepository(),
+          FirebaseExerciseRegistrationRepository(),
           horseRepository: resolvedHorseRepository,
         );
 

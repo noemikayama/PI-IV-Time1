@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão do método toApiPayload() e getter isSpecific na hierarquia
+// selada de drafts de exercícios para integração com a callable registerExercise.
+//
 // Data: 10/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da hierarquia selada e imutável de rascunhos do cadastro
@@ -37,6 +42,12 @@ sealed class ExerciseRegistrationDraft {
   // Identifica o tipo do fluxo ativo para decisões de apresentação e progresso.
   ExerciseType get exerciseType;
 
+  // Indica se o rascunho refere-se a um exercício direcionado a um cavalo específico.
+  bool get isSpecific => this is SpecificExerciseRegistrationDraft;
+
+  // Converte o rascunho em payload formatado conforme o contrato do backend.
+  Map<String, Object?> toApiPayload();
+
   // Retorna uma nova instância preservando o subtipo concreto ao definir o nome.
   ExerciseRegistrationDraft withName(String name);
 
@@ -71,6 +82,21 @@ final class GenericExerciseRegistrationDraft extends ExerciseRegistrationDraft {
 
   @override
   ExerciseType get exerciseType => ExerciseType.generic;
+
+  @override
+  Map<String, Object?> toApiPayload() => <String, Object?>{
+    'privacidade': 'GENERICO',
+    'nome': name.trim(),
+    'descricao': description.trim(),
+    'orientacoes': guidelines
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false),
+    'duracaoPadraoMinutos': defaultDurationMinutes ?? 0,
+    'materiais': materials
+        .map((material) => material.toJson())
+        .toList(growable: false),
+  };
 
   @override
   GenericExerciseRegistrationDraft withName(String name) {
@@ -170,6 +196,22 @@ final class SpecificExerciseRegistrationDraft
 
   @override
   ExerciseType get exerciseType => ExerciseType.specific;
+
+  @override
+  Map<String, Object?> toApiPayload() => <String, Object?>{
+    'privacidade': 'ESPECIFICO',
+    'cavaloId': horse.id.trim(),
+    'nome': name.trim(),
+    'descricao': description.trim(),
+    'orientacoes': guidelines
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false),
+    'duracaoPadraoMinutos': defaultDurationMinutes ?? 0,
+    'materiais': materials
+        .map((material) => material.toJson())
+        .toList(growable: false),
+  };
 
   // Permite substituir o cavalo selecionado preservando os demais campos.
   SpecificExerciseRegistrationDraft withHorse(TrainerLinkedHorse horse) {

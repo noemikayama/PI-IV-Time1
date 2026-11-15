@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Integração com retorno de persistência do ExerciseRegistrationResult,
+// exibição de alertas parciais de mídias e validações de nome, descrição e duração.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção dos componentes centralizados FormProgressIndicator,
@@ -150,9 +155,24 @@ class _ExerciseConfirmationScreenState
     };
   }
 
-  String? _validateRequired(String? value) {
-    if (value == null || value.trim().isEmpty) {
+  String? _validateName(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
       return 'Preencha este campo.';
+    }
+    if (trimmed.length < 3 || trimmed.length > 80) {
+      return 'O nome deve ter entre 3 e 80 caracteres.';
+    }
+    return null;
+  }
+
+  String? _validateDescription(String? value) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return 'Preencha este campo.';
+    }
+    if (trimmed.length > 1000) {
+      return 'A descrição deve ter no máximo 1000 caracteres.';
     }
     return null;
   }
@@ -163,8 +183,8 @@ class _ExerciseConfirmationScreenState
       return 'Preencha este campo.';
     }
     final minutes = int.tryParse(trimmed);
-    if (minutes == null || minutes <= 0) {
-      return 'Informe uma duração válida em minutos.';
+    if (minutes == null || minutes <= 0 || minutes > 240) {
+      return 'Informe uma duração válida entre 1 e 240 minutos.';
     }
     return null;
   }
@@ -202,7 +222,16 @@ class _ExerciseConfirmationScreenState
     setState(() => _isSubmitting = true);
     try {
       if (controller != null) {
-        await controller.registerExercise(draft: updatedDraft);
+        final result = await controller.registerExercise(draft: updatedDraft);
+        if (!mounted) return;
+        if (result.hasMediaWarning) {
+          AppSnackBar.show(
+            context,
+            backgroundColor: AppColors.error,
+            icon: Icons.warning_amber_rounded,
+            message: result.warning!,
+          );
+        }
       }
       if (!mounted) return;
       _finishRegistration();
@@ -395,7 +424,7 @@ class _ExerciseConfirmationScreenState
             controller: _nameController,
             focusNode: _nameFocus,
             isEditing: _editingFields.contains(_ExerciseReviewFieldId.name),
-            validator: _validateRequired,
+            validator: _validateName,
             textInputAction: TextInputAction.next,
             onToggleEditing: () => _toggleEditing(_ExerciseReviewFieldId.name),
           ),
@@ -410,7 +439,7 @@ class _ExerciseConfirmationScreenState
             ),
             minLines: 1,
             maxLines: 4,
-            validator: _validateRequired,
+            validator: _validateDescription,
             textInputAction: TextInputAction.done,
             onToggleEditing: () =>
                 _toggleEditing(_ExerciseReviewFieldId.description),

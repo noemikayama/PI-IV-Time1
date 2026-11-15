@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Injeção flexível de TrainerLinkedHorseRepository com fallback
+// local para isolamento de testes de widget.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção do componente unificado FormProgressIndicator proveniente

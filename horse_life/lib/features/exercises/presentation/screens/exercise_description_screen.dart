@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação do limite de até 1000 caracteres na descrição do exercício.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção dos widgets compartilhados FormProgressIndicator e
@@ -80,8 +84,12 @@ class _ExerciseDescriptionScreenState extends State<ExerciseDescriptionScreen> {
   }
 
   String? _validateDescription(String? value) {
-    if (value == null || value.trim().isEmpty) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
       return 'Preencha este campo.';
+    }
+    if (trimmed.length > 1000) {
+      return 'A descrição deve ter no máximo 1000 caracteres.';
     }
     return null;
   }

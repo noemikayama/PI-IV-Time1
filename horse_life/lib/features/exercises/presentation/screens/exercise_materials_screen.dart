@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação do limite máximo de 30 materiais conforme contrato do backend.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção dos widgets centralizados FormProgressIndicator,
@@ -98,6 +102,16 @@ class _ExerciseMaterialsScreenState extends State<ExerciseMaterialsScreen> {
 
   // Abre o modal de inclusão de material e evita duplicações pelo nome.
   Future<void> _addMaterial() async {
+    if (_materials.length >= 30) {
+      AppSnackBar.show(
+        context,
+        backgroundColor: AppColors.error,
+        icon: Icons.info_outline_rounded,
+        message: 'Limite máximo de 30 materiais atingido.',
+      );
+      return;
+    }
+
     final material = await showAddExerciseMaterialDialog(context);
     if (!mounted || material == null) return;
 
