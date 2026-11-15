@@ -1,6 +1,13 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adequação estética do diálogo de lesão à prototipação: card branco
+// arredondado, botão de fechar em cruz, seletor de data arredondado integrado
+// ao showAppDatePicker localizado, caixas de texto cinzas e botão Salvar em cápsula.
+//
 // Data: 09/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Ícone do calendário substituído pelo Material Symbols event.
@@ -12,11 +19,11 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_date_picker_field.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../data/models/horse_registration_draft.dart';
-import 'horse_registration_calendar.dart';
 
 /// Abre o formulário de lesão e retorna os dados somente quando são salvos.
 Future<HorseInjury?> showHorseInjuryDialog({
@@ -27,8 +34,6 @@ Future<HorseInjury?> showHorseInjuryDialog({
   builder: (_) => HorseInjuryDialog(birthDate: birthDate),
 );
 
-/// Os campos ficam com duas linhas de altura. Textos maiores rolam por dentro
-/// deles, enquanto o próprio diálogo rola se o teclado ocupar muito espaço.
 class HorseInjuryDialog extends StatefulWidget {
   const HorseInjuryDialog({super.key, this.birthDate});
 
@@ -50,14 +55,10 @@ class _HorseInjuryDialogState extends State<HorseInjuryDialog> {
     super.dispose();
   }
 
-  String _formatDate(DateTime date) =>
-      '${date.day.toString().padLeft(2, '0')}/'
-      '${date.month.toString().padLeft(2, '0')}/${date.year}';
-
   Future<void> _selectDate() async {
     final now = DateTime.now();
     final firstDate = widget.birthDate ?? DateTime(now.year - 50);
-    final picked = await showHorseRegistrationCalendar(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: _injuryDate ?? now,
       firstDate: firstDate,
@@ -81,67 +82,193 @@ class _HorseInjuryDialogState extends State<HorseInjuryDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    backgroundColor: AppColors.whiteSmoke,
-    // Limita a largura em tablets e mantém margens em celulares pequenos.
-    constraints: const BoxConstraints(maxWidth: 440),
-    insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-    // A área interna rola quando aparece o teclado ou a tela é baixa.
-    scrollable: true,
-    title: const Text('Adicionar lesão'),
-    content: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 360),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: OutlinedButton.icon(
-              onPressed: _selectDate,
-              icon: const Icon(Symbols.event),
-              label: Text(
-                _injuryDate == null
-                    ? 'Selecionar data da lesão'
-                    : _formatDate(_injuryDate!),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(28, 16, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 32),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Adicionar lesão',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.text,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    key: const Key('close-horse-injury-dialog'),
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      size: 28,
+                      color: AppColors.text,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
-            ),
+              const SizedBox(height: 18),
+              Text(
+                'Data da lesão',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: AppColors.text,
+                ),
+              ),
+              const SizedBox(height: 8),
+              InkWell(
+                key: const Key('horse-injury-date-picker-button'),
+                onTap: _selectDate,
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE9E9E9),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _injuryDate == null
+                              ? 'DD/MM/AAAA'
+                              : formatAppDate(_injuryDate),
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontSize: 18,
+                            color: _injuryDate == null
+                                ? AppColors.grey
+                                : AppColors.text,
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Symbols.event,
+                        color: AppColors.text,
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Detalhes da lesão',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: AppColors.text,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE9E9E9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: TextField(
+                  key: const Key('horse-injury-description'),
+                  controller: _description,
+                  minLines: 3,
+                  maxLines: 4,
+                  maxLength: 500,
+                  cursorColor: AppColors.seaGreen,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontSize: 18,
+                    color: AppColors.text,
+                    height: 1.25,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    counterText: '',
+                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Prescrição veterinária',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: AppColors.text,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE9E9E9),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: TextField(
+                  key: const Key('horse-injury-prescription'),
+                  controller: _prescription,
+                  minLines: 3,
+                  maxLines: 4,
+                  maxLength: 500,
+                  cursorColor: AppColors.seaGreen,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontSize: 18,
+                    color: AppColors.text,
+                    height: 1.25,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    counterText: '',
+                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 26),
+              OutlinedButton(
+                key: const Key('save-horse-injury'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  side: const BorderSide(color: AppColors.seaGreen, width: 2),
+                  shape: const StadiumBorder(),
+                ),
+                onPressed: _save,
+                child: Text(
+                  'Salvar',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.seaGreen,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const ValueKey('horse-injury-description'),
-            controller: _description,
-            maxLength: 500,
-            // Textos longos quebram linha e rolam sem aumentar o campo.
-            minLines: 2,
-            maxLines: 2,
-            keyboardType: TextInputType.multiline,
-            textInputAction: TextInputAction.newline,
-            scrollPhysics: const ClampingScrollPhysics(),
-            decoration: const InputDecoration(labelText: 'Descrição da lesão'),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const ValueKey('horse-injury-prescription'),
-            controller: _prescription,
-            maxLength: 500,
-            minLines: 2,
-            maxLines: 2,
-            keyboardType: TextInputType.multiline,
-            textInputAction: TextInputAction.newline,
-            scrollPhysics: const ClampingScrollPhysics(),
-            decoration: const InputDecoration(
-              labelText: 'Prescrição médica (opcional)',
-            ),
-          ),
-        ],
+        ),
       ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Cancelar'),
-      ),
-      OutlinedButton(onPressed: _save, child: const Text('Salvar')),
-    ],
-  );
+    );
+  }
 }

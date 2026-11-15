@@ -1,6 +1,10 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Alinhamento da mensagem de código inválido ao texto da prototipação.
+//
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Contrato isolado de verificação do microchip. Formato validado
@@ -33,7 +37,7 @@ class LocalHorseMicrochipValidator implements HorseMicrochipValidator {
   Future<void> validate(String microchip) async {
     if (!RegExp(r'^\d{15}$').hasMatch(microchip)) {
       throw const HorseMicrochipValidationFailure(
-        'O microchip deve conter exatamente 15 dígitos numéricos, sem letras ou espaços.',
+        'O número do microchip informado é inválido. Verifique se houve um erro de digitação e tente novamente.',
       );
     }
   }

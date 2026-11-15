@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão do parâmetro opcional textCapitalization para suporte à
+// capitalização automática de nomes próprios e títulos.
+//
+// Data: 11/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão do parâmetro opcional inputFormatters para suportar
+// restrições de entrada como campos exclusivamente numéricos.
+//
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de configuração e montagem do campo.
@@ -37,6 +47,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
 // --- Contratos de eventos ----------------------------------------------------
@@ -51,12 +62,14 @@ class AppTextFormField extends StatelessWidget {
     required this.hintText,
     this.autofillHints,
     this.keyboardType,
+    this.inputFormatters,
     this.obscureText = false,
     this.onChanged,
     this.onFieldSubmitted,
     this.focusNode,
     this.readOnly = false,
     this.suffixIcon,
+    this.textCapitalization = TextCapitalization.none,
     this.textInputAction,
     this.validator,
     super.key,
@@ -67,6 +80,7 @@ class AppTextFormField extends StatelessWidget {
   final String hintText;
   final Iterable<String>? autofillHints;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final bool obscureText;
 
   /// Notifica a tela enquanto o conteúdo é alterado.
@@ -81,6 +95,7 @@ class AppTextFormField extends StatelessWidget {
   /// Mantém o conteúdo visível e selecionável, mas impede sua edição.
   final bool readOnly;
   final Widget? suffixIcon;
+  final TextCapitalization textCapitalization;
   final TextInputAction? textInputAction;
   final FormFieldValidator<String>? validator;
 
@@ -96,10 +111,12 @@ class AppTextFormField extends StatelessWidget {
       readOnly: readOnly,
       autofillHints: autofillHints,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       obscureText: obscureText,
       obscuringCharacter: '•',
       onChanged: onChanged,
       onFieldSubmitted: onFieldSubmitted,
+      textCapitalization: textCapitalization,
       textInputAction: textInputAction,
       validator: validator,
       cursorColor: theme.colorScheme.primary,

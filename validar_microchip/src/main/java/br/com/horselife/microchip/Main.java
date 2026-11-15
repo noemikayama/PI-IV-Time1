@@ -1,6 +1,8 @@
 // ponto de entrada: le a porta, monta as dependencias e inicia o servidor
 package br.com.horselife.microchip;
 
+import br.com.horselife.microchip.dominio.TabelaPaises;
+import br.com.horselife.microchip.dominio.ValidadorMicrochip;
 import br.com.horselife.microchip.modelos.Validador;
 import br.com.horselife.microchip.protocolo.ProcessadorRequisicao;
 import br.com.horselife.microchip.servidor.ServidorMicrochip;
@@ -31,11 +33,15 @@ public final class Main {
             return;
         }
 
-        // TODO(feature/validacao-microchip): trocar por new ValidadorMicrochip(TabelaPaises...)
-        Validador validador = microchip -> {
-            throw new UnsupportedOperationException("Validação de domínio ainda não implementada.");
-        };
-        LOGGER.warning("Validador provisório em uso: toda validação responde ERRO_INTERNO.");
+        TabelaPaises tabelaPaises;
+        try {
+            tabelaPaises = TabelaPaises.carregar();
+        } catch (IllegalStateException e) {
+            LOGGER.log(Level.SEVERE, "Falha ao iniciar: {0}", e.getMessage());
+            System.exit(1);
+            return;
+        }
+        Validador validador = new ValidadorMicrochip(tabelaPaises);
 
         ServidorMicrochip servidor =
                 new ServidorMicrochip(porta, TIMEOUT_LEITURA, new ProcessadorRequisicao(validador));

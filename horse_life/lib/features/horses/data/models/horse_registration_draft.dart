@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização dos rótulos do enum HorseSex para "Fêmea" e "Macho",
+// alinhando as opções de exibição à prototipação.
+//
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Modelo do cadastro de cavalos alinhado ao contrato registerHorse.
@@ -20,8 +26,8 @@ enum HorseRelationship {
 }
 
 enum HorseSex {
-  female('Feminino', 'FEMEA'),
-  male('Masculino', 'MACHO');
+  female('Fêmea', 'FEMEA'),
+  male('Macho', 'MACHO');
 
   const HorseSex(this.label, this.apiValue);
   final String label;

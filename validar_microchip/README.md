@@ -16,8 +16,6 @@ O servidor valida, nesta ordem:
 
 Fora do escopo: banco de dados, verificação de unicidade do microchip (feita pelo backend), HTTP e remoção de formatação. Pontos, hífens e espaços devem ser removidos pelo app antes do envio.
 
-> **Estado atual:** a validação de domínio (país e dígitos verificadores) ainda está sendo implementada na branch `feature/validacao-microchip`. Até ela ser integrada, o servidor usa um validador provisório, e **toda requisição `VALIDAR_MICROCHIP` responde `ERRO_INTERNO`**. Um aviso (`WARNING`) é registrado na inicialização. O protocolo, os erros de requisição e o servidor já funcionam.
-
 ## 2. Como compilar e rodar
 
 Requisitos: **JDK 25**. O Maven não precisa estar instalado: o projeto usa o wrapper `./mvnw` (no Windows, `mvnw.cmd`), que baixa a versão certa do Maven na primeira execução.
@@ -39,7 +37,11 @@ MICROCHIP_PORTA=7800 java -jar target/servidor-microchip.jar   # sobe em outra p
 | Timeout de leitura | 5 segundos |
 | Limite da requisição | 1024 caracteres |
 
-Se `MICROCHIP_PORTA` for inválida (por exemplo `abc`, `0`, `+7800` ou com espaços) ou se a porta já estiver em uso, o servidor registra o erro e encerra com código de saída `1`.
+O servidor registra o erro e encerra com código de saída `1`, sem atender nenhuma conexão, quando:
+
+- `MICROCHIP_PORTA` é inválida (por exemplo `abc`, `0`, `+7800` ou com espaços);
+- a porta já está em uso;
+- a tabela de países (`paises-iso3166.csv`, que vai dentro do JAR) está ausente ou malformada. Veja a seção 6.
 
 Para parar o servidor, use `Ctrl+C` ou `kill <pid>`. As requisições em andamento terminam antes de o processo sair, e novas conexões são recusadas.
 
@@ -103,19 +105,19 @@ Com o servidor rodando em outro terminal:
 
 ```bash
 echo '{"comando":"VALIDAR_MICROCHIP","microchip":"076987654321017"}' | nc localhost 7700
+echo '{"comando":"VALIDAR_MICROCHIP","microchip":"076987654321018"}' | nc localhost 7700
 echo '{"comando":"X"}' | nc localhost 7700
 echo 'não é json' | nc localhost 7700
 ```
 
-Respostas esperadas, no estado atual:
+Respostas esperadas:
 
 ```json
-{"valido":false,"erro":{"codigo":"ERRO_INTERNO","mensagem":"Erro interno no servidor."}}
+{"valido":true,"microchip":"076987654321017","codigoPais":"076","nomePais":"Brasil"}
+{"valido":false,"microchip":"076987654321018","erro":{"codigo":"DIGITO_VERIFICADOR_INVALIDO","mensagem":"Os dígitos verificadores não conferem."}}
 {"valido":false,"erro":{"codigo":"COMANDO_DESCONHECIDO","mensagem":"O comando informado não é suportado."}}
 {"valido":false,"erro":{"codigo":"REQUISICAO_MALFORMADA","mensagem":"A requisição não é um JSON válido."}}
 ```
-
-Depois da integração da validação de domínio, a primeira requisição responderá `{"valido":true,...,"nomePais":"Brasil"}`.
 
 No Fedora, o `nc` é o `nmap-ncat`: ele envia a linha, recebe a resposta e sai sozinho. Se outra variante do netcat não sair sozinha, pressione `Ctrl+C`; o que importa é a linha recebida.
 
@@ -133,6 +135,21 @@ Neste projeto, o formato é diferente:
 ```
 
 Os dois últimos dígitos são verificadores, calculados por uma **adaptação acadêmica da regra do CPF** definida pelo projeto (pesos de 14 a 2 para o DV1 e de 15 a 2 para o DV2, módulo 11). Por isso, **a maioria dos microchips reais seria rejeitada** por este servidor.
+
+## 6. Tabela de países
+
+A regra 5 confere os 3 primeiros dígitos com o arquivo `src/main/resources/paises-iso3166.csv`, que vai dentro do JAR. O servidor lê o arquivo uma única vez, na inicialização, e não usa nenhuma biblioteca de países.
+
+- **Conteúdo:** os **249 códigos** numéricos atribuídos pela ISO 3166-1 a países e territórios, com o nome em português. Exemplo: `076;Brasil`.
+- **Formato:** UTF-8 sem BOM. A primeira linha é exatamente `codigo;nome`, e depois vem uma linha `ddd;Nome` por código, em ordem de código. O código tem sempre 3 dígitos, com zeros à esquerda.
+- **Leitura estrita:** qualquer desvio desse formato impede a inicialização: cabeçalho diferente, `,` no lugar de `;`, coluna a mais, código sem 3 dígitos (`76;Brasil`), nome vazio, código repetido, linha em branco, BOM, arquivo fora de UTF-8 ou nenhum país. Nos erros de formato, a mensagem indica a linha. Esses são os defeitos típicos de um CSV salvo numa planilha. Finais de linha `\r\n` e a falta do `\n` final são aceitos.
+- **Origem:** gerado em 2026-11-12. Os códigos vêm do pacote `iso-codes` 4.20.1 (Debian/Fedora), que acompanha a agência de manutenção da ISO 3166. Os nomes são os do CLDR em português do Brasil, como o JDK 25 os fornece; cada nome é associado ao seu código numérico pelo código alfa-2 (por exemplo, `BR` → `076`). Os códigos foram conferidos com a tabela M49 da ONU. O arquivo não tem edição manual: para atualizá-lo, gere-o de novo a partir das mesmas fontes.
+
+Recebem `PAIS_INVALIDO`, porque não representam um país:
+
+- a faixa **900–999**, reservada para uso do usuário (na ISO 11784, os códigos 900–998 identificam o fabricante, não o país);
+- os códigos **não atribuídos**, como `000`;
+- os códigos **regionais da ONU (M49)**, que não fazem parte da ISO 3166-1, como `001` (Mundo), `019` (Américas) e `419` (América Latina e Caribe).
 
 ## Limitação conhecida
 

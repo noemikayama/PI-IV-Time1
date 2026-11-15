@@ -1,6 +1,10 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Alinhamento do texto do modal impeditivo para atletas à prototipação.
+//
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Regras para avançar em cada etapa isoladas da interface.
@@ -31,21 +35,23 @@ class HorseRegistrationStepValidator {
       case HorseRegistrationStep.relationship:
         if (!draft.relationship.mayRegister) {
           return const HorseStepWarning(
-            'Atletas não podem cadastrar cavalos',
-            'O vínculo de atleta permite executar treinos, mas o cadastro do cavalo é exclusivo do proprietário.',
+            'Atletas não podem\ncadastrar cavalos',
+            'O vínculo entre os animais e seus atletas só pode ser efetuado pelo usuário proprietário o animal.\nPara que isso seja feito, entre em contato com ele para que ele estabeleça o vínculo entre vocês.',
           );
         }
         break;
       case HorseRegistrationStep.microchip:
         try {
           // O Java poderá substituir este validador sem alterar as telas.
-          await microchipValidator.validate(draft.microchip);
+          await microchipValidator
+              .validate(draft.microchip)
+              .timeout(const Duration(seconds: 10));
         } on HorseMicrochipValidationFailure catch (error) {
           return HorseStepWarning('Código inválido', error.message);
         } catch (_) {
           return const HorseStepWarning(
             'Verificação indisponível',
-            'Não foi possível verificar o microchip agora. Tente novamente.',
+            'Não foi possível verificar o microchip agora. Verifique a conexão e tente novamente.',
           );
         }
         break;

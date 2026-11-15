@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da busca e da validação de e-mail.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos recursos usados na edição do perfil.
@@ -25,11 +29,12 @@ export {
   deleteAuthAccount,
   updateAuthDisplayName,
 } from "./services/authAccountService";
-export {reserveEmail} from "./repositories/emailRepository";
+export {findEmail, reserveEmail} from "./repositories/emailRepository";
 export {
   asRecord,
   assertAllowedFields,
   parseCredentials,
+  parseEmail,
   parseFullName,
 } from "./validations/validateCredentials";
 export type {AccountType, Credentials, EmailReservation} from "./types";

@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Nome do atleta (responsavel) na projeção do dia.
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos das consultas de registros de treino.
@@ -21,6 +25,8 @@ export type DayTrainingRecord = {
     _id: ObjectId;
     status: Exclude<TrainingRecordStatus, "CANCELADO">;
     plano?: {titulo: string};
+    // O atleta do cavalo é gravado no registro como responsável.
+    responsavel?: {nome: string};
     cavalo?: {nome: string};
     treinador?: {nome: string};
     treinamento?: {titulo: string; duracaoEstimadaMinutos: number};

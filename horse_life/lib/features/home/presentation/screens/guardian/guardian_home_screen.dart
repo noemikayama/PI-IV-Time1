@@ -160,7 +160,6 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Estado local da navegação inferior.
   HomeNavigationDestination _selectedDestination =
       HomeNavigationDestination.home;
-  late Future<GuardianHomeData> _homeFuture;
 
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
   final List<String> _sessionMockHorses = [];
@@ -290,6 +289,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       drawer: GuardianSidebar(
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
+        onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
       ),
       // Área reservada aos cards futuros.
       body: _selectedDestination == HomeNavigationDestination.profile

@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/10/2026
+// Data: 02/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
-// Alteração: Endpoint callable para consultar um cavalo.
+// Alteração: Endpoint callable para listar os cavalos do usuário.
 // -----------------------------------------------------------------------------
 
 import {onCall} from "firebase-functions/v2/https";
@@ -17,17 +17,17 @@ import {
 import {
   requireAuthentication,
 } from "../../../shared/middleware/requireAuthentication";
-import {getHorseService} from "../services/getHorseService";
-import {validateHorseId} from "../validations/validateHorse";
+import {listHorsesService} from "../services/listHorsesService";
+import {validateHorseList} from "../validations/validateHorseList";
 
-// Responsáveis e treinadores do cavalo podem consultá-lo.
-export const getHorse = onCall(
+// Responsáveis e treinadores; o service confere o papel e a conta ativa.
+export const listHorses = onCall(
   defaultFunctionOptions,
   async (request) => {
     try {
       const user = requireAuthentication(request);
-      const input = validateHorseId(request.data);
-      return await getHorseService(user.uid, input);
+      const input = validateHorseList(request.data);
+      return await listHorsesService(user, input);
     } catch (error) {
       throw mapErrorToHttpsError(error);
     }

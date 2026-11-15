@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: _id dos cavalos convertido para string hexadecimal.
+//
 // Data: 29/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Carga do treinador ativo e conversão dos anexos compartilhadas
@@ -37,6 +41,12 @@ export async function getTrainerProfileService(
   return {
     ...trainer,
     ...(await toAttachmentViews(trainer)),
+    // O callable não converte ObjectId: sem isto, _id chega ao app como
+    // objeto. Lista usada também na seleção de cavalo do exercício.
+    cavalos: trainer.cavalos.map((cavalo) => ({
+      ...cavalo,
+      _id: cavalo._id.toHexString(),
+    })),
     criadoEm: trainer.criadoEm.toISOString(),
     atualizadoEm: trainer.atualizadoEm.toISOString(),
   };

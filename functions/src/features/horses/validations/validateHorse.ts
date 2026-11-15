@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Microchip editável e modalidade obrigatória.
+// Alteração: Listas de saúde e de lesões editadas por inclusão e remoção.
+// Alteração: Validação da inclusão de um item por proprietário, atleta ou
+// treinador.
+// Alteração: Ordenação e data das lesões movidas para services/horseHealth.ts;
+// este arquivo só valida a entrada.
+//
 // Data: 22/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do cadastro, da edição e da consulta de cavalos.
@@ -10,14 +19,23 @@
 import {ObjectId} from "mongodb";
 import {AppError} from "../../../shared/errors/AppError";
 import {getTodayYmd, isValidYmd} from "../../../shared/utils/dates";
-import {asRecord} from "../../authentication/shared";
+import {asRecord, assertAllowedFields} from "../../authentication/shared";
+import {
+  MAX_INJURIES,
+  MAX_ITEM_LENGTH,
+  MAX_LIST_ITEMS,
+} from "../constants/health";
 import type {
-  HorseDetailsInput,
+  HorseFieldsInput,
+  HorseHealthChanges,
+  HorseHealthEntryInput,
+  HorseHealthLists,
   HorseRegistrationInput,
   HorseResponsibility,
   HorseSex,
   HorseUpdateInput,
   InjuryRecord,
+  ListChanges,
 } from "../types";
 
 const MICROCHIP_PATTERN = /^\d{15}$/;
@@ -27,9 +45,6 @@ const RESPONSIBILITIES: readonly HorseResponsibility[] = [
   "ATLETA",
 ];
 const MAX_AGE_YEARS = 50;
-const MAX_LIST_ITEMS = 30;
-const MAX_INJURIES = 50;
-const MAX_ITEM_LENGTH = 500;
 
 /** Cria um erro de argumento inválido com a mensagem informada.
  * @param {string} message Mensagem do erro.
@@ -59,19 +74,38 @@ function parseText(
   return text;
 }
 
-/** Valida uma lista opcional de textos, sem itens vazios.
+/** Valida um item de uma lista de textos (sem item vazio).
  * @param {unknown} value Valor recebido.
- * @param {string} label Nome do campo usado na mensagem.
- * @return {string[]} Itens normalizados.
+ * @param {string} label Nome da lista usado na mensagem.
+ * @return {string} Item normalizado.
  */
-function parseTextList(value: unknown, label: string): string[] {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value) || value.length > MAX_LIST_ITEMS) {
-    throw invalid(`${label}: informe no máximo ${MAX_LIST_ITEMS} itens.`);
-  }
-  return value.map((item) =>
-    parseText(item, `Cada item de ${label.toLowerCase()}`, 1, MAX_ITEM_LENGTH)
+function parseTextItem(value: unknown, label: string): string {
+  return parseText(
+    value,
+    `Cada item de ${label.toLowerCase()}`,
+    1,
+    MAX_ITEM_LENGTH
   );
+}
+
+/** Valida uma lista de até 'max' itens com o parser informado.
+ * @param {unknown} value Valor recebido.
+ * @param {string} label Nome da lista usado na mensagem.
+ * @param {number} max Quantidade máxima de itens.
+ * @param {Function} parseItem Validação de cada item.
+ * @return {Array} Itens normalizados.
+ */
+function parseList<T>(
+  value: unknown,
+  label: string,
+  max: number,
+  parseItem: (item: unknown) => T
+): T[] {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value) || value.length > max) {
+    throw invalid(`${label}: informe no máximo ${max} itens.`);
+  }
+  return value.map(parseItem);
 }
 
 /** Valida uma data AAAA-MM-DD que não pode estar no futuro.
@@ -130,52 +164,45 @@ function parseObjectId(value: unknown, message: string): ObjectId {
   return new ObjectId(value);
 }
 
-/** Valida a modalidade opcional (ausente ou null = sem modalidade).
+/** Valida a modalidade, obrigatória no cadastro e na edição.
  * @param {unknown} value Valor recebido.
- * @return {ObjectId|null} _id da modalidade.
+ * @return {ObjectId} _id da modalidade.
  */
-function parseModalidadeId(value: unknown): ObjectId | null {
-  if (value === undefined || value === null) return null;
+function parseModalidadeId(value: unknown): ObjectId {
+  if (value === undefined || value === null) {
+    throw invalid("Informe a modalidade do cavalo.");
+  }
   return parseObjectId(value, "Modalidade inválida.");
 }
 
-/** Valida o histórico de lesões e o ordena da mais recente à mais antiga.
- * @param {unknown} value Valor recebido.
- * @return {InjuryRecord[]} Lesões normalizadas.
+/** Valida um registro de lesão; a prescrição médica é opcional.
+ * @param {unknown} item Valor recebido.
+ * @return {InjuryRecord} Lesão normalizada.
  */
-function parseInjuries(value: unknown): InjuryRecord[] {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value) || value.length > MAX_INJURIES) {
-    throw invalid(
-      `Histórico de lesões: informe no máximo ${MAX_INJURIES} lesões.`
+function parseInjury(item: unknown): InjuryRecord {
+  const {data, descricao, prescricao} = asRecord(item, "Lesão inválida.");
+  const injury: InjuryRecord = {
+    data: parsePastDate(data, "Data da lesão"),
+    descricao: parseText(
+      descricao,
+      "A descrição da lesão",
+      1,
+      MAX_ITEM_LENGTH
+    ),
+  };
+  // Texto vazio equivale a não informar a prescrição.
+  if (typeof prescricao === "string" && prescricao.trim() === "") {
+    return injury;
+  }
+  if (prescricao !== undefined && prescricao !== null) {
+    injury.prescricao = parseText(
+      prescricao,
+      "A prescrição médica",
+      1,
+      MAX_ITEM_LENGTH
     );
   }
-  const injuries = value.map((item): InjuryRecord => {
-    const {data, descricao, prescricao} = asRecord(item);
-    const injury: InjuryRecord = {
-      data: parsePastDate(data, "Data da lesão"),
-      descricao: parseText(
-        descricao,
-        "A descrição da lesão",
-        1,
-        MAX_ITEM_LENGTH
-      ),
-    };
-    // A prescrição médica é opcional; texto vazio equivale a não informar.
-    if (typeof prescricao === "string" && prescricao.trim() === "") {
-      return injury;
-    }
-    if (prescricao !== undefined && prescricao !== null) {
-      injury.prescricao = parseText(
-        prescricao,
-        "A prescrição médica",
-        1,
-        MAX_ITEM_LENGTH
-      );
-    }
-    return injury;
-  });
-  return injuries.sort((a, b) => b.data.localeCompare(a.data));
+  return injury;
 }
 
 /** Valida a relação de quem cadastra com o cavalo.
@@ -207,35 +234,82 @@ function parseMicrochip(value: unknown): string {
   return codigo;
 }
 
-// Um parser por campo editável; compartilhado entre cadastro e edição.
-const DETAIL_PARSERS: {
-  [K in keyof HorseDetailsInput]: (value: unknown) => HorseDetailsInput[K];
+// Um parser por campo simples; compartilhado entre cadastro e edição.
+const FIELD_PARSERS: {
+  [K in keyof HorseFieldsInput]: (value: unknown) => HorseFieldsInput[K];
 } = {
+  codigo: parseMicrochip,
   nome: (value) => parseText(value, "O nome", 2, 80),
   dataNascimento: parseBirthDate,
   raca: (value) => parseText(value, "A raça", 1, 60),
   pelagem: (value) => parseText(value, "A pelagem", 1, 60),
   sexo: parseSexo,
   modalidadeId: parseModalidadeId,
-  limitacoesFisicas: (value) => parseTextList(value, "Limitações físicas"),
-  observacoesSaude: (value) => parseTextList(value, "Observações de saúde"),
-  historicoLesoes: parseInjuries,
 };
 
-const DETAIL_FIELDS = Object.keys(DETAIL_PARSERS) as
-  (keyof HorseDetailsInput)[];
+const FIELDS = Object.keys(FIELD_PARSERS) as (keyof HorseFieldsInput)[];
 
-/** Garante que nenhuma lesão seja anterior ao nascimento.
- * @param {string} dataNascimento Data de nascimento.
- * @param {InjuryRecord[]} lesoes Histórico de lesões.
+// Rótulo, limite e validação de item de cada lista de saúde.
+const LIST_RULES: {
+  [K in keyof HorseHealthLists]: {
+    label: string;
+    max: number;
+    parseItem: (item: unknown) => HorseHealthLists[K][number];
+  };
+} = {
+  limitacoesFisicas: {
+    label: "Limitações físicas",
+    max: MAX_LIST_ITEMS,
+    parseItem: (item) => parseTextItem(item, "Limitações físicas"),
+  },
+  observacoesSaude: {
+    label: "Observações de saúde",
+    max: MAX_LIST_ITEMS,
+    parseItem: (item) => parseTextItem(item, "Observações de saúde"),
+  },
+  historicoLesoes: {
+    label: "Histórico de lesões",
+    max: MAX_INJURIES,
+    parseItem: parseInjury,
+  },
+};
+
+const LISTS = Object.keys(LIST_RULES) as (keyof HorseHealthLists)[];
+
+/** Valida a lista completa enviada no cadastro.
+ * @param {string} field Nome da lista.
+ * @param {unknown} value Valor recebido.
+ * @return {Array} Itens normalizados.
  */
-export function assertInjuriesAfterBirth(
-  dataNascimento: string,
-  lesoes: InjuryRecord[]
-): void {
-  if (lesoes.some((lesao) => lesao.data < dataNascimento)) {
-    throw invalid("A data da lesão não pode ser anterior ao nascimento.");
+function parseFullList<K extends keyof HorseHealthLists>(
+  field: K,
+  value: unknown
+): HorseHealthLists[K] {
+  const {label, max, parseItem} = LIST_RULES[field];
+  return parseList(value, label, max, parseItem) as HorseHealthLists[K];
+}
+
+/** Valida as inclusões e remoções de uma lista na edição. A existência e a
+ * repetição dos itens são conferidas no service, contra a lista gravada.
+ * @param {string} field Nome da lista.
+ * @param {unknown} value Valor recebido.
+ * @return {Object|undefined} Operações, ou undefined se não houver nenhuma.
+ */
+function parseListChanges<K extends keyof HorseHealthLists>(
+  field: K,
+  value: unknown
+): HorseHealthChanges[K] | undefined {
+  const {label, max, parseItem} = LIST_RULES[field];
+  const record = asRecord(value, `${label}: use 'adicionar' e 'remover'.`);
+  assertAllowedFields(record, ["adicionar", "remover"]);
+  const changes: ListChanges<HorseHealthLists[K][number]> = {
+    adicionar: parseList(record.adicionar, label, max, parseItem),
+    remover: parseList(record.remover, label, max, parseItem),
+  };
+  if (changes.adicionar.length === 0 && changes.remover.length === 0) {
+    return undefined;
   }
+  return changes as HorseHealthChanges[K];
 }
 
 /** Valida e normaliza os dados do cadastro de cavalo.
@@ -246,33 +320,44 @@ export function validateHorseRegistration(
   data: unknown
 ): HorseRegistrationInput {
   const record = asRecord(data);
-  const details = Object.fromEntries(
-    DETAIL_FIELDS.map((field) => [field, DETAIL_PARSERS[field](record[field])])
-  ) as HorseDetailsInput;
+  const fields = Object.fromEntries(
+    FIELDS.map((field) => [field, FIELD_PARSERS[field](record[field])])
+  ) as HorseFieldsInput;
+  const lists = Object.fromEntries(
+    LISTS.map((field) => [field, parseFullList(field, record[field])])
+  ) as HorseHealthLists;
 
   return {
-    ...details,
-    codigo: parseMicrochip(record.codigo),
+    ...fields,
+    ...lists,
     responsabilidades: parseResponsabilidades(record.responsabilidades),
   };
 }
 
-/** Valida a edição: 'id' e apenas os campos enviados.
+/** Valida a edição: 'id' e apenas os campos enviados. As listas vêm como
+ * { adicionar, remover }.
  * @param {unknown} data Dados recebidos pelo endpoint.
  * @return {HorseUpdateInput} Alterações validadas.
  */
 export function validateHorseUpdate(data: unknown): HorseUpdateInput {
   const record = asRecord(data);
-  const present = DETAIL_FIELDS.filter((field) => record[field] !== undefined);
-  if (present.length === 0) {
+  const id = parseObjectId(record.id, "Cavalo inválido.");
+  const changes: HorseUpdateInput["changes"] = {};
+
+  for (const field of FIELDS) {
+    if (record[field] === undefined) continue;
+    Object.assign(changes, {[field]: FIELD_PARSERS[field](record[field])});
+  }
+  for (const field of LISTS) {
+    if (record[field] === undefined) continue;
+    const listChanges = parseListChanges(field, record[field]);
+    if (listChanges) Object.assign(changes, {[field]: listChanges});
+  }
+
+  if (Object.keys(changes).length === 0) {
     throw invalid("Nenhuma alteração informada.");
   }
-  return {
-    id: parseObjectId(record.id, "Cavalo inválido."),
-    changes: Object.fromEntries(
-      present.map((field) => [field, DETAIL_PARSERS[field](record[field])])
-    ) as Partial<HorseDetailsInput>,
-  };
+  return {id, changes};
 }
 
 /** Valida o 'id' do cavalo consultado.
@@ -281,4 +366,30 @@ export function validateHorseUpdate(data: unknown): HorseUpdateInput {
  */
 export function validateHorseId(data: unknown): ObjectId {
   return parseObjectId(asRecord(data).id, "Cavalo inválido.");
+}
+
+/** Valida a inclusão de um item em uma lista de saúde: 'id', 'lista'
+ * (limitacoesFisicas, observacoesSaude ou historicoLesoes) e 'item' (texto,
+ * ou { data, descricao, prescricao } para lesões).
+ * @param {unknown} data Dados recebidos pelo endpoint.
+ * @return {HorseHealthEntryInput} Dados validados.
+ */
+export function validateHorseHealthEntry(
+  data: unknown
+): HorseHealthEntryInput {
+  const record = asRecord(data);
+  assertAllowedFields(record, ["id", "lista", "item"]);
+  const id = parseObjectId(record.id, "Cavalo inválido.");
+  const lista = record.lista as keyof HorseHealthLists;
+  if (!LISTS.includes(lista)) {
+    throw invalid(`Lista inválida. Use ${LISTS.join(", ")}.`);
+  }
+  if (record.item === undefined || record.item === null) {
+    throw invalid("Informe o item a incluir.");
+  }
+  return {
+    id,
+    lista,
+    item: LIST_RULES[lista].parseItem(record.item),
+  } as HorseHealthEntryInput;
 }
