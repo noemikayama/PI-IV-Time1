@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import br.com.horselife.microchip.dominio.TabelaPaises;
+import br.com.horselife.microchip.dominio.ValidadorMicrochip;
 import br.com.horselife.microchip.modelos.CodigoErro;
 import br.com.horselife.microchip.modelos.ResultadoValidacao;
 import br.com.horselife.microchip.modelos.Validador;
@@ -155,6 +157,16 @@ class ServidorMicrochipIntegracaoTest {
     @Test
     void deveResponderValidoNaIdaEVolta() throws IOException {
         ServidorMicrochip servidor = iniciarServidor(VALIDO, TIMEOUT_PADRAO);
+
+        String resposta = enviar(servidor.portaLocal(), REQUISICAO);
+
+        assertEquals(RESPOSTA_VALIDA, resposta);
+    }
+
+    @Test
+    void deveValidarComDominioRealNaIdaEVolta() throws IOException {
+        Validador dominioReal = new ValidadorMicrochip(TabelaPaises.carregar());
+        ServidorMicrochip servidor = iniciarServidor(dominioReal, TIMEOUT_PADRAO);
 
         String resposta = enviar(servidor.portaLocal(), REQUISICAO);
 
