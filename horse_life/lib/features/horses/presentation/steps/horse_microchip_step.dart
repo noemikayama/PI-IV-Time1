@@ -1,12 +1,20 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Substituição do campo local pelo componente padronizado
+// AppTextFormField proveniente de core/widgets, alinhando ao protótipo.
+//
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Campo de microchip isolado, preservando teste com letras.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:horse_life/core/widgets/app_text_form_field.dart';
 
 class HorseMicrochipStep extends StatelessWidget {
   const HorseMicrochipStep({
@@ -19,19 +27,14 @@ class HorseMicrochipStep extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   @override
-  Widget build(BuildContext context) => TextFormField(
-    controller: controller,
+  Widget build(BuildContext context) => AppTextFormField(
     key: const ValueKey('horse-microchip'),
-    maxLength: 15,
+    controller: controller,
+    hintText: 'Código',
     keyboardType: TextInputType.number,
-    decoration: const InputDecoration(
-      labelText: 'Código',
-      helperText: '15 dígitos numéricos, sem letras ou espaços.',
-    ),
+    textInputAction: TextInputAction.done,
+    inputFormatters: [LengthLimitingTextInputFormatter(15)],
     // Não bloqueia letras: o usuário consegue testar a mensagem de erro.
     onChanged: onChanged,
-    validator: (value) => !RegExp(r'^\d{15}$').hasMatch(value ?? '')
-        ? 'O microchip deve conter exatamente 15 números.'
-        : null,
   );
 }

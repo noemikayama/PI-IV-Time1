@@ -1,45 +1,30 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Delegação do modal de aviso para o componente reutilizável
+// showAppInfoDialog em core/widgets.
+//
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Diálogos de confirmação e aviso centralizados.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_info_dialog.dart';
 
 Future<void> showHorseRegistrationNotice(
   BuildContext context, {
   required String title,
   required String message,
-}) => showDialog<void>(
-  context: context,
-  builder: (dialogContext) => AlertDialog(
-    backgroundColor: AppColors.whiteSmoke,
-    title: Text(
-      title,
-      textAlign: TextAlign.center,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        color: AppColors.prussianBlue,
-      ),
-    ),
-    content: Text(message, textAlign: TextAlign.center),
-    actionsAlignment: MainAxisAlignment.center,
-    actions: [
-      OutlinedButton(
-        onPressed: () => Navigator.pop(dialogContext),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.seaGreen,
-          side: const BorderSide(color: AppColors.seaGreen),
-          minimumSize: const Size(220, 44),
-        ),
-        child: const Text('Ok'),
-      ),
-    ],
-  ),
+}) => showAppInfoDialog(
+  context,
+  title: title,
+  message: message,
+  dialogKey: const Key('horse-registration-notice-dialog'),
+  confirmButtonKey: const Key('confirm-horse-registration-notice'),
 );
 
 Future<bool> confirmHorseRegistrationExit(BuildContext context) async =>
@@ -59,4 +44,5 @@ Future<bool> confirmHorseRegistrationExit(BuildContext context) async =>
           ),
         ],
       ),
-    ) ?? false;
+    ) ??
+    false;

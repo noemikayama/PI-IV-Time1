@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte a segmentSpacing configurável e inclusão da configuração
+// horseRegistration (12 etapas) para o fluxo de cadastro de cavalos.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do indicador segmentado unificado de progresso para
@@ -17,6 +22,7 @@ class FormProgressConfiguration {
   const FormProgressConfiguration({
     required this.totalSteps,
     this.segmentKeyPrefix = 'form-progress-segment',
+    this.segmentSpacing = 10,
   });
 
   /// Quantidade total de passos exibidos na barra.
@@ -24,6 +30,9 @@ class FormProgressConfiguration {
 
   /// Prefixo para geração das chaves de identificação dos segmentos.
   final String segmentKeyPrefix;
+
+  /// Espaçamento horizontal entre os segmentos da barra.
+  final double segmentSpacing;
 
   // --- Predefinições compartilhadas pelo aplicativo ---------------------------
 
@@ -50,6 +59,13 @@ class FormProgressConfiguration {
     totalSteps: 7,
     segmentKeyPrefix: 'exercise-progress-segment',
   );
+
+  /// Trilha de 12 passos para cadastro de cavalo.
+  static const horseRegistration = FormProgressConfiguration(
+    totalSteps: 12,
+    segmentKeyPrefix: 'horse-progress-segment',
+    segmentSpacing: 6,
+  );
 }
 
 /// Barra segmentada de progresso reutilizável em formulários passo a passo.
@@ -59,6 +75,7 @@ class FormProgressIndicator extends StatelessWidget {
     this.totalSteps,
     this.configuration,
     this.segmentKeyPrefix,
+    this.segmentSpacing,
     super.key,
   }) : assert(
          totalSteps != null || configuration != null,
@@ -77,6 +94,9 @@ class FormProgressIndicator extends StatelessWidget {
   /// Sobrescreve o prefixo de identificação das chaves de cada segmento.
   final String? segmentKeyPrefix;
 
+  /// Sobrescreve o espaçamento horizontal entre segmentos.
+  final double? segmentSpacing;
+
   int get _resolvedTotalSteps =>
       configuration?.totalSteps ?? totalSteps ?? 1;
 
@@ -84,6 +104,9 @@ class FormProgressIndicator extends StatelessWidget {
       segmentKeyPrefix ??
       configuration?.segmentKeyPrefix ??
       'form-progress-segment';
+
+  double get _resolvedSegmentSpacing =>
+      segmentSpacing ?? configuration?.segmentSpacing ?? 10;
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +129,8 @@ class FormProgressIndicator extends StatelessWidget {
                 ),
               ),
             ),
-            if (index < _resolvedTotalSteps - 1) const SizedBox(width: 10),
+            if (index < _resolvedTotalSteps - 1)
+              SizedBox(width: _resolvedSegmentSpacing),
           ],
         ],
       ),
