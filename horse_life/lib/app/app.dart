@@ -2,6 +2,21 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação da composição raiz e das dependências injetáveis,
+// incluindo os builders usados para isolar as Homes nos testes do AppGate.
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Configuração dos delegates e locales necessários aos componentes
+// Material localizados em português do Brasil.
+//
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Recebimento de AppDependencies e encaminhamento ao AppGate,
+// com manutenção dos parâmetros legados para compatibilidade.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Inclusão do repositório opcional de sessão na composição do gate.
@@ -14,14 +29,10 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da configuração do MaterialApp e do tema visual do
 // HorseLife, com controle de inicialização pelo AppGate.
-//
-// Data: 27/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Recebimento de AppDependencies e encaminhamento ao AppGate,
-// com manutenção dos parâmetros legados para compatibilidade.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:horse_life/app/app_dependencies.dart';
 import 'package:horse_life/app/app_gate.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
@@ -41,6 +52,8 @@ class HorseLifeApp extends StatelessWidget {
     this.sessionRepository,
     this.guardianLoader,
     this.trainerLoader,
+    this.guardianHomeBuilder,
+    this.trainerHomeBuilder,
     super.key,
   });
 
@@ -54,6 +67,8 @@ class HorseLifeApp extends StatelessWidget {
   final AuthenticationSessionRepository? sessionRepository;
   final HomeLoader<GuardianHomeData>? guardianLoader;
   final HomeLoader<TrainerHomeData>? trainerLoader;
+  final SessionHomeBuilder? guardianHomeBuilder;
+  final SessionHomeBuilder? trainerHomeBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +76,12 @@ class HorseLifeApp extends StatelessWidget {
       title: 'HorseLife',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('pt', 'BR')],
       home: AppGate(
         initializeApp: initializeApp,
         home: home,
@@ -68,6 +89,8 @@ class HorseLifeApp extends StatelessWidget {
         sessionRepository: sessionRepository,
         guardianLoader: guardianLoader,
         trainerLoader: trainerLoader,
+        guardianHomeBuilder: guardianHomeBuilder,
+        trainerHomeBuilder: trainerHomeBuilder,
       ),
     );
   }

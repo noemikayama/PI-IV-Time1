@@ -1,6 +1,11 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Revisão da documentação dos blocos de estado, navegação entre
+// etapas, seleção de imagens e submissão do cadastro.
+//
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Etapas do cadastro separadas em widgets, regras e layout próprios.
@@ -217,6 +222,15 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
         currentCount: _draft.images.length,
       );
       if (!mounted) return;
+      if (selected.access != HorseImageLibraryAccess.granted) {
+        await _notice(
+          'Acesso à galeria necessário',
+          selected.access == HorseImageLibraryAccess.permanentlyDenied
+              ? 'Ative a permissão para fotos nas configurações do aparelho.'
+              : 'Permita o acesso à galeria para adicionar imagens.',
+        );
+        return;
+      }
       setState(() => _draft.images.addAll(selected.accepted));
       if (selected.rejected > 0) {
         await _notice(

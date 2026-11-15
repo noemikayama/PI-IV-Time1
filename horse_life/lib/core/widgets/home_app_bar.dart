@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do bloco visual da barra superior e correção do
+// gradiente para corresponder ao contrato whiteSmoke → alabasterGray.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Migração do componente para core/widgets e aplicação de gradiente linear
@@ -48,10 +53,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.alabasterGray,
-              AppColors.whiteSmoke,
-            ],
+            colors: [AppColors.whiteSmoke, AppColors.alabasterGray],
           ),
         ),
       ),

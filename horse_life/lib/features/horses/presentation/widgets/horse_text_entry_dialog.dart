@@ -1,12 +1,25 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de entrada, validação e devolução de
+// valores textuais usados no perfil do cavalo.
+//
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Adequação visual ao protótipo e reutilização da estrutura comum
+// dos modais de inclusão do perfil do cavalo.
+//
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Diálogo de texto reutilizável com controlador próprio.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+
+import 'horse_profile_entry_dialog.dart';
 
 Future<String?> showHorseTextEntryDialog(
   BuildContext context, {
@@ -27,6 +40,7 @@ class HorseTextEntryDialog extends StatefulWidget {
 
 class _HorseTextEntryDialogState extends State<HorseTextEntryDialog> {
   final _controller = TextEditingController();
+  bool _canSave = false;
 
   @override
   void dispose() {
@@ -35,27 +49,26 @@ class _HorseTextEntryDialogState extends State<HorseTextEntryDialog> {
   }
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    scrollable: true,
-    constraints: const BoxConstraints(maxWidth: 440),
-    title: Text(widget.title),
-    content: TextField(
-      controller: _controller,
-      autofocus: true,
-      minLines: 2,
-      maxLines: 3,
-      maxLength: 500,
-      decoration: const InputDecoration(hintText: 'Descreva aqui'),
+  Widget build(BuildContext context) => HorseProfileEntryDialog(
+    key: const Key('horse-text-entry-dialog'),
+    title: widget.title,
+    saveEnabled: _canSave,
+    onSave: () => Navigator.pop(context, _controller.text.trim()),
+    content: SizedBox(
+      height: 132,
+      child: TextField(
+        key: const Key('horse-text-entry-field'),
+        controller: _controller,
+        autofocus: true,
+        minLines: null,
+        maxLines: null,
+        expands: true,
+        maxLength: 500,
+        textAlignVertical: TextAlignVertical.top,
+        onChanged: (value) =>
+            setState(() => _canSave = value.trim().isNotEmpty),
+        decoration: horseEntryInputDecoration(hintText: 'Descreva aqui'),
+      ),
     ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Cancelar'),
-      ),
-      OutlinedButton(
-        onPressed: () => Navigator.pop(context, _controller.text.trim()),
-        child: const Text('Salvar'),
-      ),
-    ],
   );
 }

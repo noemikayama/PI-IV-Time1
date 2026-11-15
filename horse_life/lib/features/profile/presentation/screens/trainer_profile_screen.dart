@@ -1,6 +1,14 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos fluxos de documentos, regiões, edição, cavalos
+// e estados assíncronos do perfil profissional.
+//
+// Data: 10/11/2026 (perfil do cavalo)
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Abertura do perfil ao tocar no card sob tutoria.
 //
 // Data: 10/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -69,6 +77,7 @@ class TrainerProfileScreen extends StatefulWidget {
     this.onViewCertifications,
     this.onViewServiceRegions,
     this.onShowAllHorses,
+    this.onSelectHorse,
     this.experienceDocumentBuilder,
     this.experienceFilePicker,
     this.experienceFileSizeLoader,
@@ -104,6 +113,7 @@ class TrainerProfileScreen extends StatefulWidget {
 
   /// Ação da listagem completa de cavalos.
   final VoidCallback? onShowAllHorses;
+  final ValueChanged<String>? onSelectHorse;
 
   /// Construtor alternativo usado para isolar o plugin PDF nos testes.
   final ExperienceDocumentBuilder? experienceDocumentBuilder;
@@ -572,6 +582,7 @@ class _TrainerProfileScreenState extends State<TrainerProfileScreen> {
             widget.onShowAllHorses,
             'A lista de cavalos',
           ),
+          onSelectHorse: widget.onSelectHorse,
         );
       },
     );
@@ -587,6 +598,7 @@ class _TrainerProfileBody extends StatelessWidget {
     required this.onViewCertifications,
     required this.onViewServiceRegions,
     required this.onShowAllHorses,
+    this.onSelectHorse,
   });
 
   final TrainerProfileData profile;
@@ -596,6 +608,7 @@ class _TrainerProfileBody extends StatelessWidget {
   final VoidCallback onViewCertifications;
   final VoidCallback onViewServiceRegions;
   final VoidCallback onShowAllHorses;
+  final ValueChanged<String>? onSelectHorse;
 
   @override
   Widget build(BuildContext context) {
@@ -696,6 +709,9 @@ class _TrainerProfileBody extends StatelessWidget {
                     name: horse.name,
                     relationship: 'Treinador',
                     imageUrl: horse.imageUrl,
+                    onTap: horse.id.isEmpty || onSelectHorse == null
+                        ? null
+                        : () => onSelectHorse!(horse.id),
                   );
                 },
               ),

@@ -61,6 +61,19 @@ lista inteira, e `"modalidadeId": null` remove a modalidade. `codigo` e
 
 Resposta: o cavalo atualizado, no mesmo formato de `getHorse`.
 
+## updateHorseLinks e removeHorseLink
+
+As callables de vínculos estão implementadas na branch `developer`.
+`updateHorseLinks` vincula ou substitui atleta e treinador pelos campos
+`emailAtleta` e `emailTreinador`; campo ausente mantém o vínculo atual.
+`removeHorseLink` recebe `vinculo: "ATLETA"` ou `vinculo: "TREINADOR"` e
+remove um tipo por chamada. Ambas devolvem o perfil atualizado no formato de
+`getHorseProfile`.
+
+A troca ou remoção de treinador é recusada quando ele é autor do plano ativo.
+As functions sincronizam, na mesma transação, as listas resumidas em
+`responsaveis.cavalos`, `treinadores.cavalos` e `treinadores.clientes`.
+
 ## getHorse
 
 Exige login. Responde ao proprietário, ao atleta e aos treinadores do cavalo.
