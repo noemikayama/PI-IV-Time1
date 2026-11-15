@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação da duração entre 1 e 240 minutos conforme contrato do backend.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção do componente unificado FormProgressIndicator proveniente
@@ -80,15 +84,15 @@ class _ExerciseDurationScreenState extends State<ExerciseDurationScreen> {
     super.dispose();
   }
 
-  // Garante que o tempo informado seja preenchido apenas por inteiros positivos.
+  // Garante que o tempo informado seja um inteiro positivo entre 1 e 240 minutos.
   String? _validateDuration(String? value) {
     final trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
       return 'Preencha este campo.';
     }
     final minutes = int.tryParse(trimmed);
-    if (minutes == null || minutes <= 0) {
-      return 'Informe uma duração válida em minutos.';
+    if (minutes == null || minutes <= 0 || minutes > 240) {
+      return 'Informe uma duração válida entre 1 e 240 minutos.';
     }
     return null;
   }

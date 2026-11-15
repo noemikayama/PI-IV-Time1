@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação do limite de até 500 caracteres por orientação.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção do componente compartilhado AppMultilineTextFormField
@@ -49,8 +53,12 @@ class _AddExerciseGuidelineDialogState
   }
 
   String? _validateGuideline(String? value) {
-    if (value == null || value.trim().isEmpty) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
       return 'Preencha este campo.';
+    }
+    if (trimmed.length > 500) {
+      return 'A orientação deve ter no máximo 500 caracteres.';
     }
     return null;
   }

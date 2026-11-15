@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação do limite máximo de 30 orientações conforme contrato do backend.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção dos widgets centralizados FormProgressIndicator,
@@ -103,6 +107,16 @@ class _ExerciseGuidelinesScreenState extends State<ExerciseGuidelinesScreen> {
 
   // Abre o modal de adição e inclui a nova orientação se não for duplicada.
   Future<void> _addGuideline() async {
+    if (_guidelines.length >= 30) {
+      AppSnackBar.show(
+        context,
+        backgroundColor: AppColors.error,
+        icon: Icons.info_outline_rounded,
+        message: 'Limite máximo de 30 orientações atingido.',
+      );
+      return;
+    }
+
     final guideline = await showAddExerciseGuidelineDialog(context);
     if (!mounted || guideline == null || guideline.trim().isEmpty) return;
 

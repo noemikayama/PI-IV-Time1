@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação do nome entre 3 e 80 caracteres conforme contrato do backend.
+//
 // Data: 12/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adoção do componente unificado FormProgressIndicator proveniente
@@ -85,10 +89,14 @@ class _ExerciseNameScreenState extends State<ExerciseNameScreen> {
     super.dispose();
   }
 
-  // Impede o avanço com o campo de nome vazio ou composto apenas por espaços.
+  // Impede o avanço com o campo de nome fora dos limites de 3 a 80 caracteres.
   String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
       return 'Preencha este campo.';
+    }
+    if (trimmed.length < 3 || trimmed.length > 80) {
+      return 'O nome deve ter entre 3 e 80 caracteres.';
     }
     return null;
   }
