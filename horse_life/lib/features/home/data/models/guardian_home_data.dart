@@ -1,20 +1,28 @@
 // RESPONSÁVEL PELA ATUALIZAÇÃO: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos contratos de treino, cavalo e resumo exibidos
+// pela Home do responsável.
 //
-// Data: 18/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Revisão e padronização dos componentes e dados simulados da Home do Responsável, preservando a integração existente.
-// -----------------------------------------------------------------------------
-
-// Contrato dos dados recebidos de um servidor para a Home do responsável.
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão dos ids dos cavalos nos dados da Home.
 //
 // Data: 25/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do GuardianRepository e dos modelos com as Cloud
 // Functions; documentação das responsabilidades e lógicas principais,
 // preservando o comportamento anterior da interface.
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão e padronização dos componentes e dados simulados da Home
+// do Responsável, preservando a integração existente.
 // -----------------------------------------------------------------------------
+
+// Contrato dos dados recebidos de um servidor para a Home do responsável.
 class GuardianTraining {
   final String title;
   final String horseName;
@@ -46,6 +54,9 @@ class GuardianHomeData {
   final int monthlyPlanned;
   final int allTimeCompleted;
   final List<String> horses;
+
+  /// Identificadores na mesma ordem de [horses], usados na navegação.
+  final List<String> horseIds;
   // Total real do backend; a lista da home é somente uma prévia (até 5).
   final int? totalHorses;
   final List<String> trainers;
@@ -59,6 +70,7 @@ class GuardianHomeData {
     required this.monthlyPlanned,
     required this.allTimeCompleted,
     required this.horses,
+    this.horseIds = const [],
     this.totalHorses,
     required this.trainers,
   });

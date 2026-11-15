@@ -2,11 +2,21 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de estado, seleção da data, validação e
+// retorno dos dados do formulário de lesão.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adequação estética do diálogo de lesão à prototipação: card branco
 // arredondado, botão de fechar em cruz, seletor de data arredondado integrado
 // ao showAppDatePicker localizado, caixas de texto cinzas e botão Salvar em cápsula.
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Adequação do formulário de lesão ao modal compartilhado do
+// perfil, com campos e calendário conforme o protótipo.
 //
 // Data: 09/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -22,8 +32,8 @@ import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_date_picker_field.dart';
 import 'package:material_symbols_icons/symbols.dart';
-
 import '../../data/models/horse_registration_draft.dart';
+import 'horse_registration_calendar.dart';
 
 /// Abre o formulário de lesão e retorna os dados somente quando são salvos.
 Future<HorseInjury?> showHorseInjuryDialog({
@@ -47,6 +57,9 @@ class _HorseInjuryDialogState extends State<HorseInjuryDialog> {
   final _description = TextEditingController();
   final _prescription = TextEditingController();
   DateTime? _injuryDate;
+
+  bool get _canSave =>
+      _injuryDate != null && _description.text.trim().isNotEmpty;
 
   @override
   void dispose() {

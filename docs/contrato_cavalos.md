@@ -109,35 +109,10 @@ aplicado sobre a lista gravada no momento da edição. Assim, uma tela
 desatualizada não apaga o que outra pessoa incluiu nesse meio-tempo.
 
 ```json
-{
-  "id": "66e1a0c2f1b2c3d4e5f60050",
-  "nome": "Trovão II",
-  "codigo": "123123456789013",
-  "limitacoesFisicas": { "adicionar": ["Evitar terreno duro"] },
-  "historicoLesoes": {
-    "remover": [
-      { "data": "2025-03-12", "descricao": "Distensão leve", "prescricao": "Repouso de 3 semanas" }
-    ]
-  }
-}
+{ "id": "66e1a0c2f1b2c3d4e5f60050", "nome": "Trovão II", "modalidadeId": null }
 ```
 
-| Regra das listas | Resposta |
-| --- | --- |
-| Item a remover não está na lista | `not-found` |
-| Item a incluir já está na lista, ou se repete no pedido | `invalid-argument` |
-| O mesmo item em `adicionar` e em `remover` | `invalid-argument` |
-| Lista final acima do limite (30 itens; 50 lesões) | `invalid-argument` |
-
-Os itens são comparados sem diferença de maiúsculas e minúsculas. Uma lesão é
-identificada por `data`, `descricao` e `prescricao` juntas. As lesões continuam
-em ordem decrescente de data.
-
-Ao mudar `nome` ou `codigo`, as cópias do cavalo em `responsaveis`,
-`treinadores`, `avaliacoes`, `planos` e `registros_treino` são atualizadas na
-mesma transação.
-
-Resposta: o perfil atualizado, no mesmo formato de `getHorseProfile`.
+Resposta: o cavalo atualizado, no mesmo formato de `getHorse`.
 
 ## getHorseProfile
 

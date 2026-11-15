@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Revisão da documentação dos cenários de carregamento, edição,
+// nova tentativa e navegação pelos cavalos do responsável.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Regressão para garantir que a nova tentativa da Home não devolva
+// uma Future pelo callback síncrono de setState.
+//
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação da montagem e dos cenários de interface do perfil.
@@ -211,6 +221,31 @@ void main() {
     expect(find.text('Meu perfil'), findsOneWidget);
     expect(find.text('Ana Silva'), findsOneWidget);
   });
+
+  testWidgets(
+    'retries guardian Home without returning a Future from setState',
+    (tester) async {
+      final loader = _RetryGuardianHomeLoader();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: GuardianHomeScreen(loader: loader, onLogout: () async {}),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Não foi possível carregar os dados da Home.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Tentar novamente'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(loader.calls, 2);
+      expect(find.text('Olá Ana!'), findsOneWidget);
+    },
+  );
 }
 
 /// Carregador determinístico usado para isolar o teste de navegação.
@@ -227,4 +262,27 @@ class _GuardianHomeLoader implements HomeLoader<GuardianHomeData> {
     horses: [],
     trainers: [],
   );
+}
+
+class _RetryGuardianHomeLoader implements HomeLoader<GuardianHomeData> {
+  var calls = 0;
+
+  @override
+  Future<GuardianHomeData> fetchHome() {
+    calls++;
+    if (calls == 1) return Future.error(Exception('offline'));
+    return Future.value(
+      const GuardianHomeData(
+        guardianName: 'Ana',
+        todayTrainings: [],
+        weeklyCompleted: 0,
+        weeklyPlanned: 0,
+        monthlyCompleted: 0,
+        monthlyPlanned: 0,
+        allTimeCompleted: 0,
+        horses: [],
+        trainers: [],
+      ),
+    );
+  }
 }
