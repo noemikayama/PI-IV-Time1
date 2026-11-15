@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Restauração da Future da Home após o merge e correção da
+// atualização assíncrona de estado no recarregamento.
+//
 // Data: 13/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Correção da navegação para o Dashboard após atualização da developer;
@@ -164,6 +169,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
   final List<String> _sessionMockHorses = [];
   late HomeLoader<GuardianHomeData> _loader;
+  late Future<GuardianHomeData>
+  _homeFuture; // Compartilhada entre Home, Sidebar e Dashboard.
 
   // O repositório é criado sob demanda e reutilizado no carregamento e edição.
   FirebaseGuardianProfileRepository? _guardianProfileRepository;
@@ -241,7 +248,9 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
   /// Refaz a consulta da Home após uma falha apresentada ao usuário.
   void _retryHome() {
-    setState(() => _homeFuture = _fetchHome());
+    setState(() {
+      _homeFuture = _fetchHome();
+    });
   }
 
   @override
