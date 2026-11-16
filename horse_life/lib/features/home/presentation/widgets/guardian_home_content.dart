@@ -2,9 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 12/11/2026
+// Data: 15/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Botão Mostrar tudo dos cavalos abre a listagem compartilhada.
+// Alteração: Conecta Mostrar tudo à listagem de cavalos e remove cavalos
+// temporários de sessão; dados exibidos vêm da Home real.
+//
+// Data: 06/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Exibe cavalos de demonstração somente durante a sessão atual,
+// sem depender de novo carregamento da Home após o cadastro mockado.
 //
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -38,6 +44,7 @@ class GuardianHomeContent extends StatefulWidget {
   final Future<GuardianHomeData> homeFuture;
   final VoidCallback onRetry;
   final VoidCallback? onRegisterHorse;
+  /// Abre a listagem autenticada de cavalos.
   final VoidCallback? onShowAllHorses;
 
   @override

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Corrige a declaração da Future compartilhada, compatibilidade
+// da listagem com o cadastro modular e navegação dos cavalos.
+//
 // Data: 12/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Navegação para a listagem de cavalos, com cadastro reaproveitado
@@ -90,7 +95,6 @@ import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/authentication/data/repositories/firebase_password_reset_repository.dart';
 import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
-import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
 import 'package:horse_life/features/profile/application/controllers/guardian_profile_controller.dart';
 import 'package:horse_life/features/list_horse/presentation/screens/guardian/guardian_horse_list_screen.dart';
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
@@ -153,6 +157,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Estado local da navegação inferior.
   HomeNavigationDestination _selectedDestination =
       HomeNavigationDestination.home;
+  late Future<GuardianHomeData> _homeFuture;
 
   late HomeLoader<GuardianHomeData> _loader;
 
@@ -198,19 +203,25 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
   /// Cadastro real pela rota já existente de features/horses.
   Future<void> _openRegisterHorse() async {
-    final result = await Navigator.of(context).push<HorseRegistrationResult>(
-      HorseRegistrationFlowRoute.build(),
-    );
+    final result = await Navigator.of(
+      context,
+    ).push<HorseRegistrationResult>(HorseRegistrationFlowRoute.build());
     if (!mounted || result == null) return;
     if (!result.isPersisted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('O cadastro não foi confirmado pelo servidor.')),
+        const SnackBar(
+          content: Text('O cadastro não foi confirmado pelo servidor.'),
+        ),
       );
       return;
     }
     _retryHome();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result.warning ?? 'Cadastro de ${result.name} concluído!')),
+      SnackBar(
+        content: Text(
+          result.warning ?? 'Cadastro de ${result.name} concluído!',
+        ),
+      ),
     );
   }
 
@@ -236,28 +247,33 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     }
   }
 
-
   /// Listagem autenticada exclusivamente pela callable listHorses.
   Future<void> _openHorseList() async {
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
-        builder: (listContext) => GuardianHorseListScreen(
-          onRegistrationCompleted: (result) {
-            if (mounted && result.isPersisted) _retryHome();
-          },
-          appBar: const HomeAppBar(),
-          drawer: GuardianSidebar(onLogout: widget.onLogout, homeFuture: _homeFuture),
-          bottomNavigationBar: HomeBottomNavBar(
-            selectedDestination: HomeNavigationDestination.horses,
-            onDestinationSelected: (selected) {
-              if (selected != HomeNavigationDestination.horses) {
-                Navigator.of(listContext).pop(selected);
-              }
-            },
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (listContext) => GuardianHorseListScreen(
+              onRegistrationCompleted: (result) {
+                if (mounted && result.isPersisted) _retryHome();
+              },
+              appBar: const HomeAppBar(),
+              drawer: GuardianSidebar(
+                onLogout: widget.onLogout,
+                homeFuture: _homeFuture,
+                // Reutiliza o cadastro real e atualiza a Home ao retornar.
+                onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
+              ),
+              bottomNavigationBar: HomeBottomNavBar(
+                selectedDestination: HomeNavigationDestination.horses,
+                onDestinationSelected: (selected) {
+                  if (selected != HomeNavigationDestination.horses) {
+                    Navigator.of(listContext).pop(selected);
+                  }
+                },
+              ),
+            ),
           ),
-        ),
-      ),
-    );
+        );
     if (!mounted || destination == null) return;
     setState(() => _selectedDestination = destination);
   }
@@ -283,7 +299,6 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       drawer: GuardianSidebar(
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
-        onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
       ),
       // Área reservada aos cards futuros.
       body: _selectedDestination == HomeNavigationDestination.profile
@@ -294,7 +309,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               onEditGuardianProfileData: widget.onEditGuardianProfile == null
                   ? _openGuardianProfileEditor
                   : null,
-              onShowAllGuardianHorses: widget.onShowAllGuardianHorses ?? _openHorseList,
+              onShowAllGuardianHorses:
+                  widget.onShowAllGuardianHorses ?? _openHorseList,
               // O perfil usa o mesmo fluxo de cadastro aberto pela Home.
               onRegisterGuardianHorse:
                   widget.onRegisterHorse ?? _openRegisterHorse,
