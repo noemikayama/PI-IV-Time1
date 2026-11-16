@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Revisão da documentação do contrato, conteúdo e estados visuais
+// do botão compartilhado.
+//
 // Data: 30/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do suporte a ícone e dos estados do componente.
@@ -91,7 +96,7 @@ class GradientButton extends StatelessWidget {
                             ],
                             Text(
                               label,
-                              style: theme.textTheme.labelLarge?.copyWith(
+                              style: theme.textTheme.titleLarge?.copyWith(
                                 color: colorScheme.onPrimary,
                               ),
                             ),

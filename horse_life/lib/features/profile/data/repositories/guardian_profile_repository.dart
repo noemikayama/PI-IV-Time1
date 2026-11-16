@@ -1,6 +1,14 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação das fronteiras de domínio, adaptador de Functions,
+// mapeamento e persistência do perfil do responsável.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Mapeamento do identificador do cavalo vinculado.
 //
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -131,6 +139,7 @@ GuardianProfileData mapGuardianProfile(Map<String, dynamic> json) {
             .where((value) => value.isNotEmpty)
             .toList(growable: false);
         return GuardianProfileHorse(
+          id: _horseId(horse),
           name: _withFallback(horse['nome'], 'Cavalo sem nome'),
           relationship: _guardianRelationship(responsibilities),
           imageUrl: _firstImageUrl(horse['imagens']),
@@ -152,6 +161,12 @@ String? _firstImageUrl(dynamic value) {
     if (url.isNotEmpty) return url;
   }
   return null;
+}
+
+String _horseId(Map<String, dynamic> horse) {
+  final direct = _asText(horse['id'] ?? horse['_id']).trim();
+  if (direct.isNotEmpty) return direct;
+  return _asText(_asMap(horse['_id'])[r'$oid']).trim();
 }
 
 // Traduz as responsabilidades armazenadas no backend para o texto da interface.

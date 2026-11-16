@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do cenário de falha no logout e alinhamento da
+// mensagem segura exibida ao usuário.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura da home temporária, do logout e do feedback de falha.
@@ -56,7 +61,10 @@ void main() {
     await tester.tap(find.byKey(const Key('sign-out-button')));
     await tester.pump();
 
-    expect(find.text('Erro de conexão com o servidor'), findsOneWidget);
+    expect(
+      find.text('Não foi possível sair. Tente novamente.'),
+      findsOneWidget,
+    );
     expect(find.text('Sair'), findsOneWidget);
   });
 }

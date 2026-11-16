@@ -1,6 +1,14 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação das callables, enriquecimento dos cavalos e
+// conversão do retorno remoto para o perfil profissional.
+//
+// Data: 10/11/2026 (perfil do cavalo)
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Preservação do id após enriquecimento por getHorse.
 //
 // Data: 10/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -227,6 +235,7 @@ TrainerProfileData mapTrainerProfile(Map<String, dynamic> json) {
       .map(_asMap)
       .map(
         (horse) => TrainerProfileHorse(
+          id: _horseId(horse) ?? '',
           name: _withFallback(horse['nome'], 'Cavalo sem nome'),
           imageUrl: _firstImageUrl(horse['imagens']),
         ),

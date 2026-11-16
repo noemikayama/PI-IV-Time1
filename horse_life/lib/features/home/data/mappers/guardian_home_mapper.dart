@@ -1,6 +1,15 @@
 // RESPONSÁVEL PELA DOCUMENTAÇÃO/INTEGRAÇÃO: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do bloco de conversão entre o modelo remoto e os
+// dados de apresentação, incluindo a preservação dos identificadores.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Preservação dos ids dos cavalos para abrir o perfil.
+//
 // Data: 25/10/2026
 // Autor da documentação e integração: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização dos cabeçalhos e comentários explicativos das
@@ -36,6 +45,7 @@ extension GuardianHomeToViewData on GuardianHomeModel {
     monthlyPlanned: month.total,
     allTimeCompleted: allTimeCompleted,
     horses: horses.map((horse) => horse.name).toList(growable: false),
+    horseIds: horses.map((horse) => horse.id).toList(growable: false),
     totalHorses: totalHorses,
     trainers: trainers.map((trainer) => trainer.name).toList(growable: false),
   );

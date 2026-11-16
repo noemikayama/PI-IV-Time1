@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos cenários de inicialização e sessão; isolamento
+// das Homes autenticadas por builders injetáveis para evitar Firebase real.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura da restauração da sessão, abertura da home e retorno ao
@@ -125,6 +130,7 @@ void main() {
         initializeApp: () async {},
         home: const Text('Boas-vindas'),
         sessionRepository: repository,
+        guardianHomeBuilder: (_, _, onLogout) => HomeScreen(signOut: onLogout),
       ),
     );
     await tester.pump(const Duration(seconds: 4));
@@ -154,6 +160,7 @@ void main() {
         initializeApp: () async {},
         home: const Text('Boas-vindas'),
         sessionRepository: repository,
+        trainerHomeBuilder: (_, _, onLogout) => HomeScreen(signOut: onLogout),
       ),
     );
     await tester.pump(const Duration(seconds: 4));
