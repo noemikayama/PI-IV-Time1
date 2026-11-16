@@ -153,7 +153,6 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Estado local da navegação inferior.
   HomeNavigationDestination _selectedDestination =
       HomeNavigationDestination.home;
-  late Future<GuardianHomeData> _homeFuture;
 
   late HomeLoader<GuardianHomeData> _loader;
 
@@ -284,6 +283,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       drawer: GuardianSidebar(
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
+        onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
       ),
       // Área reservada aos cards futuros.
       body: _selectedDestination == HomeNavigationDestination.profile

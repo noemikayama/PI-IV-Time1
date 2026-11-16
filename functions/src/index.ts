@@ -2,6 +2,26 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de exercícios e do envio, da confirmação
+// e da remoção de mídias do exercício.
+//
+// Data: 04/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do desvínculo de atleta ou treinador do cavalo.
+//
+// Data: 03/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: getHorseProfile (perfil completo do cavalo) no lugar de
+// getHorse, getHorseCurrentPlan e listHorseEvaluations.
+// Alteração: Exportação da inclusão de saúde, da exclusão e do plano atual
+// do cavalo, e da criação e do histórico de avaliações.
+//
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos vínculos e da lista de cavalos.
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do dashboard de evolução.
@@ -56,11 +76,25 @@ export {
 export {
   registerHorse,
   updateHorse,
-  getHorse,
+  getHorseProfile,
+  listHorses,
+  updateHorseLinks,
+  removeHorseLink,
+  addHorseHealthEntry,
+  deleteHorse,
   createHorseImageUpload,
   confirmHorseImage,
   removeHorseImage,
 } from "./features/horses";
 export {
+  createHorseEvaluation,
+} from "./features/evaluations";
+export {
   getDashboard,
 } from "./features/dashboard";
+export {
+  registerExercise,
+  createExerciseMediaUpload,
+  confirmExerciseMedia,
+  removeExerciseMedia,
+} from "./features/exercises";

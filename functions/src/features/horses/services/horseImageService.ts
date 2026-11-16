@@ -2,6 +2,19 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Extensão, assinatura e validade das URLs vindas de
+// shared/constants/files.ts; conferência dos bytes com hasSignature.
+// Alteração: A URL de envio só aceita caminho livre, e o caminho pula
+// envios ainda em andamento.
+//
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Conferência da conta ativa do proprietário.
+// Alteração: Verificação de acesso pelo helper central (horseAccess).
+// Alteração: Leitura e acesso pelo getHorseForUser.
+//
 // Data: 27/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Envio, confirmação e remoção de imagens do cavalo.
@@ -10,20 +23,24 @@
 import type {ObjectId} from "mongodb";
 import {
   createReadUrl,
-  createUploadUrl,
+  createSignedUpload,
   deleteObject,
+  findFreePath,
   getObjectInfo,
-  readFirstBytes,
+  hasSignature,
 } from "../../../shared/config/storage";
+import {ROLES} from "../../../shared/constants/roles";
+import {
+  FILE_FORMATS,
+  READ_URL_TTL_MS,
+  UNCONFIRMED_FILE_TTL_MS,
+  UPLOAD_URL_TTL_MS,
+} from "../../../shared/constants/files";
 import {AppError} from "../../../shared/errors/AppError";
 import {
-  IMAGE_EXTENSIONS,
   IMAGE_MAX_BYTES,
   IMAGE_ROOT,
-  IMAGE_SIGNATURES,
   MAX_HORSE_IMAGES,
-  READ_URL_TTL_MS,
-  UPLOAD_URL_TTL_MS,
 } from "../constants/images";
 import {
   addHorseImage,
@@ -38,6 +55,7 @@ import type {
   HorseImageUploadResult,
   HorseImageView,
 } from "../types";
+import {getHorseForUser, HORSE_RULES} from "./horseAccess";
 
 const IMAGE_INDEX_PATTERN = /imagem_(\d+)\.(jpg|png)$/;
 
@@ -52,7 +70,7 @@ function imagePath(
   indice: number,
   contentType: HorseImageContentType
 ): string {
-  const extension = IMAGE_EXTENSIONS[contentType];
+  const {extension} = FILE_FORMATS[contentType];
   return `${IMAGE_ROOT}/${id.toHexString()}/imagem_${indice}.${extension}`;
 }
 
@@ -78,24 +96,42 @@ function assertOwnedPath(
   return contentType;
 }
 
-/** Escolhe o menor índice livre para uma nova imagem.
- * @param {string[]} imagens Caminhos já gravados.
- * @return {number} Menor índice livre.
+/** Escolhe o caminho da nova imagem: o menor índice que não está gravado no
+ * cavalo nem reservado por um envio em andamento.
+ * @param {HorseDocument} horse Cavalo carregado.
+ * @param {HorseImageContentType} contentType Formato da imagem.
+ * @return {Promise<string>} Caminho livre.
  */
-function nextImageIndex(imagens: string[]): number {
+async function nextImagePath(
+  horse: HorseDocument,
+  contentType: HorseImageContentType
+): Promise<string> {
   const used = new Set(
-    imagens.map((path) => Number(IMAGE_INDEX_PATTERN.exec(path)?.[1]))
+    horse.imagens.map((path) => Number(IMAGE_INDEX_PATTERN.exec(path)?.[1]))
   );
+  const candidates: string[] = [];
   for (let i = 1; i <= MAX_HORSE_IMAGES; i++) {
-    if (!used.has(i)) return i;
+    if (!used.has(i)) candidates.push(imagePath(horse._id, i, contentType));
   }
-  throw new AppError(
-    "invalid-argument",
-    `Limite de ${MAX_HORSE_IMAGES} imagens atingido.`
-  );
+  if (candidates.length === 0) {
+    throw new AppError(
+      "invalid-argument",
+      `Limite de ${MAX_HORSE_IMAGES} imagens atingido.`
+    );
+  }
+
+  const caminho = await findFreePath(candidates, UNCONFIRMED_FILE_TTL_MS);
+  if (!caminho) {
+    throw new AppError(
+      "failed-precondition",
+      "Há envios em andamento. Confirme-os antes de enviar outra imagem."
+    );
+  }
+  return caminho;
 }
 
-/** Carrega o cavalo ativo e garante que o usuário é o proprietário.
+/** Carrega o cavalo ativo e garante que o usuário é o proprietário, com a
+ * conta ativa.
  * @param {string} uid UID do responsável.
  * @param {ObjectId} id _id do cavalo.
  * @return {Promise<HorseDocument>} Cavalo do proprietário.
@@ -104,14 +140,11 @@ async function loadOwnedHorse(
   uid: string,
   id: ObjectId
 ): Promise<HorseDocument> {
-  const horse = await findActiveHorseById(id);
-  if (!horse) throw new AppError("not-found", "Cavalo não encontrado.");
-  if (horse.proprietario._id !== uid) {
-    throw new AppError(
-      "permission-denied",
-      "Apenas o proprietário pode alterar as imagens do cavalo."
-    );
-  }
+  const {horse} = await getHorseForUser(
+    {uid, role: ROLES.guardian},
+    id,
+    HORSE_RULES.alterarImagens
+  );
   return horse;
 }
 
@@ -133,9 +166,7 @@ async function isValidImage(
   ) {
     return false;
   }
-  const signature = IMAGE_SIGNATURES[contentType];
-  const header = await readFirstBytes(caminho, signature.length);
-  return signature.every((byte, i) => header[i] === byte);
+  return hasSignature(caminho, contentType);
 }
 
 /** Converte o caminho gravado para o formato enviado ao app.
@@ -158,26 +189,17 @@ export async function createHorseImageUploadService(
   input: HorseImageUploadInput
 ): Promise<HorseImageUploadResult> {
   const horse = await loadOwnedHorse(uid, input.id);
-  const caminho = imagePath(
-    horse._id,
-    nextImageIndex(horse.imagens),
-    input.contentType
-  );
-  const uploadUrl = await createUploadUrl(
+  const caminho = await nextImagePath(horse, input.contentType);
+  // Só aceita caminho livre: a imagem conferida não pode ser sobrescrita.
+  const upload = await createSignedUpload(
     caminho,
     input.contentType,
     IMAGE_MAX_BYTES,
-    UPLOAD_URL_TTL_MS
+    UPLOAD_URL_TTL_MS,
+    true
   );
 
-  return {
-    caminho,
-    uploadUrl,
-    headers: {
-      "Content-Type": input.contentType,
-      "x-goog-content-length-range": `0,${IMAGE_MAX_BYTES}`,
-    },
-  };
+  return {caminho, ...upload};
 }
 
 /** Confere a imagem enviada e grava o caminho no cavalo.
@@ -194,8 +216,8 @@ export async function confirmHorseImageService(
   const contentType = assertOwnedPath(horse._id, caminho);
 
   if (!(await isValidImage(caminho, contentType))) {
-    // Um envio para um caminho já gravado sobrescreveu a imagem anterior,
-    // então a referência também é removida.
+    // A URL de envio não sobrescreve arquivos, mas a referência é removida
+    // por garantia (arquivos enviados antes dessa regra).
     await deleteObject(caminho);
     await removeHorseImage(horse._id, caminho);
     throw new AppError(

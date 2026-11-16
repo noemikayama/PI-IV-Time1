@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 01/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Consulta leve da conta (código, nome e situação).
+//
 // Data: 28/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Edição do nome do responsável e atualização das suas cópias.
@@ -30,6 +34,7 @@ import {getDatabase} from "../../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../../shared/constants/collections";
 import {nextCode} from "../../../../shared/database/sequence";
 import type {
+  GuardianAccount,
   GuardianDocument,
   GuardianModality,
   NewGuardian,
@@ -64,6 +69,22 @@ export async function findGuardianById(
   return db
     .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
     .findOne({_id: uid});
+}
+
+/** Busca só o necessário para conferir a conta e referenciá-la (código,
+ * nome e situação), sem as listas do documento.
+ * @param {string} uid UID do usuário.
+ */
+export async function findGuardianAccount(
+  uid: string
+): Promise<GuardianAccount | null> {
+  const db = await getDatabase();
+  return db
+    .collection<GuardianDocument>(COLLECTIONS.Responsaveis)
+    .findOne<GuardianAccount>(
+      {_id: uid},
+      {projection: {codigo: 1, nome: 1, situacaoCadastral: 1}}
+    );
 }
 
 /** Busca os dados mínimos do responsável usados pela home.

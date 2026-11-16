@@ -66,6 +66,11 @@ O documento de experiência é enviado antes das certificações. As certificaç
 são processadas sequencialmente porque o backend escolhe o próximo índice livre
 depois de cada confirmação.
 
+Os headers recebidos devem ser enviados no `PUT` exatamente como vieram. A URL
+de uma certificação só aceita o envio se o caminho estiver livre: um segundo
+`PUT` para o mesmo caminho recebe `412` do Storage. A experiência tem caminho
+fixo, e um novo envio substitui o anterior.
+
 O frontend aplica os mesmos limites do backend: PDF de até 10 MB, uma
 experiência e no máximo dez certificações.
 

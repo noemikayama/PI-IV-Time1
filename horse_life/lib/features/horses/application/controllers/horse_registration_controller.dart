@@ -1,37 +1,70 @@
-// RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// RESPONSÁVEL: Enzo Olivato Pazian - 25001654
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 14/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Desacoplamento da persistência e consulta das telas, centralizando
+// no controller o rascunho (HorseRegistrationDraft), a busca de modalidades,
+// a validação assíncrona de microchip e a submissão final do cadastro.
+//
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Regras do cadastro fora da interface e validação independente.
 // -----------------------------------------------------------------------------
+
+import 'dart:async';
 
 import '../../data/mocks/mock_horse_catalog.dart';
 import '../../data/models/horse_registration_draft.dart';
 import '../../data/repositories/horse_microchip_validator.dart';
 import '../../data/repositories/horse_registration_repository.dart';
 
-/// A tela chama este controlador; ele valida e aciona o repositório.
+/// Controlador central do fluxo de cadastro de cavalos.
+///
+/// Mantém o rascunho de dados e centraliza as operações com o repositório
+/// e validadores, isolando completamente as telas de detalhes de infraestrutura.
 class HorseRegistrationController {
-  const HorseRegistrationController({
+  HorseRegistrationController({
     required this.repository,
     required this.microchipValidator,
-  });
+    HorseRegistrationDraft? initialDraft,
+  }) : draft = initialDraft ?? HorseRegistrationDraft();
 
   final HorseRegistrationRepository repository;
   final HorseMicrochipValidator microchipValidator;
 
-  Future<HorseRegistrationResult> register(HorseRegistrationDraft draft) async {
-    validateFields(draft);
-    // Até o Java estar pronto, esta validação confirma somente o formato.
+  /// Rascunho das informações do cavalo mantido ao longo de todas as etapas.
+  final HorseRegistrationDraft draft;
+
+  /// Carrega as modalidades disponíveis para treinos do animal.
+  Future<List<HorseModality>> fetchModalities() {
+    return repository.getModalities();
+  }
+
+  /// Valida o microchip com timeout defensivo de 10 segundos.
+  Future<void> validateMicrochip(String microchip) async {
+    await microchipValidator
+        .validate(microchip)
+        .timeout(const Duration(seconds: 10));
+  }
+
+  /// Valida o rascunho e submete o cadastro do cavalo ao repositório.
+  Future<HorseRegistrationResult> register([
+    HorseRegistrationDraft? draftToRegister,
+  ]) async {
+    final targetDraft = draftToRegister ?? draft;
+    validateFields(targetDraft);
+    // Confirmação do microchip antes de enviar o payload.
     try {
-      await microchipValidator.validate(draft.microchip);
+      await validateMicrochip(targetDraft.microchip);
     } on HorseMicrochipValidationFailure catch (error) {
       throw HorseRegistrationFailure(error.message);
     }
-    return repository.register(draft);
+    return repository.register(targetDraft);
   }
 
+  /// Validação síncrona de integridade de todos os campos do cadastro.
   void validateFields(HorseRegistrationDraft draft) {
     if (!draft.relationship.mayRegister) {
       throw const HorseRegistrationFailure(

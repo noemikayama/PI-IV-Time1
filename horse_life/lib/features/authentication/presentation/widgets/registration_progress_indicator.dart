@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 13/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Herança de FormProgressConfiguration em RegistrationProgressConfiguration
+// para garantir compatibilidade de tipos nos construtores const e no indicador.
+//
+// Data: 12/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Re-exportação e adaptação da barra de progresso unificada em
+// core/widgets/form_progress_indicator.dart, mantendo retrocompatibilidade.
+//
 // Data: 15/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Definição da trilha profissional com oito passos fixos.
@@ -11,74 +21,28 @@
 // Alteração: Criação do indicador configurável dos fluxos de cadastro.
 // -----------------------------------------------------------------------------
 
-import 'package:flutter/material.dart';
+export '../../../../core/widgets/form_progress_indicator.dart';
 
-import '../../../../app/theme/app_colors.dart';
+import '../../../../core/widgets/form_progress_indicator.dart';
 import '../../data/models/user_type.dart';
 
 // Configura separadamente a quantidade de etapas de cada tipo de usuário.
-class RegistrationProgressConfiguration {
+class RegistrationProgressConfiguration extends FormProgressConfiguration {
   const RegistrationProgressConfiguration._({
     required this.userType,
-    required this.totalSteps,
-  });
+    required super.totalSteps,
+  }) : super(segmentKeyPrefix: 'registration-progress-segment');
 
-  // Identidade do fluxo e número total de etapas exibidas.
   final UserType userType;
-  final int totalSteps;
 
-  // Fluxo de responsável definido pelos quatro passos atuais.
   static const guardian = RegistrationProgressConfiguration._(
     userType: UserType.guardian,
     totalSteps: 4,
   );
-
-  // Fluxo profissional definido com os oito passos planejados.
   static const trainer = RegistrationProgressConfiguration._(
     userType: UserType.trainer,
     totalSteps: 8,
   );
 }
 
-// Exibe o progresso segmentado correspondente ao fluxo selecionado.
-class RegistrationProgressIndicator extends StatelessWidget {
-  const RegistrationProgressIndicator({
-    required this.configuration,
-    required this.currentStep,
-    super.key,
-  });
-
-  // Configuração do fluxo e etapa ativa, usando índice iniciado em um.
-  final RegistrationProgressConfiguration configuration;
-  final int currentStep;
-
-  @override
-  Widget build(BuildContext context) {
-    // Restringe valores externos aos limites disponíveis no indicador.
-    final activeSteps = currentStep.clamp(0, configuration.totalSteps);
-
-    return Semantics(
-      label: 'Etapa $activeSteps de ${configuration.totalSteps}',
-      // Cada segmento ocupa a mesma largura e somente o atual recebe destaque.
-      child: Row(
-        children: [
-          for (var index = 0; index < configuration.totalSteps; index++) ...[
-            Expanded(
-              child: Container(
-                key: Key('registration-progress-segment-${index + 1}'),
-                height: 8,
-                decoration: BoxDecoration(
-                  color: index == activeSteps - 1
-                      ? AppColors.seaGreen
-                      : AppColors.alabasterGray,
-                  borderRadius: const BorderRadius.all(Radius.circular(8)),
-                ),
-              ),
-            ),
-            if (index < configuration.totalSteps - 1) const SizedBox(width: 10),
-          ],
-        ],
-      ),
-    );
-  }
-}
+typedef RegistrationProgressIndicator = FormProgressIndicator;
