@@ -1,6 +1,18 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de dependências, perfil e navegação;
+// inclusão da trava que impede rotas duplicadas do cavalo por toques rápidos.
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Sincronização do menu inferior ao sair do perfil do cavalo.
+//
+// Data: 10/11/2026 (perfil do cavalo)
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Navegação dos cards profissionais ao perfil do cavalo.
 //
 // Data: 12/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -46,6 +58,7 @@
 // compartilhadas, Sidebar exclusiva, Mock API e três cenários de testes.
 // -----------------------------------------------------------------------------
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
@@ -61,6 +74,7 @@ import 'package:horse_life/features/profile/data/repositories/trainer_profile_re
 import 'package:horse_life/features/profile/presentation/screens/trainer_edit_profile_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/trainer_profile_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/trainer_experience_pdf_screen.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import 'package:horse_life/core/widgets/add_trainer_certifications_dialog.dart';
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/trainer_home_data.dart';
@@ -166,12 +180,36 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       HomeNavigationDestination.home;
 
   late HomeLoader<TrainerHomeData> _loader;
+  bool _isOpeningHorseProfile = false;
   FirebaseTrainerProfileRepository? _trainerProfileRepository;
   FirebaseTrainerRegistrationRepository? _trainerAttachmentRepository;
   FirebasePasswordResetRepository? _passwordResetRepository;
 
   /// A sidebar e o conteúdo usam uma única Future, evitando chamadas duplicadas.
   Future<TrainerHomeData> _fetchHome() => _loader.fetchHome();
+
+  /// Usa o mesmo detalhe para cards da Home e do perfil profissional.
+  Future<void> _openHorseProfile(String id) async {
+    if (_isOpeningHorseProfile) return;
+    _isOpeningHorseProfile = true;
+
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => HorseProfileScreen(
+            horseId: id,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: true,
+            onNavigationSelected: (destination) {
+              if (mounted) setState(() => _selectedDestination = destination);
+            },
+          ),
+        ),
+      );
+    } finally {
+      _isOpeningHorseProfile = false;
+    }
+  }
 
   Future<TrainerProfileData> _fetchTrainerProfile() {
     final injectedLoader = widget.trainerProfileLoader;
@@ -315,12 +353,15 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
               addTrainerServiceArea: _addTrainerServiceArea,
               updateTrainerProfile: _updateTrainerProfile,
               requestPasswordReset: _requestTrainerPasswordReset,
+              onSelectHorse: _openHorseProfile,
             )
           : TrainerHomeContent(
               homeFuture: _homeFuture,
               onRetry: _retry,
               onViewTraining: widget.onViewTraining,
-              onSelectHorse: widget.onSelectHorse,
+              onSelectHorse:
+                  widget.onSelectHorse ??
+                  (horse) => _openHorseProfile(horse.id),
               onSelectClient: widget.onSelectClient,
               onShowAllTrainings: widget.onShowAllTrainings,
               onShowAllHorses: widget.onShowAllHorses ?? _openHorseList,

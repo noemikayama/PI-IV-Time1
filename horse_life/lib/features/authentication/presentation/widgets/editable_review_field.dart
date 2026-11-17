@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação da finalidade deste adaptador de compatibilidade,
+// que mantém o caminho antigo enquanto expõe o widget compartilhado do core.
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Implementação movida para core/widgets; este arquivo preserva a
+// importação anterior para compatibilidade com as telas de autenticação.
+//
 // Data: 11/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Suporte opcional a inputFormatters e múltiplas linhas (minLines e

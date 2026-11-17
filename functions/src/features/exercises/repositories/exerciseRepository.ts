@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Consultas da galeria e dos exercícios do treinador por _id,
+// usadas pelo cadastro de treinamentos.
+//
 // Data: 07/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Índices, inserção (com geração do código sequencial), consulta
@@ -35,7 +40,9 @@ import {inPeriod} from "../../../shared/utils/dates";
 import type {DatePeriod} from "../../../shared/utils/dates";
 import type {
   ExerciseDocument,
+  ExerciseGallerySource,
   ExerciseMediaField,
+  ExercisePrivacy,
   NewExercise,
 } from "../types";
 
@@ -171,4 +178,51 @@ export async function countActiveExercisesByTrainer(
       "ativo": true,
       ...(createdIn ? inPeriod("criadoEm", createdIn) : {}),
     });
+}
+
+/** Busca os exercícios ativos do treinador para a galeria: os genéricos
+ * (horseId null) ou os específicos do cavalo informado. Usa
+ * idx_exercicios_treinador.
+ * @param {string} trainerId UID do treinador.
+ * @param {ExercisePrivacy} privacidade GENERICO ou ESPECIFICO.
+ * @param {ObjectId|null} horseId _id do cavalo, no ESPECIFICO.
+ */
+export async function findGalleryExercises(
+  trainerId: string,
+  privacidade: ExercisePrivacy,
+  horseId: ObjectId | null
+): Promise<ExerciseGallerySource[]> {
+  const db = await getDatabase();
+  return db
+    .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
+    .find({
+      "treinador._id": trainerId,
+      "ativo": true,
+      privacidade,
+      ...(horseId && {"cavalo._id": horseId}),
+    })
+    .project<ExerciseGallerySource>({
+      nome: 1,
+      duracaoPadraoMinutos: 1,
+      privacidade: 1,
+      cavalo: 1,
+    })
+    .toArray();
+}
+
+/** Busca, entre os _id informados, os exercícios ativos cadastrados pelo
+ * treinador. Os que não existem, foram excluídos ou são de outro dono não
+ * voltam. Usa o índice de _id.
+ * @param {string} trainerId UID do treinador.
+ * @param {ObjectId[]} ids _id dos exercícios, sem repetição.
+ */
+export async function findTrainerExercisesByIds(
+  trainerId: string,
+  ids: ObjectId[]
+): Promise<ExerciseDocument[]> {
+  const db = await getDatabase();
+  return db
+    .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
+    .find({"_id": {$in: ids}, "treinador._id": trainerId, "ativo": true})
+    .toArray();
 }

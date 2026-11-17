@@ -1,6 +1,14 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de conteúdo, interação, imagem remota e
+// fallback visual do card compartilhado de cavalo.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão da ação opcional de toque no card.
 //
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -16,6 +24,7 @@ class ProfileHorseCard extends StatelessWidget {
     required this.name,
     required this.relationship,
     this.imageUrl,
+    this.onTap,
     super.key,
   });
 
@@ -28,62 +37,72 @@ class ProfileHorseCard extends StatelessWidget {
   /// Imagem assinada opcional; falhas de rede também usam o fallback local.
   final String? imageUrl;
 
+  /// Abre o perfil do animal quando o card estiver em um contexto navegável.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      width: 190,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 112,
-            width: double.infinity,
-            child: _HorseImage(imageUrl: imageUrl),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 10, 3),
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleLarge,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: const Color(0xFFC6E9E1),
-                borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: 190,
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 5,
+                offset: Offset(0, 2),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 112,
+                width: double.infinity,
+                child: _HorseImage(imageUrl: imageUrl),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 10, 3),
                 child: Text(
-                  relationship,
+                  name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium,
+                  style: theme.textTheme.titleLarge,
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC6E9E1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      relationship,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

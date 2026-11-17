@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipos da galeria de exercícios e do tempo total da seleção.
+//
 // Data: 07/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos do documento, do cadastro e das mídias de exercícios.
@@ -109,3 +113,30 @@ export type ExerciseMediaView = {
     caminho: string;
     url: string;
 };
+
+// Filtro da galeria. Sem cavaloId, lista os genéricos do treinador; com ele,
+// os específicos daquele cavalo.
+export type ExerciseGalleryInput = {
+    busca?: string;
+    cavaloId: ObjectId | null;
+};
+
+// Campos de 'exercicios' lidos pela galeria.
+export type ExerciseGallerySource = Pick<
+    ExerciseDocument,
+    "_id" | "nome" | "duracaoPadraoMinutos" | "privacidade" | "cavalo"
+>;
+
+// Item da galeria; 'cavalo' só no exercício específico.
+export type ExerciseGalleryItem = {
+    id: string;
+    nome: string;
+    duracaoPadraoMinutos: number;
+    privacidade: ExercisePrivacy;
+    cavalo?: {id: string; codigo: string; nome: string};
+};
+
+export type ExerciseGalleryResult = {exercicios: ExerciseGalleryItem[]};
+
+// Soma de duracaoPadraoMinutos dos exercícios selecionados.
+export type ExerciseDurationSumResult = {duracaoTotalMinutos: number};

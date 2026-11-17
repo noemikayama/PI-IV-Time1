@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Busca por nome movida para shared/utils/search.ts, para ser
+// usada também pela galeria de exercícios.
+//
 // Data: 02/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Lista de cavalos do responsável e do treinador.
@@ -10,6 +15,7 @@
 // -----------------------------------------------------------------------------
 
 import {ROLES} from "../../../shared/constants/roles";
+import {filterByName} from "../../../shared/utils/search";
 import type {
   AuthenticatedUser,
 } from "../../../shared/middleware/requireAuthentication";
@@ -21,7 +27,6 @@ import type {
   HorseListInput,
   HorseListOrder,
   HorseListResult,
-  HorseListSource,
 } from "../types";
 import {assertActiveAccount} from "./horseAccess";
 import {toGuardianHorseCard, toTrainerHorseCard} from "./horseMappers";
@@ -32,35 +37,6 @@ const collator = new Intl.Collator("pt-BR", {
 });
 
 type SortableCard = {id: string; nome: string; vinculadoEm: string};
-
-/** Normaliza o texto para a busca: sem acentos e sem diferença de caixa.
- * @param {string} text Texto original.
- * @return {string} Texto normalizado.
- */
-function normalizeForSearch(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLocaleLowerCase("pt-BR");
-}
-
-/** Mantém os cavalos cujo nome contém o texto buscado ("tro" encontra
- * "Trovão"). Roda antes de montar os cards, então só os encontrados ganham
- * URL de foto.
- * @param {HorseListSource[]} horses Cavalos do usuário.
- * @param {string|undefined} busca Texto buscado.
- * @return {HorseListSource[]} Cavalos encontrados.
- */
-function filterByName(
-  horses: HorseListSource[],
-  busca: string | undefined
-): HorseListSource[] {
-  if (!busca) return horses;
-  const term = normalizeForSearch(busca);
-  return horses.filter((horse) =>
-    normalizeForSearch(horse.nome).includes(term)
-  );
-}
 
 /** Ordena os cards. Empates de nome desempatam pelo id; empates de data,
  * pelo nome. vinculadoEm é ISO em UTC, então a ordem do texto é a da data.

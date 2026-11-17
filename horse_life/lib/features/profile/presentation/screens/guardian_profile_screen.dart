@@ -1,6 +1,14 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos segmentos de carregamento, edição, ações dos
+// cavalos e estados vazio e de erro do perfil do responsável.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Abertura do perfil ao tocar no card do cavalo.
 //
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -49,6 +57,7 @@ class GuardianProfileScreen extends StatefulWidget {
     this.onEditGuardianProfileData,
     this.onShowAllGuardianHorses,
     this.onRegisterGuardianHorse,
+    this.onSelectGuardianHorse,
     super.key,
   });
 
@@ -59,6 +68,7 @@ class GuardianProfileScreen extends StatefulWidget {
   final GuardianProfileEditRequested? onEditGuardianProfileData;
   final VoidCallback? onShowAllGuardianHorses;
   final VoidCallback? onRegisterGuardianHorse;
+  final ValueChanged<String>? onSelectGuardianHorse;
 
   @override
   State<GuardianProfileScreen> createState() => _GuardianProfileScreenState();
@@ -155,6 +165,7 @@ class _GuardianProfileScreenState extends State<GuardianProfileScreen> {
           onRegisterGuardianHorse:
               widget.onRegisterGuardianHorse ??
               () => _showGuardianActionUnavailable('O cadastro de animais'),
+          onSelectGuardianHorse: widget.onSelectGuardianHorse,
         );
       },
     );
@@ -169,6 +180,7 @@ class _GuardianProfileBody extends StatelessWidget {
     required this.onEditGuardianProfile,
     required this.onShowAllGuardianHorses,
     required this.onRegisterGuardianHorse,
+    this.onSelectGuardianHorse,
   });
 
   final GuardianProfileData guardianProfile;
@@ -176,6 +188,7 @@ class _GuardianProfileBody extends StatelessWidget {
   final VoidCallback onEditGuardianProfile;
   final VoidCallback onShowAllGuardianHorses;
   final VoidCallback onRegisterGuardianHorse;
+  final ValueChanged<String>? onSelectGuardianHorse;
 
   // --- Identidade, ações e cavalos ------------------------------------------
   @override
@@ -248,7 +261,10 @@ class _GuardianProfileBody extends StatelessWidget {
                     onRegisterGuardianHorse: onRegisterGuardianHorse,
                   )
                 else
-                  _GuardianHorseList(horses: guardianProfile.horses),
+                  _GuardianHorseList(
+                    horses: guardianProfile.horses,
+                    onSelectHorse: onSelectGuardianHorse,
+                  ),
                 const SizedBox(height: 24),
                 const Spacer(),
                 RedSignOutButton(onLogout: onLogout),
@@ -263,9 +279,10 @@ class _GuardianProfileBody extends StatelessWidget {
 
 /// Exibe os cavalos vinculados em uma lista horizontal rolável.
 class _GuardianHorseList extends StatelessWidget {
-  const _GuardianHorseList({required this.horses});
+  const _GuardianHorseList({required this.horses, this.onSelectHorse});
 
   final List<GuardianProfileHorse> horses;
+  final ValueChanged<String>? onSelectHorse;
 
   @override
   Widget build(BuildContext context) {
@@ -279,6 +296,9 @@ class _GuardianHorseList extends StatelessWidget {
           name: horses[index].name,
           relationship: horses[index].relationship,
           imageUrl: horses[index].imageUrl,
+          onTap: horses[index].id.isEmpty || onSelectHorse == null
+              ? null
+              : () => onSelectHorse!(horses[index].id),
         ),
       ),
     );

@@ -2,11 +2,21 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de entrada, validação e devolução de
+// valores textuais usados no perfil do cavalo.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adaptação visual do diálogo à prototipação: card branco com cantos
 // arredondados, botão de fechar em cruz no topo, caixa de texto cinza e botão
 // de salvar em cápsula com contorno verde.
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Adequação visual ao protótipo e reutilização da estrutura comum
+// dos modais de inclusão do perfil do cavalo.
 //
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -15,6 +25,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+
+import 'horse_profile_entry_dialog.dart';
 
 Future<String?> showHorseTextEntryDialog(
   BuildContext context, {
@@ -35,6 +47,7 @@ class HorseTextEntryDialog extends StatefulWidget {
 
 class _HorseTextEntryDialogState extends State<HorseTextEntryDialog> {
   final _controller = TextEditingController();
+  bool _canSave = false;
 
   @override
   void dispose() {

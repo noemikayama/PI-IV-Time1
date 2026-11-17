@@ -1,6 +1,23 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de carregamento, navegação e composição;
+// inclusão da trava que impede rotas duplicadas do perfil por toques rápidos.
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Sincronização do menu inferior ao sair do perfil do cavalo.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção da nova tentativa da Home para manter o callback de
+// setState síncrono após o cadastro de um cavalo.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Navegação dos cards da Home e do perfil ao detalhe do cavalo.
 //
 // Data: 15/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -87,6 +104,7 @@
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
@@ -95,6 +113,7 @@ import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/authentication/data/repositories/firebase_password_reset_repository.dart';
 import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import 'package:horse_life/features/profile/application/controllers/guardian_profile_controller.dart';
 import 'package:horse_life/features/list_horse/presentation/screens/guardian/guardian_horse_list_screen.dart';
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
@@ -160,6 +179,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   late Future<GuardianHomeData> _homeFuture;
 
   late HomeLoader<GuardianHomeData> _loader;
+  bool _isOpeningHorseProfile = false;
 
   // O repositório é criado sob demanda e reutilizado no carregamento e edição.
   FirebaseGuardianProfileRepository? _guardianProfileRepository;
@@ -169,6 +189,29 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
   // --- Carregamento da Home e do perfil -------------------------------------
   Future<GuardianHomeData> _fetchHome() => _loader.fetchHome();
+
+  /// Abre o detalhe remoto a partir de qualquer card que preserve o id.
+  Future<void> _openHorseProfile(String id) async {
+    if (_isOpeningHorseProfile) return;
+    _isOpeningHorseProfile = true;
+
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => HorseProfileScreen(
+            horseId: id,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: false,
+            onNavigationSelected: (destination) {
+              if (mounted) setState(() => _selectedDestination = destination);
+            },
+          ),
+        ),
+      );
+    } finally {
+      _isOpeningHorseProfile = false;
+    }
+  }
 
   // Prioriza a fonte injetada; na aplicação, consulta o Firebase.
   Future<GuardianProfileData> _fetchGuardianProfile() {
@@ -227,7 +270,10 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
   /// Refaz a consulta da Home após uma falha apresentada ao usuário.
   void _retryHome() {
-    setState(() => _homeFuture = _fetchHome());
+    final homeFuture = _fetchHome();
+    setState(() {
+      _homeFuture = homeFuture;
+    });
   }
 
   @override
@@ -314,12 +360,14 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               // O perfil usa o mesmo fluxo de cadastro aberto pela Home.
               onRegisterGuardianHorse:
                   widget.onRegisterHorse ?? _openRegisterHorse,
+              onSelectGuardianHorse: _openHorseProfile,
             )
           : GuardianHomeContent(
               homeFuture: _homeFuture,
               onRetry: _retryHome,
               onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
               onShowAllHorses: _openHorseList,
+              onSelectHorse: _openHorseProfile,
             ),
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
