@@ -47,6 +47,7 @@ class HorseRegistrationScreen extends StatefulWidget {
     this.repository,
     this.microchipValidator,
     super.key,
+    required HorseImageSelectionService imageSelection,
   });
 
   final HorseRegistrationRepository? repository;
