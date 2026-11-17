@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 14/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de treinamentos.
+//
 // Data: 03/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos treinos do dia de um cavalo no plano atual.
@@ -37,3 +41,4 @@ export type {
   HorseExecutionCounts,
   TrainingRecordStatus,
 } from "./types/trainingRecord";
+export {registerTraining} from "./handlers/registerTraining";
