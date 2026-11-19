@@ -7,6 +7,10 @@
 // Alteração: Atualização do teste da Sidebar para a rota modular do cadastro;
 // serviços de produção não são inicializados durante o teste de navegação.
 //
+// Data: 17/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura do link "Cadastrar treinamento" na barra lateral do
+// treinador abrindo o fluxo de cadastro de treinamentos.
 //
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
@@ -40,6 +44,8 @@ import 'package:horse_life/features/horses/presentation/screens/horse_relationsh
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
 import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_title_screen.dart';
 
 void main() {
   // --- Navegação para o perfil ----------------------------------------------
@@ -143,6 +149,38 @@ void main() {
 
       expect(find.byType(HorseRelationshipScreen), findsOneWidget);
       expect(find.text('Relação com o cavalo'), findsOneWidget);
+    },
+  );
+
+  // --- Navegação para cadastro de treinamentos ------------------------------
+  testWidgets(
+    'opens training registration flow when tapping Cadastrar treinamento in TrainerSidebar',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainerHomeScreen(
+            loader: _TrainerHomeLoader(),
+            onLogout: () async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Abrir menu'));
+      await tester.pumpAndSettle();
+
+      final createTrainingTile = find.byKey(
+        const Key('trainer-sidebar-create-training'),
+      );
+      expect(createTrainingTile, findsOneWidget);
+      expect(find.text('Cadastrar treinamento'), findsOneWidget);
+
+      await tester.tap(createTrainingTile);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TrainingTitleScreen), findsOneWidget);
+      expect(find.text('Título do treinamento'), findsOneWidget);
     },
   );
 }

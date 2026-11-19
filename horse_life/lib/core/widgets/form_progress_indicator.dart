@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 17/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição da configuração de 6 etapas (training) para o fluxo de
+// cadastro de treinamentos.
+//
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Suporte a segmentSpacing configurável e inclusão da configuração
@@ -65,6 +70,12 @@ class FormProgressConfiguration {
     totalSteps: 12,
     segmentKeyPrefix: 'horse-progress-segment',
     segmentSpacing: 6,
+  );
+
+  /// Trilha de 6 passos para cadastro de treinamento.
+  static const training = FormProgressConfiguration(
+    totalSteps: 6,
+    segmentKeyPrefix: 'training-progress-segment',
   );
 }
 
