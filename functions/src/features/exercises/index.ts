@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportações usadas pela feature de planos.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da galeria, do tempo total dos exercícios
@@ -24,6 +28,7 @@
 
 export {
   countActiveExercisesByTrainer,
+  findForeignSpecificExerciseIds,
 } from "./repositories/exerciseRepository";
 export {registerExercise} from "./handlers/registerExercise";
 export {
@@ -34,5 +39,9 @@ export {removeExerciseMedia} from "./handlers/removeExerciseMedia";
 export {listExerciseGallery} from "./handlers/listExerciseGallery";
 export {sumExerciseDurations} from "./handlers/sumExerciseDurations";
 export {loadTrainerExercises} from "./services/trainerExercises";
-export {parseExerciseIds} from "./validations/validateExerciseSelection";
+export {
+  parseBusca,
+  parseExerciseIds,
+  parseObjectId,
+} from "./validations/validateExerciseSelection";
 export type {ExerciseDocument} from "./types";

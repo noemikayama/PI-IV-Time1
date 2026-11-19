@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportações usadas pela feature de planos; a consulta do
+// autor do plano ativo foi para a feature de planos.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do cadastro de treinamentos.
@@ -29,16 +34,23 @@ export {
   countHorseExecutions,
   countTrainerExecutions,
   countTrainerFeedbacks,
+  closePlannedRecords,
+  ensureTrainingRecordIndexes,
+  insertTrainingRecords,
   findDayRecordsByHorsePlan,
   findDayRecordsByHorses,
   findDayRecordsByTrainer,
 } from "./repositories/trainingRecordRepository";
-export {isActivePlanAuthor} from "./repositories/planRepository";
+export {findTrainerTrainings} from "./repositories/trainingRepository";
 export type {
   DayTrainingRecord,
   ExecutionCount,
   FeedbackCount,
   HorseExecutionCounts,
+  NewTrainingRecord,
+  PerformedExercise,
   TrainingRecordStatus,
+  TrainingRecordTraining,
 } from "./types/trainingRecord";
+export type {TrainingDocument, TrainingSnapshot} from "./types/training";
 export {registerTraining} from "./handlers/registerTraining";

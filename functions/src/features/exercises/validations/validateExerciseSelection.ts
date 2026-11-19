@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação do _id e da busca exportadas para a feature de planos.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação da galeria de exercícios e da lista de exercícios
@@ -31,7 +35,10 @@ function invalid(message: string): AppError {
  * @param {string} message Mensagem usada se o valor for inválido.
  * @return {ObjectId} _id convertido.
  */
-function parseObjectId(value: unknown, message: string): ObjectId {
+export function parseObjectId(
+  value: unknown,
+  message: string
+): ObjectId {
   if (typeof value !== "string" || !/^[0-9a-f]{24}$/i.test(value)) {
     throw invalid(message);
   }
@@ -63,7 +70,7 @@ export function parseExerciseIds(value: unknown, min: number): ObjectId[] {
  * @param {unknown} value Valor recebido.
  * @return {string|undefined} Texto da busca, sem espaços nas pontas.
  */
-function parseBusca(value: unknown): string | undefined {
+export function parseBusca(value: unknown): string | undefined {
   if (value === undefined || value === null) return undefined;
   if (typeof value !== "string") throw invalid("Busca inválida.");
   if (value.length > MAX_SEARCH_LENGTH) {
