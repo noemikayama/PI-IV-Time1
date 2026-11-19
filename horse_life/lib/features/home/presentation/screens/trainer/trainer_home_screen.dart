@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 18/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração da agenda semanal profissional, dos estados vazios e
+// do menu flutuante para criação de planos, treinamentos e exercícios.
+// Documentação da adaptação dos dados e das ações profissionais.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de dependências, perfil e navegação;
@@ -68,6 +74,7 @@ import 'package:horse_life/features/authentication/application/states/trainer_se
 import 'package:horse_life/features/authentication/data/repositories/brazilian_locations_repository.dart';
 import 'package:horse_life/features/authentication/data/repositories/firebase_trainer_registration_repository.dart';
 import 'package:horse_life/features/authentication/data/repositories/firebase_password_reset_repository.dart';
+import 'package:horse_life/features/exercises/presentation/routes/exercise_registration_flow_route.dart';
 import 'package:horse_life/features/profile/data/models/trainer_profile_data.dart';
 import 'package:horse_life/features/list_horse/presentation/screens/professional/professional_horse_list_screen.dart';
 import 'package:horse_life/features/profile/data/repositories/trainer_profile_repository.dart';
@@ -76,6 +83,9 @@ import 'package:horse_life/features/profile/presentation/screens/trainer_profile
 import 'package:horse_life/features/profile/presentation/screens/trainer_experience_pdf_screen.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import 'package:horse_life/core/widgets/add_trainer_certifications_dialog.dart';
+import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
+import 'package:horse_life/features/training/presentation/widgets/training_agenda_floating_menu.dart';
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/trainer_home_data.dart';
 import '../../../data/repositories/trainer_repository.dart';
@@ -116,6 +126,10 @@ class TrainerHomeScreen extends StatefulWidget {
     this.addTrainerServiceArea,
     this.updateTrainerProfile,
     this.requestTrainerPasswordReset,
+    this.onViewPlans,
+    this.onCreateTrainingPlan,
+    this.onCreateTraining,
+    this.onCreateExercise,
   });
 
   // --- Fontes de dados -------------------------------------------------------
@@ -168,6 +182,12 @@ class TrainerHomeScreen extends StatefulWidget {
   final TrainerServiceAreaAdder? addTrainerServiceArea;
   final TrainerProfileUpdateHandler? updateTrainerProfile;
   final TrainerPasswordResetRequester? requestTrainerPasswordReset;
+
+  // Ações exclusivas da agenda profissional.
+  final VoidCallback? onViewPlans;
+  final VoidCallback? onCreateTrainingPlan;
+  final VoidCallback? onCreateTraining;
+  final VoidCallback? onCreateExercise;
 
   @override
   State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
@@ -280,6 +300,18 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   /// Substitui a Future armazenada para executar uma nova tentativa.
   void _retry() => setState(() => _homeFuture = _fetchHome());
 
+  void _openExerciseCreation() {
+    // Exercícios já possuem fluxo próprio e podem ser abertos diretamente.
+    Navigator.of(context).push(ExerciseRegistrationFlowRoute.build());
+  }
+
+  void _showUnavailable(String feature) {
+    // Mantém as opções futuras visíveis sem deixar o toque sem resposta.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$feature ainda não está disponível.')),
+    );
+  }
+
   @override
   void didUpdateWidget(covariant TrainerHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -291,6 +323,89 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     }
   }
 
+  Widget _buildTrainingAgenda() {
+    // Converte o resumo retornado pela Home nos contratos reutilizáveis da
+    // agenda, preservando os modelos originais para os callbacks externos.
+    return FutureBuilder<TrainerHomeData>(
+      future: _homeFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Center(
+            child: TextButton.icon(
+              onPressed: _retry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Tentar novamente'),
+            ),
+          );
+        }
+
+        final home = snapshot.data!;
+        final today = DateTime.now();
+        final entries = home.todayTrainings
+            .map(
+              (training) => TrainingAgendaEntry(
+                id: training.id,
+                title: training.title,
+                horseName: training.horseName,
+                trainerName: home.trainerName,
+                planName: training.planName,
+                date: today,
+                durationMinutes: 0,
+                status: trainingAgendaStatusFromApi(training.status),
+                action: TrainingAgendaAction.view,
+              ),
+            )
+            .toList(growable: false);
+
+        final plansByKey = <String, TrainingAgendaPlan>{};
+        // Agrupa treinos por plano e cavalo, pois a Home não retorna os planos
+        // como uma lista independente.
+        for (final training in home.todayTrainings) {
+          final key = '${training.planName}:${training.horseName}';
+          plansByKey.putIfAbsent(
+            key,
+            () => TrainingAgendaPlan(
+              id: key,
+              trainingName: training.title,
+              horseName: training.horseName,
+              trainerName: home.trainerName,
+              planName: training.planName,
+              date: today,
+              status: trainingAgendaStatusFromApi(training.status),
+            ),
+          );
+        }
+
+        TrainerTraining? sourceFor(TrainingAgendaEntry entry) {
+          // Resolve o item adaptado de volta ao modelo exposto pela Home.
+          for (final training in home.todayTrainings) {
+            if (training.id == entry.id) return training;
+          }
+          return null;
+        }
+
+        void viewEntry(TrainingAgendaEntry entry) {
+          final training = sourceFor(entry);
+          if (training != null) widget.onViewTraining?.call(training);
+        }
+
+        return TrainingAgendaScreen(
+          audience: TrainingAgendaAudience.trainer,
+          activePlansCount: home.activePlans ?? plansByKey.length,
+          plans: plansByKey.values.toList(growable: false),
+          trainings: entries,
+          onViewPlans: widget.onViewPlans,
+          onViewPlan: widget.onViewPlans == null
+              ? null
+              : (_) => widget.onViewPlans!(),
+          onViewTraining: widget.onViewTraining == null ? null : viewEntry,
+          onViewHistory: widget.onViewTraining == null ? null : viewEntry,
+        );
+      },
+    );
 
   /// Treinador consulta cavalos vinculados; cadastro segue exclusivo do responsável.
   Future<void> _openHorseList() async {
@@ -334,39 +449,53 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
       ),
-      body: _selectedDestination == HomeNavigationDestination.profile
-          ? TrainerProfileScreen(
-              loadTrainerProfile: _fetchTrainerProfile,
-              onLogout: widget.onLogout,
-              onEditTrainerProfile: widget.onEditTrainerProfile,
-              onViewExperience: widget.onViewExperience,
-              onViewCertifications: widget.onViewCertifications,
-              onViewServiceRegions: widget.onViewServiceRegions,
-              onShowAllHorses: widget.onShowAllHorses ?? _openHorseList,
-              experienceDocumentBuilder: widget.experienceDocumentBuilder,
-              experienceFilePicker: widget.experienceFilePicker,
-              uploadTrainerExperience: _uploadTrainerExperience,
-              certificationsFilePicker: widget.certificationsFilePicker,
-              certificationsFileSizeLoader: widget.certificationsFileSizeLoader,
-              uploadTrainerCertification: _uploadTrainerCertification,
-              locationsRepository: widget.locationsRepository,
-              addTrainerServiceArea: _addTrainerServiceArea,
-              updateTrainerProfile: _updateTrainerProfile,
-              requestPasswordReset: _requestTrainerPasswordReset,
-              onSelectHorse: _openHorseProfile,
+      body: switch (_selectedDestination) {
+        HomeNavigationDestination.profile => TrainerProfileScreen(
+          loadTrainerProfile: _fetchTrainerProfile,
+          onLogout: widget.onLogout,
+          onEditTrainerProfile: widget.onEditTrainerProfile,
+          onViewExperience: widget.onViewExperience,
+          onViewCertifications: widget.onViewCertifications,
+          onViewServiceRegions: widget.onViewServiceRegions,
+          onShowAllHorses: widget.onShowAllHorses,
+          experienceDocumentBuilder: widget.experienceDocumentBuilder,
+          experienceFilePicker: widget.experienceFilePicker,
+          uploadTrainerExperience: _uploadTrainerExperience,
+          certificationsFilePicker: widget.certificationsFilePicker,
+          certificationsFileSizeLoader: widget.certificationsFileSizeLoader,
+          uploadTrainerCertification: _uploadTrainerCertification,
+          locationsRepository: widget.locationsRepository,
+          addTrainerServiceArea: _addTrainerServiceArea,
+          updateTrainerProfile: _updateTrainerProfile,
+          requestPasswordReset: _requestTrainerPasswordReset,
+          onSelectHorse: _openHorseProfile,
+        ),
+        HomeNavigationDestination.trainings => _buildTrainingAgenda(),
+        _ => TrainerHomeContent(
+          homeFuture: _homeFuture,
+          onRetry: _retry,
+          onViewTraining: widget.onViewTraining,
+          onSelectHorse:
+              widget.onSelectHorse ?? (horse) => _openHorseProfile(horse.id),
+          onSelectClient: widget.onSelectClient,
+          onShowAllTrainings: widget.onShowAllTrainings,
+          onShowAllHorses: widget.onShowAllHorses,
+          onShowAllClients: widget.onShowAllClients,
+        ),
+      },
+      floatingActionButton:
+          _selectedDestination == HomeNavigationDestination.trainings
+          ? TrainingAgendaFloatingMenu(
+              onCreatePlan:
+                  widget.onCreateTrainingPlan ??
+                  () => _showUnavailable('Plano de treinos'),
+              onCreateTraining:
+                  widget.onCreateTraining ??
+                  () => _showUnavailable('Treinamento'),
+              onCreateExercise:
+                  widget.onCreateExercise ?? _openExerciseCreation,
             )
-          : TrainerHomeContent(
-              homeFuture: _homeFuture,
-              onRetry: _retry,
-              onViewTraining: widget.onViewTraining,
-              onSelectHorse:
-                  widget.onSelectHorse ??
-                  (horse) => _openHorseProfile(horse.id),
-              onSelectClient: widget.onSelectClient,
-              onShowAllTrainings: widget.onShowAllTrainings,
-              onShowAllHorses: widget.onShowAllHorses ?? _openHorseList,
-              onShowAllClients: widget.onShowAllClients,
-            ),
+          : null,
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: _selectedDestination,
         onDestinationSelected: _onNavigationDestination,

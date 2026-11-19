@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Validação de que o AppBar acompanha a cor de fundo da tela sem
+// gradiente ou tonalização de superfície. Documentação do cenário e
+// das expectativas visuais atualizadas.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação dos testes de widget do HomeAppBar para validar o gradiente linear
@@ -10,13 +16,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 
 void main() {
-  testWidgets('renders HomeAppBar with linear gradient background and opens drawer', (
-    tester,
-  ) async {
+  testWidgets('matches screen background and opens drawer', (tester) async {
     final scaffoldKey = GlobalKey<ScaffoldState>();
 
     await tester.pumpWidget(
@@ -34,26 +37,14 @@ void main() {
     expect(find.byType(HomeAppBar), findsOneWidget);
     expect(find.byType(AppBar), findsOneWidget);
 
-    // Validação da decoração com gradiente linear no flexibleSpace.
-    final containerFinder = find.descendant(
-      of: find.byType(HomeAppBar),
-      matching: find.byType(Container),
+    final appBar = tester.widget<AppBar>(find.byType(AppBar));
+    final appBarContext = tester.element(find.byType(HomeAppBar));
+    expect(
+      appBar.backgroundColor,
+      Theme.of(appBarContext).scaffoldBackgroundColor,
     );
-    expect(containerFinder, findsWidgets);
-
-    bool foundGradient = false;
-    for (final element in tester.widgetList<Container>(containerFinder)) {
-      final decoration = element.decoration;
-      if (decoration is BoxDecoration && decoration.gradient is LinearGradient) {
-        final gradient = decoration.gradient as LinearGradient;
-        expect(gradient.begin, Alignment.topCenter);
-        expect(gradient.end, Alignment.bottomCenter);
-        expect(gradient.colors, [AppColors.whiteSmoke, AppColors.alabasterGray]);
-        foundGradient = true;
-        break;
-      }
-    }
-    expect(foundGradient, isTrue);
+    expect(appBar.surfaceTintColor, Colors.transparent);
+    expect(appBar.flexibleSpace, isNull);
 
     // Validação do botão que abre o Drawer.
     final openButton = find.byTooltip('Abrir menu');
@@ -66,4 +57,3 @@ void main() {
     expect(find.text('Sidebar Drawer'), findsOneWidget);
   });
 }
-
