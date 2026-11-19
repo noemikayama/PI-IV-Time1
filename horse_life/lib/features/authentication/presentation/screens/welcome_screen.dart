@@ -28,11 +28,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
-import '../../application/controllers/registration_controller.dart';
 import '../routes/login_flow_route.dart';
 import '../routes/registration_flow_route.dart';
 import '../widgets/welcome_action_panel.dart';
-import 'login_screen.dart';
 import 'profile_selection_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {

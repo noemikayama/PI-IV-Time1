@@ -184,6 +184,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       HomeNavigationDestination.home;
   late Future<GuardianHomeData> _homeFuture;
 
+  // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
+  final List<String> _sessionMockHorses = [];
   late HomeLoader<GuardianHomeData> _loader;
   bool _isOpeningHorseProfile = false;
 
