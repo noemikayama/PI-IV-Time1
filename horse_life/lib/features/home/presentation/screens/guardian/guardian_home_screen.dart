@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Encaminhamento do callback de cadastro à Sidebar da Home,
+// permitindo navegação injetável em testes sem mudar o Firebase de produção.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de carregamento, navegação e composição;
@@ -18,6 +24,16 @@
 // Data: 10/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Navegação dos cards da Home e do perfil ao detalhe do cavalo.
+//
+// Data: 15/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Corrige a declaração da Future compartilhada, compatibilidade
+// da listagem com o cadastro modular e navegação dos cavalos.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Navegação para a listagem de cavalos, com cadastro reaproveitado
+// de features/horses e sincronização após retorno do cadastro.
 //
 // Data: 10/11/2026 (organização após integração)
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -102,10 +118,10 @@ import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/authentication/data/repositories/firebase_password_reset_repository.dart';
 import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
-import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import 'package:horse_life/features/profile/application/controllers/guardian_profile_controller.dart';
+import 'package:horse_life/features/list_horse/presentation/screens/guardian/guardian_horse_list_screen.dart';
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
 import 'package:horse_life/features/profile/data/repositories/guardian_profile_repository.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_edit_screen.dart';
@@ -236,38 +252,28 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         HomeComposition.guardian(mockScenario: widget.mockScenario);
   }
 
-  /// Mantém a feature independente da Home, retornando ao ponto de origem.
+  /// Cadastro real pela rota já existente de features/horses.
   Future<void> _openRegisterHorse() async {
-    final result = await Navigator.of(context).push<HorseRegistrationResult>(
-      HorseRegistrationFlowRoute.build(
-        repository:
-            widget.horseRegistrationRepository ??
-            (widget.mockScenario == null
-                ? null
-                : const MockHorseRegistrationRepository()),
+    final result = await Navigator.of(
+      context,
+    ).push<HorseRegistrationResult>(HorseRegistrationFlowRoute.build());
+    if (!mounted || result == null) return;
+    if (!result.isPersisted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('O cadastro não foi confirmado pelo servidor.'),
+        ),
+      );
+      return;
+    }
+    _retryHome();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.warning ?? 'Cadastro de ${result.name} concluído!',
+        ),
       ),
     );
-    if (!mounted || result == null) return;
-
-    if (result.isPersisted) {
-      // Cadastro real: atualiza a lista de cavalos consultando o servidor.
-      _retryHome();
-    } else {
-      // Cadastro mockado: exibe o nome só na sessão, sem consultar o servidor.
-      setState(() => _sessionMockHorses.add(result.name));
-    }
-
-    // Mostra a mensagem retornada pela feature ou uma confirmação padrão.
-    final message =
-        result.warning ??
-        (result.isPersisted
-            ? 'Cadastro de ${result.name} concluído!'
-            : 'Cadastro de ${result.name} concluído em modo de demonstração '
-                  '(não salvo no servidor)!');
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Refaz a consulta da Home após uma falha apresentada ao usuário.
@@ -295,6 +301,46 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     }
   }
 
+  /// Listagem autenticada exclusivamente pela callable listHorses.
+  Future<void> _openHorseList() async {
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (listContext) => GuardianHorseListScreen(
+              onRegistrationCompleted: (result) {
+                if (mounted && result.isPersisted) _retryHome();
+              },
+              appBar: const HomeAppBar(),
+              drawer: GuardianSidebar(
+                onLogout: widget.onLogout,
+                homeFuture: _homeFuture,
+                // Reutiliza o cadastro real e atualiza a Home ao retornar.
+                onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
+              ),
+              bottomNavigationBar: HomeBottomNavBar(
+                selectedDestination: HomeNavigationDestination.horses,
+                onDestinationSelected: (selected) {
+                  if (selected != HomeNavigationDestination.horses) {
+                    Navigator.of(listContext).pop(selected);
+                  }
+                },
+              ),
+            ),
+          ),
+        );
+    if (!mounted || destination == null) return;
+    setState(() => _selectedDestination = destination);
+  }
+
+  /// Mantém a aba atual quando a listagem é aberta como rota secundária.
+  void _onNavigationDestination(HomeNavigationDestination destination) {
+    if (destination == HomeNavigationDestination.horses) {
+      _openHorseList();
+    } else {
+      setState(() => _selectedDestination = destination);
+    }
+  }
+
   // --- Composição visual e navegação ----------------------------------------
   @override
   Widget build(BuildContext context) {
@@ -318,7 +364,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               onEditGuardianProfileData: widget.onEditGuardianProfile == null
                   ? _openGuardianProfileEditor
                   : null,
-              onShowAllGuardianHorses: widget.onShowAllGuardianHorses,
+              onShowAllGuardianHorses:
+                  widget.onShowAllGuardianHorses ?? _openHorseList,
               // O perfil usa o mesmo fluxo de cadastro aberto pela Home.
               onRegisterGuardianHorse:
                   widget.onRegisterHorse ?? _openRegisterHorse,
@@ -327,15 +374,14 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           : GuardianHomeContent(
               homeFuture: _homeFuture,
               onRetry: _retryHome,
-              sessionMockHorses: _sessionMockHorses,
               onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
+              onShowAllHorses: _openHorseList,
               onSelectHorse: _openHorseProfile,
             ),
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: _selectedDestination,
-        onDestinationSelected: (destination) =>
-            setState(() => _selectedDestination = destination),
+        onDestinationSelected: _onNavigationDestination,
       ),
     );
   }
