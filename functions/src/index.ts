@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação da conferência do microchip no servidor Java.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da galeria de exercícios, do tempo total dos
@@ -80,6 +84,7 @@ export {
 } from "./features/modalities";
 export {
   registerHorse,
+  validateMicrochip,
   updateHorse,
   getHorseProfile,
   listHorses,

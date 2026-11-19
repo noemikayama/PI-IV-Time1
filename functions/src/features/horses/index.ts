@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação da conferência do microchip no servidor Java.
+//
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da consulta do cavalo ativo, usada pelo cadastro de
@@ -57,6 +61,7 @@ export type {
   TrainerHorseRef,
 } from "./types";
 export {registerHorse} from "./handlers/registerHorse";
+export {validateMicrochip} from "./handlers/validateMicrochip";
 export {updateHorse} from "./handlers/updateHorse";
 export {getHorseProfile} from "./handlers/getHorseProfile";
 export {listHorses} from "./handlers/listHorses";
