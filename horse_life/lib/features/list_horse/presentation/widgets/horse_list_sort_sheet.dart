@@ -1,12 +1,23 @@
-// AUTORA: Gabriela Sichiroli Ferrari
-// PROJETO: HorseLife
-// CRIAÇÃO: 07/11/2026
-// HISTÓRICO:
-// - 07/11/2026: Bottom sheet que envia a ordenação selecionada para o Firebase.
-// - 13/11/2026: Rótulos de ordenação alinhados ao Figma (setas ↑ e ↓).
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reorganização da camada de dados e atualização dos imports; padronização
+// de autoria e histórico para revisão do PR.
+//
+// Data: 13/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Rótulos de ordenação alinhados ao Figma (setas ↑ e ↓).
+//
+// Data: 07/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Bottom sheet que envia a ordenação selecionada para o Firebase.
+// -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../domain/models/horse_list_item.dart';
+import '../../data/models/horse_list_item.dart';
 
 extension HorseSortOrderLabel on HorseSortOrder {
   String get label {

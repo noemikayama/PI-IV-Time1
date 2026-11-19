@@ -1,17 +1,31 @@
-// AUTORA: Gabriela Sichiroli Ferrari
-// PROJETO: HorseLife
-// CRIAÇÃO: 07/11/2026
-// HISTÓRICO:
-// - 07/11/2026: Card reutilizável de cavalo com variação por perfil e foto opcional.
-// - 12/11/2026: Exibe foto do backend e usa assets/black-head-horse.png
-//   já existente como ícone neutro quando não houver foto; aplica AppColors.
-// - 12/11/2026: Corrige o carregamento de URLs assinadas do Storage no
-//   Flutter Web (CORS), preserva fotos em BoxFit.cover e diferencia ausência
-//   de imagem de falha de carregamento sem expor tokens nos logs.
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reorganização da camada de dados e atualização dos imports; padronização
+// de autoria e histórico para revisão do PR.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Corrige o carregamento de URLs assinadas do Storage no Flutter Web (CORS),
+// preserva fotos em BoxFit.cover e diferencia ausência de imagem de falha de
+// carregamento sem expor tokens nos logs.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Exibe foto do backend e usa assets/black-head-horse.png já existente como
+// ícone neutro quando não houver foto; aplica AppColors.
+//
+// Data: 07/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Card reutilizável de cavalo com variação por perfil e foto opcional.
+// -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import '../../domain/models/horse_list_item.dart';
+import '../../data/models/horse_list_item.dart';
 
 class HorseListCard extends StatelessWidget {
   final HorseListItem horse;
@@ -70,20 +84,30 @@ class HorseListCard extends StatelessWidget {
                           color: AppColors.pearlAqua,
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 3,
+                        ),
                         child: Text(
                           isProfessional ? 'Treinador' : horse.relation,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                           maxLines: 1,
                         ),
                       ),
                       const SizedBox(height: 5),
                       _DetailLine(
-                        label: isProfessional ? 'proprietário: ' : 'treinador: ',
-                        value: isProfessional ? horse.ownerName : horse.trainerName,
+                        label: isProfessional
+                            ? 'Proprietário: '
+                            : 'Treinador: ',
+                        value: isProfessional
+                            ? horse.ownerName
+                            : horse.trainerName,
                       ),
                       const SizedBox(height: 3),
-                      _DetailLine(label: 'modalidade: ', value: horse.modality),
+                      _DetailLine(label: 'Modalidade: ', value: horse.modality),
                     ],
                   ),
                 ),
@@ -107,11 +131,18 @@ class _DetailLine extends StatelessWidget {
     return Text.rich(
       TextSpan(
         children: <TextSpan>[
-          TextSpan(text: label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          TextSpan(
+            text: label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
           TextSpan(text: value),
         ],
       ),
-      style: const TextStyle(fontSize: 12.5, height: 1.12, color: Colors.black87),
+      style: const TextStyle(
+        fontSize: 12.5,
+        height: 1.12,
+        color: Colors.black87,
+      ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
@@ -138,7 +169,8 @@ class _HorsePhoto extends StatelessWidget {
     }
 
     final uri = Uri.tryParse(url);
-    if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http') ||
+    if (uri == null ||
+        (uri.scheme != 'https' && uri.scheme != 'http') ||
         uri.host.isEmpty) {
       return const _HorsePhotoPlaceholder(message: 'Endereço da foto inválido');
     }

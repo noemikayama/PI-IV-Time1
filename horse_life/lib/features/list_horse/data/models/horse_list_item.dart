@@ -1,7 +1,20 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 07/11/2026: Modelo de card da listagem de cavalos.
-// 12/11/2026: Modelo exclusivo do retorno real da callable listHorses.
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reorganização da camada de dados e atualização dos imports; padronização
+// de autoria e histórico para revisão do PR.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Modelo exclusivo do retorno real da callable listHorses.
+//
+// Data: 07/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Modelo de card da listagem de cavalos.
+// -----------------------------------------------------------------------------
 
 /// Perfil esperado no retorno de listHorses, determinado pela autenticação.
 enum HorseListProfile { guardian, professional }

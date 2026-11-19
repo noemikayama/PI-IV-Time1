@@ -1,11 +1,21 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 12/11/2026: Consulta exclusiva à Cloud Function listHorses; busca e
-// ordenação remotas, validação de contrato e tratamento de perfil autenticado.
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reorganização da camada de dados e atualização dos imports; padronização
+// de autoria e histórico para revisão do PR.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Consulta exclusiva à Cloud Function listHorses; busca e ordenação remotas,
+// validação de contrato e tratamento de perfil autenticado.
+// -----------------------------------------------------------------------------
 
 import 'package:cloud_functions/cloud_functions.dart';
-import '../../domain/models/horse_list_item.dart';
-import '../../domain/repositories/horse_list_repository.dart';
+import '../../data/models/horse_list_item.dart';
+import '../../data/repositories/horse_list_repository.dart';
 
 /// Não utiliza Firestore direto nem dados fictícios: listHorses aplica as
 /// permissões e os vínculos conforme a sessão autenticada no backend.

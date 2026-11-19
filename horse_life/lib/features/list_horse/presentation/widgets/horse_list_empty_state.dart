@@ -1,13 +1,24 @@
-// AUTORA: Gabriela Sichiroli Ferrari
-// PROJETO: HorseLife
-// CRIAÇÃO: 07/11/2026
-// HISTÓRICO:
-// - 07/11/2026: Estados vazios próprios de Responsável e Profissional.
-// - 12/11/2026: Reutiliza o AppColors do tema oficial; não duplica assets.
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reorganização da camada de dados e atualização dos imports; padronização
+// de autoria e histórico para revisão do PR.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reutiliza o AppColors do tema oficial; não duplica assets.
+//
+// Data: 07/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Estados vazios próprios de Responsável e Profissional.
+// -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import '../../domain/models/horse_list_item.dart';
+import '../../data/models/horse_list_item.dart';
 
 class HorseListEmptyState extends StatelessWidget {
   final HorseListProfile profile;

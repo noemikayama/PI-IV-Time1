@@ -1,15 +1,35 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-// 07/11/2026: Criação da listagem de cavalos para ambos os perfis.
-// 12/11/2026: Integração exclusiva com Firebase callable listHorses.
-//   Busca e ordenação remotas; sem dados mockados, nem cadastro temporário.
-//   Botões de cadastro reutilizam a rota real de features/horses.
-// 12/11/2026: Reutiliza HomeAppBar, HomeBottomNavBar e AppColors;
-//   sem cópia de logos, imagens ou barra de navegação.
-// 12/11/2026: Atualiza URLs temporárias de fotos ao retomar o aplicativo
-//   e mantém estado vazio conforme os protótipos de Responsável/Profissional.
-// 13/11/2026: Ajusta botão de cadastro para 60 x 60 conforme o Figma.
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reorganização da camada de dados e atualização dos imports; padronização
+// de autoria e histórico para revisão do PR.
+//
+// Data: 13/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Ajusta botão de cadastro para 60 x 60 conforme o Figma.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Atualiza URLs temporárias de fotos ao retomar o aplicativo e mantém estado
+// vazio conforme os protótipos de Responsável/Profissional.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reutiliza HomeAppBar, HomeBottomNavBar e AppColors; sem cópia de logos,
+// imagens ou barra de navegação.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração exclusiva com Firebase callable listHorses. Busca e ordenação
+// remotas; sem dados mockados, nem cadastro temporário. Botões de cadastro
+// reutilizam a rota real de features/horses.
+//
+// Data: 07/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Criação da listagem de cavalos para ambos os perfis.
 // -----------------------------------------------------------------------------
 
 import 'dart:async';
@@ -20,8 +40,8 @@ import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
-import '../../domain/models/horse_list_item.dart';
-import '../../domain/repositories/horse_list_repository.dart';
+import '../../data/models/horse_list_item.dart';
+import '../../data/repositories/horse_list_repository.dart';
 import '../../list_horse_composition.dart';
 import '../widgets/horse_list_card.dart';
 import '../widgets/horse_list_empty_state.dart';

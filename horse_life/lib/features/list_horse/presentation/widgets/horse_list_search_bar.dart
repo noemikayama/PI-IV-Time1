@@ -1,9 +1,20 @@
-// AUTORA: Gabriela Sichiroli Ferrari
-// PROJETO: HorseLife
-// CRIAÇÃO: 07/11/2026
-// HISTÓRICO:
-// - 07/11/2026: Campo de busca e botão de ordenação conforme protótipo.
-// - 12/11/2026: Usa AppColors.alabasterGray do tema existente.
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Padronização dos comentários de autoria e histórico de alterações para
+// revisão do PR.
+//
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Usa AppColors.alabasterGray do tema existente.
+//
+// Data: 07/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Campo de busca e botão de ordenação conforme protótipo.
+// -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';

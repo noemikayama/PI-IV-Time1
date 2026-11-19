@@ -1,12 +1,20 @@
-// AUTORA: Gabriela Sichiroli Ferrari
-// PROJETO: HorseLife
-// CRIAÇÃO: 07/11/2026
-// HISTÓRICO:
-// - 07/11/2026: Entrada da listagem de cavalos para o perfil Profissional.
+// RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Reorganização da camada de dados e atualização dos imports; padronização
+// de autoria e histórico para revisão do PR.
+//
+// Data: 07/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Entrada da listagem de cavalos para o perfil Profissional.
+// -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../../domain/models/horse_list_item.dart';
-import '../../../domain/repositories/horse_list_repository.dart';
+import '../../../data/models/horse_list_item.dart';
+import '../../../data/repositories/horse_list_repository.dart';
 import '../horse_list_screen.dart';
 
 class ProfessionalHorseListScreen extends StatelessWidget {
