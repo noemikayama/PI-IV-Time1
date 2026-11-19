@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Documento do registro de treino, gerado na ativação do plano.
+//
 // Data: 01/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Nome do atleta (responsavel) na projeção do dia.
@@ -12,6 +16,7 @@
 // -----------------------------------------------------------------------------
 
 import type {ObjectId} from "mongodb";
+import type {TrainingExercise, TrainingSnapshot} from "./training";
 
 export type TrainingRecordStatus =
     | "PLANEJADO"
@@ -19,6 +24,67 @@ export type TrainingRecordStatus =
     | "PARCIAL"
     | "NAO_REALIZADO"
     | "CANCELADO";
+
+// Referência resumida a uma conta (responsável ou treinador).
+type AccountRef = {_id: string; codigo: number; nome: string};
+
+// Cópia do treinamento (DD 3.7): a do item do planejamento, sem os
+// exercícios, que ficam em 'exercicios'.
+export type TrainingRecordTraining = Omit<TrainingSnapshot, "exercicios">;
+
+export type ExerciseCompletion = "PENDENTE" | "REALIZADO" | "NAO_REALIZADO";
+
+// Exercício Realizado (DD 3.9). Nasce PENDENTE; 'video' e
+// 'observacoesEspecificas' são informados pelo atleta na execução e ficam
+// omitidos até lá.
+export type PerformedExercise = {
+    exercicio: TrainingExercise;
+    realizacao: ExerciseCompletion;
+    video?: string;
+    observacoesEspecificas?: string;
+};
+
+// Feedback do treinador (DD 3.8), embutido no registro.
+export type TrainingFeedback = {
+    data: Date;
+    comentario: string;
+    dificuldadesIdentificadas: string[];
+    orientacoes: string[];
+};
+
+// Coleção 'registros_treino' (DD 2.8): uma sessão por registro, gerada na
+// ativação do plano.
+export type TrainingRecordDocument = {
+    _id: ObjectId;
+    codigo: number;
+    plano: {_id: ObjectId; codigo: number; titulo: string};
+    // Código do item do planejamento que originou o registro.
+    itemPlanejamento: number;
+    // Atleta do cavalo na geração, omitido se não houver. A agenda é lida
+    // por cavalo, então a troca de atleta não esconde nenhum registro.
+    responsavel?: AccountRef;
+    cavalo: {_id: ObjectId; codigo: string; nome: string};
+    treinador: AccountRef;
+    // Semana do plano: 1 são os 7 primeiros dias a partir de dataInicio.
+    semana: number;
+    status: TrainingRecordStatus;
+    // Datas de calendário à meia-noite UTC.
+    dataPlanejada: Date;
+    // Campos da execução e do feedback: ausentes até o registro.
+    dataExecucao?: Date;
+    duracaoEfetivaMinutos?: number;
+    percepcaoDesempenho?: string;
+    dificuldade?: string;
+    observacoes?: string[];
+    treinamento: TrainingRecordTraining;
+    exercicios: PerformedExercise[];
+    feedback?: TrainingFeedback;
+    criadoEm: Date;
+    atualizadoEm: Date;
+};
+
+// Registro montado pelo plano; o 'codigo' é reservado na inserção.
+export type NewTrainingRecord = Omit<TrainingRecordDocument, "codigo">;
 
 // Projeção usada na listagem do dia. CANCELADO é excluído na consulta.
 export type DayTrainingRecord = {

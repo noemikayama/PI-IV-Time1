@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Cópia do treinamento guardada no item do planejamento do plano.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos do documento e do cadastro de treinamentos.
@@ -38,6 +42,13 @@ export type TrainingDocument = {
     criadoEm: Date;
     atualizadoEm: Date;
 };
+
+// Cópia do treinamento no item do planejamento (DD 3.6), com os exercícios
+// em uso. '_id' e 'codigo' são os do treinamento de origem.
+export type TrainingSnapshot = Omit<
+    TrainingDocument,
+    "treinador" | "criadoEm" | "atualizadoEm"
+>;
 
 // Dados enviados ao repository; o 'codigo' é gerado na própria inserção.
 export type NewTraining = Omit<TrainingDocument, "codigo">;
