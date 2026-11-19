@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: parseMicrochip exportado, para o callable validateMicrochip.
+//
 // Data: 02/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Microchip editável e modalidade obrigatória.
@@ -226,7 +230,7 @@ function parseResponsabilidades(value: unknown): HorseResponsibility[] {
  * @param {unknown} value Valor recebido.
  * @return {string} Código do microchip.
  */
-function parseMicrochip(value: unknown): string {
+export function parseMicrochip(value: unknown): string {
   const codigo = typeof value === "string" ? value.trim() : "";
   if (!MICROCHIP_PATTERN.test(codigo)) {
     throw invalid("O microchip deve ter exatamente 15 dígitos numéricos.");

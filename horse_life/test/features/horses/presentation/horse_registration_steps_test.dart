@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - RA 25016900
+// Alteração: Validador local de microchip injetado na tela, porque o de
+// produção passou a consultar o servidor pelo Firebase.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Cobertura da fase final de adaptação estética do cadastro de cavalos:
@@ -37,6 +42,7 @@ import 'package:horse_life/core/widgets/auth_next_button.dart';
 import 'package:horse_life/core/widgets/form_progress_indicator.dart';
 import 'package:horse_life/core/widgets/information_row.dart';
 import 'package:horse_life/features/horses/data/models/horse_registration_draft.dart';
+import 'package:horse_life/features/horses/data/repositories/horse_microchip_validator.dart';
 import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
 import 'package:horse_life/features/horses/presentation/services/horse_image_selection_service.dart';
@@ -66,6 +72,7 @@ void main() {
       theme: AppTheme.light,
       home: HorseRegistrationScreen(
         repository: const MockHorseRegistrationRepository(),
+        microchipValidator: const LocalHorseMicrochipValidator(),
         imageSelection:
             imageSelection ?? const HorseImageSelectionService(),
       ),

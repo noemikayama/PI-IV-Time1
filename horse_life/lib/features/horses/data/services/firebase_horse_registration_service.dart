@@ -1,6 +1,11 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - RA 25016900
+// Alteração: Chamada da callable validateMicrochip; só a recusa do microchip
+// vira HorseMicrochipValidationFailure.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de callable, autenticação e upload;
@@ -20,6 +25,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:http/http.dart' as http;
 
+import '../repositories/horse_microchip_validator.dart';
 import 'horse_registration_remote_service.dart';
 
 // --- Dependências substituíveis para testes ---------------------------------
@@ -116,6 +122,24 @@ class FirebaseHorseRegistrationService
   Future<Map<String, dynamic>> registerHorse(
     Map<String, Object?> payload,
   ) async => _object(await _call('registerHorse', payload));
+
+  // --- Verificação do microchip ---------------------------------------------
+  // Só a recusa do código (invalid-argument) vira falha de validação, com a
+  // mensagem do servidor. Servidor Java fora do ar ('unavailable') ou rede
+  // seguem como erro, para a tela não chamar de inválido um código que não
+  // pôde ser conferido.
+
+  @override
+  Future<void> validateMicrochip(String code) async {
+    try {
+      await _call('validateMicrochip', {'codigo': code});
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'invalid-argument') rethrow;
+      throw HorseMicrochipValidationFailure(
+        error.message ?? 'Microchip inválido.',
+      );
+    }
+  }
 
   // --- Preparação, envio e confirmação das imagens --------------------------
   // O backend emite uma URL temporária; o serviço faz o PUT diretamente no

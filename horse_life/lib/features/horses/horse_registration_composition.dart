@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - RA 25016900
+// Alteração: Validador de produção do microchip passa a consultar o servidor
+// Java, pela callable validateMicrochip.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Inclusão do método de fábrica productionController para instanciar
@@ -17,15 +22,20 @@ import 'data/models/horse_registration_draft.dart';
 import 'data/repositories/firebase_horse_registration_repository.dart';
 import 'data/repositories/horse_microchip_validator.dart';
 import 'data/repositories/horse_registration_repository.dart';
+import 'data/repositories/remote_horse_microchip_validator.dart';
+import 'data/services/firebase_horse_registration_service.dart';
 
 /// Ponto único de composição para criar os serviços, validadores e controlador.
 abstract final class HorseRegistrationComposition {
   static HorseRegistrationRepository productionRepository() =>
       FirebaseHorseRegistrationRepository();
 
-  // Quando o Java estiver disponível, injete aqui o validador da API Java.
+  // O formato é conferido no app; o país e os dígitos verificadores, no
+  // servidor Java, pela callable validateMicrochip.
   static HorseMicrochipValidator productionMicrochipValidator() =>
-      const LocalHorseMicrochipValidator();
+      RemoteHorseMicrochipValidator(
+        verifyOnServer: FirebaseHorseRegistrationService().validateMicrochip,
+      );
 
   /// Cria o controlador de cadastro com as dependências padrão ou substituídas.
   static HorseRegistrationController productionController({
