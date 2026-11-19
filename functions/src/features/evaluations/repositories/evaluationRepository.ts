@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Leitura da avaliação de um cavalo, usada pelo cadastro de
+// plano.
+//
 // Data: 01/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Gravação da avaliação e do resumo em cavalos.avaliacoes.
@@ -76,4 +81,21 @@ export async function addEvaluationToHorse(
   if (result.matchedCount === 0) {
     throw new AppError("not-found", "Cavalo não encontrado.");
   }
+}
+
+/** Busca a avaliação, desde que seja do cavalo informado.
+ * @param {ObjectId} id _id da avaliação.
+ * @param {ObjectId} horseId _id do cavalo.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<EvaluationDocument|null>} Avaliação ou null.
+ */
+export async function findHorseEvaluation(
+  id: ObjectId,
+  horseId: ObjectId,
+  session: ClientSession
+): Promise<EvaluationDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<EvaluationDocument>(COLLECTIONS.Avaliacoes)
+    .findOne({"_id": id, "cavalo._id": horseId}, {session});
 }

@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Busca dos treinamentos do treinador, usada pelo plano.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Índices e inserção de treinamentos (com geração do código
@@ -10,7 +14,7 @@
 
 // Coleção 'treinamentos'. Índices do DD: idx_treinamentos_treinador e
 // idx_treinamentos_titulo, além do único em 'codigo'.
-import type {ClientSession, IndexDescription} from "mongodb";
+import type {ClientSession, IndexDescription, ObjectId} from "mongodb";
 import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
 import {ensureIndexesOnce} from "../../../shared/database/indexes";
@@ -49,4 +53,21 @@ export async function insertTraining(
     .insertOne({...training, codigo}, {session});
 
   return codigo;
+}
+
+/** Busca os treinamentos do treinador; com 'ids', só esses. Usa
+ * idx_treinamentos_treinador. Treinamento de outro treinador nunca volta.
+ * @param {string} trainerId UID do treinador.
+ * @param {ObjectId[]} ids _id dos treinamentos, se a busca for restrita.
+ * @return {Promise<TrainingDocument[]>} Treinamentos encontrados.
+ */
+export async function findTrainerTrainings(
+  trainerId: string,
+  ids?: ObjectId[]
+): Promise<TrainingDocument[]> {
+  const db = await getDatabase();
+  return db
+    .collection<TrainingDocument>(COLLECTIONS.Treinamentos)
+    .find({"treinador._id": trainerId, ...(ids && {_id: {$in: ids}})})
+    .toArray();
 }

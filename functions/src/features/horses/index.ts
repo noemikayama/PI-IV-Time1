@@ -5,6 +5,9 @@
 // Data: 19/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação da conferência do microchip no servidor Java.
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportações usadas pela feature de planos.
 //
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -45,9 +48,11 @@
 export {
   findActiveHorseById,
   findTrainersOfHorses,
+  updateHorseDocument,
 } from "./repositories/horseRepository";
 export {
   assertActiveAccount,
+  getHorseForUser,
   HORSE_RULES,
   loadHorseAccess,
 } from "./services/horseAccess";
