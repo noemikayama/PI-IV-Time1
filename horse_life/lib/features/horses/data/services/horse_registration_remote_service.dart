@@ -1,6 +1,11 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - RA 25016900
+// Alteração: Verificação do microchip pela callable validateMicrochip, que
+// consulta o servidor Java.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos contratos de preparação, envio, confirmação e
@@ -46,6 +51,10 @@ abstract class HorseRegistrationRemoteService {
   Future<List<Map<String, dynamic>>> getModalities();
 
   Future<Map<String, dynamic>> registerHorse(Map<String, Object?> payload);
+
+  /// Confere o microchip no servidor. Lança `HorseMicrochipValidationFailure`
+  /// quando o código é recusado; qualquer outro erro segue como está.
+  Future<void> validateMicrochip(String code);
 
   Future<HorseImageUploadTicket> prepareImage(
     String horseId,
