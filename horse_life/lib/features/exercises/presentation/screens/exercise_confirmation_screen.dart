@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Propagação do identificador real do exercício criado via
+// onExerciseCreatedWithId após conclusão do cadastro.
+//
+// Data: 17/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte ao retorno até a tela chamadora de ExerciseRegistrationFlowRoute
+// e notificação via onExerciseCreated após concluir o cadastro do exercício.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Integração com retorno de persistência do ExerciseRegistrationResult,
@@ -41,6 +51,7 @@ import '../../application/states/exercise_media.dart';
 import '../../application/states/exercise_registration_draft.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/exercise_registration_repository.dart';
+import '../routes/exercise_registration_flow_route.dart';
 
 typedef ExerciseConfirmationSubmittedCallback =
     void Function(ExerciseRegistrationDraft draft);
@@ -221,8 +232,10 @@ class _ExerciseConfirmationScreenState
     final controller = widget.registrationController;
     setState(() => _isSubmitting = true);
     try {
+      String? createdExerciseId;
       if (controller != null) {
         final result = await controller.registerExercise(draft: updatedDraft);
+        createdExerciseId = result.id;
         if (!mounted) return;
         if (result.hasMediaWarning) {
           AppSnackBar.show(
@@ -234,7 +247,7 @@ class _ExerciseConfirmationScreenState
         }
       }
       if (!mounted) return;
-      _finishRegistration();
+      _finishRegistration(updatedDraft, createdExerciseId);
     } on ExerciseRegistrationFailure catch (error) {
       if (!mounted) return;
       _showError(error.message);
@@ -257,7 +270,18 @@ class _ExerciseConfirmationScreenState
     );
   }
 
-  void _finishRegistration() {
+  void _finishRegistration([
+    ExerciseRegistrationDraft? createdDraft,
+    String? createdExerciseId,
+  ]) {
+    if (createdDraft != null) {
+      widget.registrationController?.onExerciseCreated?.call(createdDraft);
+      widget.registrationController?.onExerciseCreatedWithId?.call(
+        createdDraft,
+        createdExerciseId,
+      );
+    }
+
     final onCreated = widget.onCreated;
     if (onCreated != null) {
       onCreated();
@@ -270,7 +294,19 @@ class _ExerciseConfirmationScreenState
       icon: Icons.check_circle_outline_rounded,
       message: 'Exercício cadastrado com sucesso.',
     );
-    Navigator.of(context).popUntil((route) => route.isFirst);
+
+    final navigator = Navigator.of(context);
+    var foundEntryRoute = false;
+    navigator.popUntil((route) {
+      if (route.settings.name == ExerciseRegistrationFlowRoute.routeName) {
+        foundEntryRoute = true;
+        return true;
+      }
+      return route.isFirst;
+    });
+    if (foundEntryRoute && navigator.canPop()) {
+      navigator.pop();
+    }
   }
 
   @override
