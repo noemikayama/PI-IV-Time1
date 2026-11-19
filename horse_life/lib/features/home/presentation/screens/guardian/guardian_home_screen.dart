@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Encaminhamento do callback de cadastro à Sidebar da Home,
+// permitindo navegação injetável em testes sem mudar o Firebase de produção.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de carregamento, navegação e composição;
@@ -345,6 +351,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       drawer: GuardianSidebar(
         onLogout: widget.onLogout,
         homeFuture: _homeFuture,
+        onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
       ),
       // Área reservada aos cards futuros.
       body: _selectedDestination == HomeNavigationDestination.profile

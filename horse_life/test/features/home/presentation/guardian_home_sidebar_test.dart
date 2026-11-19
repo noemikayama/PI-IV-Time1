@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Adequação do teste à rota modular HorseRelationshipScreen e
+// injeção de repositório exclusivo do teste para evitar acesso ao Firebase.
+//
+//
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Cobertura do link "Cadastrar cavalo" na barra lateral do responsável.
@@ -14,18 +20,29 @@ import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/features/home/application/controllers/home_loader.dart';
 import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
 import 'package:horse_life/features/home/presentation/screens/guardian/guardian_home_screen.dart';
-import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_relationship_screen.dart';
+import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
+import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 
 void main() {
   testWidgets(
     'opens horse registration flow when tapping Cadastrar cavalo in GuardianSidebar',
     (tester) async {
+      final navigatorKey = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
         MaterialApp(
+          navigatorKey: navigatorKey,
           theme: AppTheme.light,
           home: GuardianHomeScreen(
             loader: _GuardianHomeLoader(),
             onLogout: () async {},
+            onRegisterHorse: () {
+              navigatorKey.currentState!.push(
+                HorseRegistrationFlowRoute.build(
+                  repository: const MockHorseRegistrationRepository(),
+                ),
+              );
+            },
           ),
         ),
       );
@@ -44,7 +61,7 @@ void main() {
       await tester.tap(registerHorseTile);
       await tester.pumpAndSettle();
 
-      expect(find.byType(HorseRegistrationScreen), findsOneWidget);
+      expect(find.byType(HorseRelationshipScreen), findsOneWidget);
       expect(find.text('Relação com o cavalo'), findsOneWidget);
     },
   );

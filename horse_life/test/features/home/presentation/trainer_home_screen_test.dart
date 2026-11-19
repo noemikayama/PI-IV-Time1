@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Atualização do teste da Sidebar para a rota modular do cadastro;
+// serviços de produção não são inicializados durante o teste de navegação.
+//
+//
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Cobertura do link "Cadastrar cavalo" na barra lateral do treinador.
@@ -30,7 +36,10 @@ import 'package:horse_life/features/exercises/presentation/screens/exercise_type
 import 'package:horse_life/features/home/application/controllers/home_loader.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
-import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_relationship_screen.dart';
+import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
+import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
+import 'package:horse_life/core/widgets/trainer_sidebar.dart';
 
 void main() {
   // --- Navegação para o perfil ----------------------------------------------
@@ -95,18 +104,32 @@ void main() {
   testWidgets(
     'opens horse registration flow when tapping Cadastrar cavalo in TrainerSidebar',
     (tester) async {
+      final navigatorKey = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
         MaterialApp(
+          navigatorKey: navigatorKey,
           theme: AppTheme.light,
-          home: TrainerHomeScreen(
-            loader: _TrainerHomeLoader(),
-            onLogout: () async {},
+          home: Scaffold(
+            appBar: AppBar(title: const Text('Teste da Sidebar')),
+            drawer: TrainerSidebar(
+              homeFuture: _TrainerHomeLoader().fetchHome(),
+              onLogout: () async {},
+              onRegisterHorse: () {
+                navigatorKey.currentState!.push(
+                  HorseRegistrationFlowRoute.build(
+                    repository: const MockHorseRegistrationRepository(),
+                  ),
+                );
+              },
+            ),
+            body: const SizedBox(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Abrir menu'));
+      final scaffold = tester.state<ScaffoldState>(find.byType(Scaffold));
+      scaffold.openDrawer();
       await tester.pumpAndSettle();
 
       final registerHorseTile = find.byKey(
@@ -118,7 +141,7 @@ void main() {
       await tester.tap(registerHorseTile);
       await tester.pumpAndSettle();
 
-      expect(find.byType(HorseRegistrationScreen), findsOneWidget);
+      expect(find.byType(HorseRelationshipScreen), findsOneWidget);
       expect(find.text('Relação com o cavalo'), findsOneWidget);
     },
   );

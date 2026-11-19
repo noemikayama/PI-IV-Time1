@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Enzo Olivato Pazian - 25001654
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 18/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Restauração da injeção opcional do seletor de imagens para
+// compatibilidade com os testes, mantendo o serviço real como padrão.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Revisão da documentação dos blocos de estado, navegação entre
@@ -46,6 +52,7 @@ class HorseRegistrationScreen extends StatefulWidget {
   const HorseRegistrationScreen({
     this.repository,
     this.microchipValidator,
+    this.imageSelection = const HorseImageSelectionService(),
     super.key,
   });
 
@@ -53,6 +60,9 @@ class HorseRegistrationScreen extends StatefulWidget {
 
   /// Somente o microchip poderá consultar a API Java no futuro.
   final HorseMicrochipValidator? microchipValidator;
+
+  /// Permite isolar a seleção de fotografias nos testes sem alterar a produção.
+  final HorseImageSelectionService imageSelection;
 
   @override
   State<HorseRegistrationScreen> createState() =>
@@ -64,7 +74,6 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _chipController = TextEditingController();
-  final _imageSelection = const HorseImageSelectionService();
 
   HorseRegistrationStep _step = HorseRegistrationStep.relationship;
   bool _saving = false;
@@ -199,7 +208,7 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
 
   Future<void> _selectImages() async {
     try {
-      final selected = await _imageSelection.select(
+      final selected = await widget.imageSelection.select(
         currentCount: _draft.images.length,
       );
       if (!mounted) return;
