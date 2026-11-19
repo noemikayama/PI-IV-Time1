@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 17/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição do link funcional "Cadastrar treinamento" na barra lateral
+// do treinador para abertura direta do fluxo de cadastro de treinamentos.
+//
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do link funcional "Cadastrar cavalo" na barra lateral do
@@ -38,6 +43,7 @@ import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/exercises/presentation/routes/exercise_registration_flow_route.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
+import 'package:horse_life/features/trainings/presentation/routes/training_registration_flow_route.dart';
 
 class TrainerSidebar extends StatefulWidget {
   const TrainerSidebar({
@@ -46,6 +52,7 @@ class TrainerSidebar extends StatefulWidget {
     required this.homeFuture,
     this.onCreateExercise,
     this.onRegisterHorse,
+    this.onCreateTraining,
   });
 
   final Future<void> Function() onLogout;
@@ -59,6 +66,10 @@ class TrainerSidebar extends StatefulWidget {
   /// de cavalos em composições externas ou testes.
   final VoidCallback? onRegisterHorse;
 
+  /// Callback opcional que permite sobrescrever a abertura do fluxo de cadastro
+  /// de treinamentos em composições externas ou testes.
+  final VoidCallback? onCreateTraining;
+
   @override
   State<TrainerSidebar> createState() => _TrainerSidebarState();
 }
@@ -68,7 +79,6 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
 
   // Itens provisórios remanescentes do protótipo; substituir ao integrar as respectivas rotas.
   static const List<String> _placeholderMenuItems = [
-    'Item 1',
     'Item 1',
   ];
 
@@ -98,6 +108,20 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
     }
 
     navigator.push(HorseRegistrationFlowRoute.build());
+  }
+
+  // Fecha o menu lateral e direciona o treinador ao fluxo de cadastro de treinamentos.
+  void _handleCreateTraining() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+
+    final onCreateTraining = widget.onCreateTraining;
+    if (onCreateTraining != null) {
+      onCreateTraining();
+      return;
+    }
+
+    navigator.push(TrainingRegistrationFlowRoute.build());
   }
 
   Future<void> _handleLogout() async {
@@ -216,6 +240,23 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
                   ),
                 ),
                 onTap: _handleRegisterHorse,
+              ),
+              ListTile(
+                key: const Key('trainer-sidebar-create-training'),
+                contentPadding: EdgeInsets.zero,
+                minTileHeight: 48,
+                leading: const Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                title: Text(
+                  'Cadastrar treinamento',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+                onTap: _handleCreateTraining,
               ),
               ..._placeholderMenuItems.map(
                 (item) => ListTile(
