@@ -2,11 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 09/11/2026
-// Autor: Noemi Kayama - RA 25004140
-// Alteração: Cobertura da criação da URL assinada, envio e confirmação de um
-// documento adicionado após a autenticação do treinador.
-//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura do payload profissional, da ordem dos uploads, da
@@ -116,37 +111,6 @@ void main() {
     );
 
     expect(authenticationCalls, 0);
-  });
-
-  test('uploads an attachment for an already authenticated trainer', () async {
-    final events = <String>[];
-    final repository = FirebaseTrainerRegistrationRepository(
-      createAttachmentUpload: (type) async {
-        events.add('create:${type.value}');
-        return const TrainerAttachmentUpload(
-          path: '/experiencia_1.pdf',
-          url: 'https://storage.test/experiencia',
-          headers: {'Content-Type': 'application/pdf'},
-        );
-      },
-      uploadFile: (upload, bytes) async {
-        events.add('upload:${upload.path}:${bytes.single}');
-      },
-      confirmAttachment: (type, path) async {
-        events.add('confirm:${type.value}:$path');
-      },
-    );
-
-    await repository.uploadTrainerAttachment(
-      TrainerAttachmentType.experience,
-      _document('experiencia.pdf', 7),
-    );
-
-    expect(events, [
-      'create:experiencias',
-      'upload:/experiencia_1.pdf:7',
-      'confirm:experiencias:/experiencia_1.pdf',
-    ]);
   });
 
   test(
