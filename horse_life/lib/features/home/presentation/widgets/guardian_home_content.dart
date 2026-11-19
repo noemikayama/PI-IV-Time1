@@ -10,6 +10,11 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ação de toque nos cavalos persistidos da Home.
 //
+// Data: 15/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Conecta Mostrar tudo à listagem de cavalos e remove cavalos
+// temporários de sessão; dados exibidos vêm da Home real.
+//
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Exibe cavalos de demonstração somente durante a sessão atual,
@@ -41,6 +46,7 @@ class GuardianHomeContent extends StatefulWidget {
     required this.homeFuture,
     required this.onRetry,
     this.onRegisterHorse,
+    this.onShowAllHorses,
     this.sessionMockHorses = const [],
     this.onSelectHorse,
   });
@@ -48,6 +54,8 @@ class GuardianHomeContent extends StatefulWidget {
   final Future<GuardianHomeData> homeFuture;
   final VoidCallback onRetry;
   final VoidCallback? onRegisterHorse;
+  /// Abre a listagem autenticada de cavalos.
+  final VoidCallback? onShowAllHorses;
   final List<String> sessionMockHorses;
   final ValueChanged<String>? onSelectHorse;
 
@@ -173,6 +181,7 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                       const SizedBox(height: 24),
                       GuardianListCard(
                         title: 'Meus cavalos',
+                        onShowAll: widget.onShowAllHorses,
                         icon: Icons.pets,
                         useHorseAsset: true,
                         maxVisibleItems: 2,

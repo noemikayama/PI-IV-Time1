@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição dos parâmetros opcionais inputFormatters, minLines e
+// maxLines no componente compartilhado para reutilização na revisão do
+// cadastro de treinamentos.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos parâmetros e dos modos de leitura, edição e
@@ -18,6 +24,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
 /// Campo que alterna entre leitura e edição sem trocar o layout.
@@ -35,6 +42,9 @@ class EditableReviewField extends StatelessWidget {
     required this.validator,
     required this.textInputAction,
     this.keyboardType,
+    this.inputFormatters,
+    this.minLines,
+    this.maxLines = 1,
     this.obscureText = false,
     this.externalEdit = false,
     this.leadingAction,
@@ -51,6 +61,9 @@ class EditableReviewField extends StatelessWidget {
   final FormFieldValidator<String> validator;
   final TextInputAction textInputAction;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? minLines;
+  final int? maxLines;
   final bool obscureText;
   final bool externalEdit;
   final Widget? leadingAction;
@@ -70,6 +83,9 @@ class EditableReviewField extends StatelessWidget {
       enableSuggestions: !obscureText,
       autocorrect: !obscureText,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      minLines: obscureText ? 1 : minLines,
+      maxLines: obscureText ? 1 : maxLines,
       textInputAction: textInputAction,
       validator: validator,
       onFieldSubmitted: (_) => onToggleEditing(),

@@ -20,6 +20,11 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Navegação dos cards profissionais ao perfil do cavalo.
 //
+// Data: 12/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Aba Cavalos e Mostrar tudo abrem somente a callable listHorses,
+// com a barra de navegação e Sidebar institucionais.
+//
 // Data: 10/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ampliação da composição do perfil com os callbacks de upload de
@@ -71,6 +76,7 @@ import 'package:horse_life/features/authentication/data/repositories/firebase_tr
 import 'package:horse_life/features/authentication/data/repositories/firebase_password_reset_repository.dart';
 import 'package:horse_life/features/exercises/presentation/routes/exercise_registration_flow_route.dart';
 import 'package:horse_life/features/profile/data/models/trainer_profile_data.dart';
+import 'package:horse_life/features/list_horse/presentation/screens/professional/professional_horse_list_screen.dart';
 import 'package:horse_life/features/profile/data/repositories/trainer_profile_repository.dart';
 import 'package:horse_life/features/profile/presentation/screens/trainer_edit_profile_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/trainer_profile_screen.dart';
@@ -400,6 +406,37 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         );
       },
     );
+
+  /// Treinador consulta cavalos vinculados; cadastro segue exclusivo do responsável.
+  Future<void> _openHorseList() async {
+    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
+      MaterialPageRoute<HomeNavigationDestination>(
+        builder: (listContext) => ProfessionalHorseListScreen(
+          appBar: const HomeAppBar(),
+          drawer: TrainerSidebar(onLogout: widget.onLogout, homeFuture: _homeFuture),
+          bottomNavigationBar: HomeBottomNavBar(
+            selectedDestination: HomeNavigationDestination.horses,
+            onDestinationSelected: (selected) {
+              if (selected != HomeNavigationDestination.horses) {
+                Navigator.of(listContext).pop(selected);
+              }
+            },
+          ),
+        ),
+      ),
+    );
+    if (!mounted || destination == null) return;
+    setState(() => _selectedDestination = destination);
+  }
+
+  void _onNavigationDestination(HomeNavigationDestination destination) {
+    if (destination == HomeNavigationDestination.horses) {
+      widget.onNavigationSelected?.call(destination.index);
+      _openHorseList();
+    } else {
+      setState(() => _selectedDestination = destination);
+      widget.onNavigationSelected?.call(destination.index);
+    }
   }
 
   // --- Composição visual e navegação ----------------------------------------
@@ -461,10 +498,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           : null,
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: _selectedDestination,
-        onDestinationSelected: (destination) {
-          setState(() => _selectedDestination = destination);
-          widget.onNavigationSelected?.call(destination.index);
-        },
+        onDestinationSelected: _onNavigationDestination,
       ),
     );
   }

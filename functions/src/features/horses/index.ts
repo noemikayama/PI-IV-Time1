@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportações usadas pela feature de planos.
+//
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da consulta do cavalo ativo, usada pelo cadastro de
@@ -41,9 +45,11 @@
 export {
   findActiveHorseById,
   findTrainersOfHorses,
+  updateHorseDocument,
 } from "./repositories/horseRepository";
 export {
   assertActiveAccount,
+  getHorseForUser,
   HORSE_RULES,
   loadHorseAccess,
 } from "./services/horseAccess";

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Reserva de um bloco de códigos em uma única operação, usada
+// na geração dos registros de treino do plano.
+//
 // Data: 13/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Criação do gerador de códigos sequenciais por coleção.
@@ -16,13 +21,18 @@ import {COLLECTIONS} from "../constants/collections";
 
 type Counter = {_id: string; seq: number};
 
-/** Gera o próximo código sequencial para a coleção indicada.
+/** Gera o próximo código sequencial para a coleção indicada. Com 'count'
+ * maior que 1, reserva um bloco: os códigos vão de (retorno - count + 1)
+ * até o retorno, em uma única ida ao banco.
  * @param {string} sequenceName Nome do contador.
  * @param {ClientSession} session Sessão da transação.
+ * @param {number} count Quantidade de códigos reservados.
+ * @return {Promise<number>} Último código reservado.
  */
 export async function nextCode(
   sequenceName: string,
-  session: ClientSession
+  session: ClientSession,
+  count = 1
 ): Promise<number> {
   const db = await getDatabase();
 
@@ -30,7 +40,7 @@ export async function nextCode(
     .collection<Counter>(COLLECTIONS.Contadores)
     .findOneAndUpdate(
       {_id: sequenceName},
-      {$inc: {seq: 1}},
+      {$inc: {seq: count}},
       {upsert: true, returnDocument: "after", session}
     );
 
