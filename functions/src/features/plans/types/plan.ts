@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Projeção do plano ativo usada pela agenda.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos do documento e do cadastro de planos de treinamento, do
@@ -60,6 +64,15 @@ export type PlanDocument = {
     planejamento: PlanningItem[];
     criadoEm: Date;
     atualizadoEm: Date;
+};
+
+// Projeção do plano ativo listado na agenda.
+export type ActivePlanSummary = Pick<
+    PlanDocument,
+    "_id" | "titulo" | "dataInicio" | "dataFim"
+> & {
+    cavalo: Pick<PlanDocument["cavalo"], "nome">;
+    treinador: Pick<PlanDocument["treinador"], "nome">;
 };
 
 // Treino escolhido em cada dia; null deixa o dia vazio.

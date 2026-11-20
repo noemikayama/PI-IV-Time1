@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Projeção das listagens por período (home e agenda), com a
+// data prevista, a de execução e o _id do cavalo.
+// Alteração: Projeção das execuções recentes (histórico da agenda).
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Documento do registro de treino, gerado na ativação do plano.
@@ -86,16 +92,28 @@ export type TrainingRecordDocument = {
 // Registro montado pelo plano; o 'codigo' é reservado na inserção.
 export type NewTrainingRecord = Omit<TrainingRecordDocument, "codigo">;
 
-// Projeção usada na listagem do dia. CANCELADO é excluído na consulta.
-export type DayTrainingRecord = {
+// Projeção das listagens por período (o dia na home, a semana na agenda).
+// CANCELADO é excluído na consulta.
+export type TrainingRecordSummary = {
     _id: ObjectId;
     status: Exclude<TrainingRecordStatus, "CANCELADO">;
+    dataPlanejada: Date;
+    dataExecucao?: Date;
     plano?: {titulo: string};
     // O atleta do cavalo é gravado no registro como responsável.
     responsavel?: {nome: string};
-    cavalo?: {nome: string};
+    cavalo?: {_id: ObjectId; nome: string};
     treinador?: {nome: string};
     treinamento?: {titulo: string; duracaoEstimadaMinutos: number};
+};
+
+// Projeção das execuções recentes (histórico da agenda).
+export type RecentExecutionRecord = {
+    _id: ObjectId;
+    status: "REALIZADO" | "PARCIAL";
+    dataExecucao?: Date;
+    cavalo?: {nome: string};
+    treinamento?: {titulo: string};
 };
 
 // executed são REALIZADO + PARCIAL; total são os registros do período
