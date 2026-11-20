@@ -53,7 +53,7 @@ class HorseRegistrationScreen extends StatefulWidget {
     this.repository,
     this.microchipValidator,
     this.imageSelection = const HorseImageSelectionService(),
-    super.key
+    super.key,
   });
 
   final HorseRegistrationRepository? repository;

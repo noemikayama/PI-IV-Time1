@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição da configuração de etapas (trainingPlan) para o fluxo de
+// cadastro de planos de treinamento.
+//
 // Data: 17/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição da configuração de 6 etapas (training) para o fluxo de
@@ -76,6 +81,13 @@ class FormProgressConfiguration {
   static const training = FormProgressConfiguration(
     totalSteps: 6,
     segmentKeyPrefix: 'training-progress-segment',
+  );
+
+  /// Trilha de passos para cadastro de plano de treinamento.
+  static const trainingPlan = FormProgressConfiguration(
+    totalSteps: 7,
+    segmentKeyPrefix: 'training-plan-progress-segment',
+    segmentSpacing: 8,
   );
 }
 

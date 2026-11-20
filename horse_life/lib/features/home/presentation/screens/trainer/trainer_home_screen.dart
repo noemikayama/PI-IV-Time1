@@ -7,6 +7,12 @@
 // Alteração: Correção da duplicidade em onDestinationSelected na HomeBottomNavBar,
 // conexão unificada do fluxo de navegação e repasse ao Dashboard.
 //
+// Data: 19/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão dos atalhos de plano de treinos e treinamento do menu
+// flutuante da agenda com TrainingPlanRegistrationFlowRoute e
+// TrainingRegistrationFlowRoute.
+//
 // Data: 18/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da agenda semanal profissional, dos estados vazios e
@@ -100,6 +106,8 @@ import 'package:horse_life/core/widgets/add_trainer_certifications_dialog.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/widgets/training_agenda_floating_menu.dart';
+import 'package:horse_life/features/training_plans/presentation/routes/training_plan_registration_flow_route.dart';
+import 'package:horse_life/features/trainings/presentation/routes/training_registration_flow_route.dart';
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/trainer_home_data.dart';
 import '../../../data/repositories/trainer_repository.dart';
@@ -323,11 +331,12 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     Navigator.of(context).push(ExerciseRegistrationFlowRoute.build());
   }
 
-  void _showUnavailable(String feature) {
-    // Mantém as opções futuras visíveis sem deixar o toque sem resposta.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature ainda não está disponível.')),
-    );
+  void _openTrainingCreation() {
+    Navigator.of(context).push(TrainingRegistrationFlowRoute.build());
+  }
+
+  void _openTrainingPlanCreation() {
+    Navigator.of(context).push(TrainingPlanRegistrationFlowRoute.build());
   }
 
   @override
@@ -425,6 +434,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       },
     );
   }
+  
   /// Treinador consulta cavalos vinculados; cadastro segue exclusivo do responsável.
   Future<void> _openHorseList() async {
     final destination = await Navigator.of(context).push<HomeNavigationDestination>(
@@ -526,11 +536,9 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           _selectedDestination == HomeNavigationDestination.trainings
           ? TrainingAgendaFloatingMenu(
               onCreatePlan:
-                  widget.onCreateTrainingPlan ??
-                  () => _showUnavailable('Plano de treinos'),
+                  widget.onCreateTrainingPlan ?? _openTrainingPlanCreation,
               onCreateTraining:
-                  widget.onCreateTraining ??
-                  () => _showUnavailable('Treinamento'),
+                  widget.onCreateTraining ?? _openTrainingCreation,
               onCreateExercise:
                   widget.onCreateExercise ?? _openExerciseCreation,
             )
