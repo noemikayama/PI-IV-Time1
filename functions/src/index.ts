@@ -10,8 +10,10 @@
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da agenda de treinos.
 //
+// Data: 19/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação da conferência do microchip no servidor Java.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do cadastro de planos, das avaliações do cavalo e

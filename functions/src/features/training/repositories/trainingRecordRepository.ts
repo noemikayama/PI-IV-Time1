@@ -8,6 +8,7 @@
 // (acesso aos detalhes do treinamento).
 // Alteração: Índice por treinamento e renovação da cópia do treinamento nos
 // registros PLANEJADO a partir de hoje (edição do treinamento).
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Registros de qualquer período (o dia na home, a semana na
@@ -53,11 +54,10 @@ import type {
   HorseExecutionCounts,
   NewTrainingRecord,
   PerformedExercise,
-  TrainingRecordDocument,
-  TrainingRecordTraining,
   RecentExecutionRecord,
   TrainingRecordDocument,
   TrainingRecordSummary,
+  TrainingRecordTraining,
 } from "../types/trainingRecord";
 
 // Índices do DD 5.1. O único em plano + item + data substitui o único em

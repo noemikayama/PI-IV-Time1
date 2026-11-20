@@ -6,6 +6,7 @@
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Índice e renovação da cópia do treinamento nos planos em
 // andamento.
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Planos ativos e não vencidos dos cavalos ou do treinador,
@@ -36,7 +37,6 @@ import {COLLECTIONS} from "../../../shared/constants/collections";
 import {ensureIndexesOnce} from "../../../shared/database/indexes";
 import {nextCode} from "../../../shared/database/sequence";
 import type {TrainingSnapshot} from "../../training";
-import type {PlanDocument} from "../types";
 import type {ActivePlanSummary, PlanDocument} from "../types";
 
 const PLAN_INDEXES: IndexDescription[] = [
