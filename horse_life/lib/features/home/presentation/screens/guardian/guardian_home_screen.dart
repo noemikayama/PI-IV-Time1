@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 20/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração da consulta de registros de execução e feedback
+// mockado a partir do histórico da agenda, preservando callbacks externos.
+//
+// Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da navegação da barra inferior para chamar _onNavigationDestination,
 // permitindo acesso à listagem de cavalos, e repasse do callback ao Dashboard.
@@ -133,6 +138,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/guardian/guardian_dashboard_screen.dart';
@@ -348,6 +354,19 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     }
   }
 
+  /// Abre os detalhes de uma execução no modo de demonstração.
+  Future<void> _openExecutionHistory(TrainingAgendaEntry entry) async {
+    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
+      TrainingFeedbackRoute.fromAgenda(
+        entry: entry,
+        audience: TrainingAgendaAudience.guardian,
+      ),
+    );
+    if (mounted && destination != null) {
+      _onNavigationDestination(destination);
+    }
+  }
+
   Widget _buildTrainingAgenda() {
     // A Home fornece os treinos, enquanto o perfil determina se o vínculo com
     // cada cavalo permite iniciar a execução ou somente consultar o treino.
@@ -454,12 +473,15 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
                       final training = sourceFor(entry);
                       if (training != null) widget.onViewTraining!(training);
                     },
-              onViewHistory: widget.onViewTraining == null
-                  ? null
-                  : (entry) {
-                      final training = sourceFor(entry);
-                      if (training != null) widget.onViewTraining!(training);
-                    },
+              onViewHistory: (entry) {
+                // A injeção mantém compatibilidade com integrações/testes.
+                if (widget.onViewTraining != null) {
+                  final training = sourceFor(entry);
+                  if (training != null) widget.onViewTraining!(training);
+                  return;
+                }
+                _openExecutionHistory(entry);
+              },
             );
           },
         );

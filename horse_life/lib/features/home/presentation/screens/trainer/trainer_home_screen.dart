@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 20/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Integração da consulta de registros de execução e feedback
+// mockado a partir do histórico da agenda, preservando callbacks externos.
+//
+// Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da duplicidade em onDestinationSelected na HomeBottomNavBar,
 // conexão unificada do fluxo de navegação e repasse ao Dashboard.
@@ -83,6 +88,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/trainer/trainer_dashboard_screen.dart';
@@ -350,6 +356,19 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     }
   }
 
+  /// Exibe os reportes e permite registrar feedback após a execução.
+  Future<void> _openExecutionHistory(TrainingAgendaEntry entry) async {
+    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
+      TrainingFeedbackRoute.fromAgenda(
+        entry: entry,
+        audience: TrainingAgendaAudience.trainer,
+      ),
+    );
+    if (mounted && destination != null) {
+      _onNavigationDestination(destination);
+    }
+  }
+
   Widget _buildTrainingAgenda() {
     // Converte o resumo retornado pela Home nos contratos reutilizáveis da
     // agenda, preservando os modelos originais para os callbacks externos.
@@ -429,7 +448,9 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
               ? null
               : (_) => widget.onViewPlans!(),
           onViewTraining: widget.onViewTraining == null ? null : viewEntry,
-          onViewHistory: widget.onViewTraining == null ? null : viewEntry,
+          onViewHistory: widget.onViewTraining == null
+              ? _openExecutionHistory
+              : viewEntry,
         );
       },
     );
