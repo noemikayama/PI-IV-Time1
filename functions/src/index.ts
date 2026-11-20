@@ -7,6 +7,9 @@
 // Alteração: Exportação dos detalhes e da edição do treinamento.
 //
 // Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da agenda de treinos.
+//
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação da conferência do microchip no servidor Java.
 // Data: 18/11/2026
@@ -128,3 +131,6 @@ export {
   listHorseEvaluations,
   listTrainingGallery,
 } from "./features/plans";
+export {
+  getTrainingAgenda,
+} from "./features/agenda";

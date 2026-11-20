@@ -2,17 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 30/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Dashboard Trainer com alternância entre cavalos próprios e painel profissional.
-//
-// Data: 03/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Remoção dos painéis simulados e fallback fictício da Sidebar; dados reais obrigatórios.
-//
-// Data: 03/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Integração da barra de navegação tipada com callback de destino
+// para permitir navegação para todas as abas (Home, Treinos, Cavalos, Perfil) e
+// integração das ações da lista de treinos recentes.
 //
 // Data: 11/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -35,11 +29,13 @@ class TrainerDashboardScreen extends StatefulWidget {
     super.key,
     required this.onLogout,
     this.onHome,
+    this.onNavigationSelected,
     required this.homeFuture,
     required this.repository,
   });
   final Future<void> Function() onLogout;
   final VoidCallback? onHome;
+  final ValueChanged<HomeNavigationDestination>? onNavigationSelected;
   final Future<TrainerHomeData> homeFuture;
   final DashboardRepository repository;
   @override
@@ -48,6 +44,24 @@ class TrainerDashboardScreen extends StatefulWidget {
 
 class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
   bool _professional = false;
+
+  void _onDestinationSelected(HomeNavigationDestination destination) {
+    if (destination == HomeNavigationDestination.dashboard) return;
+    if (destination == HomeNavigationDestination.home) {
+      if (widget.onHome != null) {
+        widget.onHome!();
+      } else {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+    if (widget.onNavigationSelected != null) {
+      widget.onNavigationSelected!(destination);
+    } else {
+      Navigator.of(context).pop(destination);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -57,16 +71,8 @@ class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
       homeFuture: widget.homeFuture,
     ),
     bottomNavigationBar: HomeBottomNavBar(
-      selectedIndex: 3,
-      onItemSelected: (index) {
-        if (index == 0) {
-          if (widget.onHome != null) {
-            widget.onHome!();
-          } else {
-            Navigator.of(context).maybePop();
-          }
-        }
-      },
+      selectedDestination: HomeNavigationDestination.dashboard,
+      onDestinationSelected: _onDestinationSelected,
     ),
     body: Center(
       child: ConstrainedBox(
@@ -106,7 +112,11 @@ class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
             if (_professional)
               DashboardLiveProfessionalContent(repository: widget.repository)
             else
-              DashboardLiveTrainingContent(repository: widget.repository),
+              DashboardLiveTrainingContent(
+                repository: widget.repository,
+                onShowAllTrainings: () =>
+                    _onDestinationSelected(HomeNavigationDestination.trainings),
+              ),
           ],
         ),
       ),

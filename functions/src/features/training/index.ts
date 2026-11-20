@@ -7,6 +7,11 @@
 // Alteração: Exportação da consulta de detalhes do treinamento.
 // Alteração: Exportação da edição do treinamento e das cópias usadas pelos
 // planos.
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Registros por período (findRecordsByHorses e
+// findRecordsByTrainer), usados pela home e pela agenda, e execuções
+// recentes para o histórico da agenda.
 //
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -44,8 +49,10 @@ export {
   ensureTrainingRecordIndexes,
   insertTrainingRecords,
   findDayRecordsByHorsePlan,
-  findDayRecordsByHorses,
-  findDayRecordsByTrainer,
+  findRecentExecutionsByHorses,
+  findRecentExecutionsByTrainer,
+  findRecordsByHorses,
+  findRecordsByTrainer,
 } from "./repositories/trainingRecordRepository";
 export {findTrainerTrainings} from "./repositories/trainingRepository";
 export {
@@ -53,13 +60,14 @@ export {
   toTrainingSnapshot,
 } from "./services/trainingSnapshot";
 export type {
-  DayTrainingRecord,
   ExecutionCount,
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
   PerformedExercise,
+  RecentExecutionRecord,
   TrainingRecordStatus,
+  TrainingRecordSummary,
   TrainingRecordTraining,
 } from "./types/trainingRecord";
 export type {TrainingDocument, TrainingSnapshot} from "./types/training";

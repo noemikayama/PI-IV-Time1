@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Link padrão dos cards de cavalos para seus respectivos perfis (HorseProfileScreen)
+// quando onHorseSelected não for informado explicitamente.
+//
 // Data: 18/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Reorganização da camada de dados e atualização dos imports; padronização
@@ -34,12 +39,14 @@
 
 import 'dart:async';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
+import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import '../../data/models/horse_list_item.dart';
 import '../../data/repositories/horse_list_repository.dart';
 import '../../list_horse_composition.dart';
@@ -212,6 +219,25 @@ class _HorseListScreenState extends State<HorseListScreen>
     return 'Não foi possível consultar os cavalos. Tente novamente.';
   }
 
+  void _openHorseDetails(HorseListItem horse) {
+    if (widget.onHorseSelected != null) {
+      widget.onHorseSelected!(horse);
+      return;
+    }
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => HorseProfileScreen(
+          horseId: horse.id,
+          currentUserId: FirebaseAuth.instance.currentUser?.uid,
+          isTrainer: widget.profile == HorseListProfile.professional,
+          onNavigationSelected: (destination) {
+            _navigate(destination.index);
+          },
+        ),
+      ),
+    );
+  }
+
   void _navigate(int tab) {
     if (tab == 2) return;
     widget.onNavigationSelected?.call(tab);
@@ -368,9 +394,7 @@ class _HorseListScreenState extends State<HorseListScreen>
                               key: ValueKey(horse.id),
                               horse: horse,
                               profile: widget.profile,
-                              onTap: widget.onHorseSelected == null
-                                  ? null
-                                  : () => widget.onHorseSelected!(horse),
+                              onTap: () => _openHorseDetails(horse),
                             );
                           },
                         ),

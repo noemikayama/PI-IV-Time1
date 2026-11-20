@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Substituição do item provisório "Item 1" pelo link funcional
+// "Cadastrar plano de treino" na barra lateral do treinador.
+//
 // Data: 17/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do link funcional "Cadastrar treinamento" na barra lateral
@@ -43,6 +48,7 @@ import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/exercises/presentation/routes/exercise_registration_flow_route.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
+import 'package:horse_life/features/training_plans/presentation/routes/training_plan_registration_flow_route.dart';
 import 'package:horse_life/features/trainings/presentation/routes/training_registration_flow_route.dart';
 
 class TrainerSidebar extends StatefulWidget {
@@ -53,6 +59,7 @@ class TrainerSidebar extends StatefulWidget {
     this.onCreateExercise,
     this.onRegisterHorse,
     this.onCreateTraining,
+    this.onCreateTrainingPlan,
   });
 
   final Future<void> Function() onLogout;
@@ -70,17 +77,16 @@ class TrainerSidebar extends StatefulWidget {
   /// de treinamentos em composições externas ou testes.
   final VoidCallback? onCreateTraining;
 
+  /// Callback opcional que permite sobrescrever a abertura do fluxo de cadastro
+  /// de planos de treinamento em composições externas ou testes.
+  final VoidCallback? onCreateTrainingPlan;
+
   @override
   State<TrainerSidebar> createState() => _TrainerSidebarState();
 }
 
 class _TrainerSidebarState extends State<TrainerSidebar> {
   bool _isLoggingOut = false;
-
-  // Itens provisórios remanescentes do protótipo; substituir ao integrar as respectivas rotas.
-  static const List<String> _placeholderMenuItems = [
-    'Item 1',
-  ];
 
   // Fecha o menu lateral e direciona o treinador ao fluxo de criação de exercícios.
   void _handleCreateExercise() {
@@ -122,6 +128,20 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
     }
 
     navigator.push(TrainingRegistrationFlowRoute.build());
+  }
+
+  // Fecha o menu lateral e direciona o treinador ao fluxo de cadastro de planos.
+  void _handleCreateTrainingPlan() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+
+    final onCreateTrainingPlan = widget.onCreateTrainingPlan;
+    if (onCreateTrainingPlan != null) {
+      onCreateTrainingPlan();
+      return;
+    }
+
+    navigator.push(TrainingPlanRegistrationFlowRoute.build());
   }
 
   Future<void> _handleLogout() async {
@@ -258,24 +278,22 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
                 ),
                 onTap: _handleCreateTraining,
               ),
-              ..._placeholderMenuItems.map(
-                (item) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  minTileHeight: 48,
-                  leading: const Icon(
-                    Icons.add_circle_outline_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                  title: Text(
-                    item,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                  // Não executar rotas fictícias enquanto as telas não existirem.
-                  onTap: null,
+              ListTile(
+                key: const Key('trainer-sidebar-create-training-plan'),
+                contentPadding: EdgeInsets.zero,
+                minTileHeight: 48,
+                leading: const Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: Colors.white,
+                  size: 24,
                 ),
+                title: Text(
+                  'Cadastrar plano de treino',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+                onTap: _handleCreateTrainingPlan,
               ),
               const SizedBox(height: 12),
               const Divider(color: AppColors.alabasterGray),

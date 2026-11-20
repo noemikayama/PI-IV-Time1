@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Semana (segunda a domingo) de qualquer dia, usada pela agenda
+// e pelos períodos da home.
+//
 // Data: 30/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Conversão de um dia de calendário no instante em que ele
@@ -111,19 +116,28 @@ export function isValidYmd(value: string): boolean {
     date.toISOString().startsWith(value);
 }
 
+/** Semana de segunda a domingo que contém o dia de calendário.
+ * @param {Date} day Dia de calendário à meia-noite UTC.
+ * @return {DatePeriod} Da segunda (inclusiva) à segunda seguinte
+ * (exclusiva).
+ */
+export function getWeekOf(day: Date): DatePeriod {
+  const monday = addDays(day, -((day.getUTCDay() + 6) % 7));
+  return {start: monday, end: addDays(monday, 7)};
+}
+
 /** Retorna os períodos de dia, semana e mês no fuso de São Paulo.
  * @param {Date} now Data usada como referência.
  * @return {Object} Períodos do dia, semana e mês.
  */
 export function getPeriods(now = new Date()) {
   const today = getDayStart(now);
-  const monday = addDays(today, -((today.getUTCDay() + 6) % 7));
   const year = today.getUTCFullYear();
   const month = today.getUTCMonth();
 
   return {
     day: {start: today, end: addDays(today, 1)} as DatePeriod,
-    week: {start: monday, end: addDays(monday, 7)} as DatePeriod,
+    week: getWeekOf(today),
     month: {
       start: new Date(Date.UTC(year, month, 1)),
       end: new Date(Date.UTC(year, month + 1, 1)),

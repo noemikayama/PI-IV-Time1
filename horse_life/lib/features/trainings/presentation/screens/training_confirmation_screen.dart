@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Notificação do resultado do treinamento recém-criado via
+// onTrainingCreated ao concluir o cadastro.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Validação obrigatória de ao menos uma orientação e conferência de que
@@ -207,9 +212,9 @@ class _TrainingConfirmationScreenState
     final controller = widget.controller ?? TrainingRegistrationController();
     setState(() => _isSubmitting = true);
     try {
-      await controller.registerTraining(draft: updatedDraft);
+      final result = await controller.registerTraining(draft: updatedDraft);
       if (!mounted) return;
-      _finishRegistration();
+      _finishRegistration(updatedDraft, result);
     } on TrainingRegistrationFailure catch (error) {
       if (!mounted) return;
       _showError(error.message);
@@ -232,7 +237,14 @@ class _TrainingConfirmationScreenState
     );
   }
 
-  void _finishRegistration() {
+  void _finishRegistration([
+    TrainingRegistrationDraft? createdDraft,
+    TrainingRegistrationResult? result,
+  ]) {
+    if (createdDraft != null) {
+      widget.controller?.onTrainingCreated?.call(createdDraft, result);
+    }
+
     final onCreated = widget.onCreated;
     if (onCreated != null) {
       onCreated();

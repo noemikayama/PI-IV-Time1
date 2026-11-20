@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição do callback onShowAllTrainings para navegação da lista de
+// treinos recentes.
+//
 // Data: 01/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do getDashboard com contrato real e modo mock.
@@ -28,8 +33,13 @@ import 'dashboard_empty_state.dart';
 
 /// Consulta os indicadores de treinos por cavalo e período sem recalculá-los.
 class DashboardLiveTrainingContent extends StatefulWidget {
-  const DashboardLiveTrainingContent({super.key, required this.repository});
+  const DashboardLiveTrainingContent({
+    super.key,
+    required this.repository,
+    this.onShowAllTrainings,
+  });
   final DashboardRepository repository;
+  final VoidCallback? onShowAllTrainings;
   @override
   State<DashboardLiveTrainingContent> createState() =>
       _DashboardLiveTrainingContentState();
@@ -192,6 +202,7 @@ class _DashboardLiveTrainingContentState
             DashboardRecentList(
               title: 'Últimos treinos',
               liveTrainings: data.trainings,
+              onShowAll: widget.onShowAllTrainings,
             ),
             if (data.role == 'RESPONSAVEL') ...[
               const SizedBox(height: 22),

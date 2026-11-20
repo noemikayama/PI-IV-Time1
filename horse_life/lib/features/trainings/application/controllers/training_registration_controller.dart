@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição do callback opcional onTrainingCreated e do método
+// withOnTrainingCreated para retorno integrado ao fluxo de planos de treino.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Integração de sumExerciseDurations e registerTraining no controlador
@@ -33,6 +38,7 @@ class TrainingRegistrationController {
         const LocalTrainerLinkedHorseRepository(),
     TrainingRegistrationRepository registrationRepository =
         const LocalTrainingRegistrationRepository(),
+    this.onTrainingCreated,
   }) : _galleryRepository = galleryRepository,
        _horseRepository = horseRepository,
        _registrationRepository = registrationRepository;
@@ -40,7 +46,29 @@ class TrainingRegistrationController {
   final TrainingExerciseGalleryRepository _galleryRepository;
   final TrainerLinkedHorseRepository _horseRepository;
   final TrainingRegistrationRepository _registrationRepository;
+  final void Function(
+    TrainingRegistrationDraft draft,
+    TrainingRegistrationResult? result,
+  )?
+  onTrainingCreated;
   final List<TrainingExerciseItem> _sessionCreatedExercises = [];
+
+  /// Cria uma cópia do controlador preservando os repositórios e vinculando um
+  /// callback acionado após a conclusão do cadastro do treinamento.
+  TrainingRegistrationController withOnTrainingCreated(
+    void Function(
+      TrainingRegistrationDraft draft,
+      TrainingRegistrationResult? result,
+    )?
+    callback,
+  ) {
+    return TrainingRegistrationController(
+      galleryRepository: _galleryRepository,
+      horseRepository: _horseRepository,
+      registrationRepository: _registrationRepository,
+      onTrainingCreated: callback,
+    );
+  }
 
   /// Obtém e normaliza a lista de cavalos vinculados ao treinador autenticado.
   Future<List<TrainerLinkedHorse>> fetchLinkedHorses() async {
