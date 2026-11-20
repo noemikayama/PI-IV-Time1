@@ -2,6 +2,14 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Registros de qualquer período (o dia na home, a semana na
+// agenda), em ordem de data, com a data prevista, a de execução e o _id
+// do cavalo na projeção.
+// Alteração: Execuções mais recentes dos cavalos ou do treinador, para o
+// histórico da agenda.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Índices, inserção dos registros gerados pelo plano e
@@ -31,14 +39,16 @@ import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
 import {ensureIndexesOnce} from "../../../shared/database/indexes";
 import {nextCode} from "../../../shared/database/sequence";
+import {inPeriod} from "../../../shared/utils/dates";
 import type {DatePeriod} from "../../../shared/utils/dates";
 import type {
-  DayTrainingRecord,
   ExecutionCount,
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
+  RecentExecutionRecord,
   TrainingRecordDocument,
+  TrainingRecordSummary,
 } from "../types/trainingRecord";
 
 // Índices do DD 5.1. O único em plano + item + data substitui o único em
@@ -121,8 +131,11 @@ export const EXECUTED_STATUSES = ["REALIZADO", "PARCIAL"];
 
 const NOT_CANCELED = {status: {$ne: "CANCELADO"}};
 
-const DAY_PROJECTION = {
+const SUMMARY_PROJECTION = {
   "status": 1,
+  "dataPlanejada": 1,
+  "dataExecucao": 1,
+  "cavalo._id": 1,
   "plano.titulo": 1,
   "responsavel.nome": 1,
   "cavalo.nome": 1,
@@ -162,29 +175,26 @@ const toExecutionCount = (row?: Document | null): ExecutionCount => ({
   total: row?.total ?? 0,
 });
 
-/** Busca os registros não cancelados de um responsável em um dia.
+/** Busca os registros não cancelados com data prevista no período, em
+ * ordem de data (no mesmo dia, de criação).
  * @param {Document} owner Filtro do responsável ou treinador.
- * @param {DatePeriod} day Período do dia.
+ * @param {DatePeriod} period Período da consulta (o dia ou a semana).
  */
-async function findDayRecords(owner: Document, day: DatePeriod) {
+async function findRecords(owner: Document, period: DatePeriod) {
   const records = await getCollection();
   return records
-    .find({
-      ...owner,
-      ...NOT_CANCELED,
-      dataPlanejada: {$gte: day.start, $lt: day.end},
-    })
-    .project<DayTrainingRecord>(DAY_PROJECTION)
-    .sort({_id: 1})
+    .find({...owner, ...NOT_CANCELED, ...inPeriod("dataPlanejada", period)})
+    .project<TrainingRecordSummary>(SUMMARY_PROJECTION)
+    .sort({dataPlanejada: 1, _id: 1})
     .toArray();
 }
 
 // idx_registros_cavalo_data. O registro grava o atleta como responsável; o
 // proprietário consulta pelos seus cavalos. Por cavalo cobre os dois casos.
-export const findDayRecordsByHorses = (
+export const findRecordsByHorses = (
   horseIds: ObjectId[],
-  day: DatePeriod
-) => findDayRecords({"cavalo._id": {$in: horseIds}}, day);
+  period: DatePeriod
+) => findRecords({"cavalo._id": {$in: horseIds}}, period);
 
 // Aba "Plano atual": só os registros do plano ATIVO do cavalo. Usa
 // idx_registros_cavalo_data.
@@ -192,12 +202,45 @@ export const findDayRecordsByHorsePlan = (
   horseId: ObjectId,
   planId: ObjectId,
   day: DatePeriod
-) => findDayRecords({"cavalo._id": horseId, "plano._id": planId}, day);
+) => findRecords({"cavalo._id": horseId, "plano._id": planId}, day);
 
-export const findDayRecordsByTrainer = (
+// idx_registros_treinador_data.
+export const findRecordsByTrainer = (
   trainerId: string,
-  day: DatePeriod
-) => findDayRecords({"treinador._id": trainerId}, day);
+  period: DatePeriod
+) => findRecords({"treinador._id": trainerId}, period);
+
+/** Execuções (REALIZADO ou PARCIAL) mais recentes primeiro.
+ * @param {Document} owner Filtro dos cavalos ou do treinador.
+ * @param {number} limit Quantidade máxima.
+ */
+async function findRecentExecutions(owner: Document, limit: number) {
+  const records = await getCollection();
+  return records
+    .find({...owner, status: {$in: EXECUTED_STATUSES}})
+    .project<RecentExecutionRecord>({
+      "status": 1,
+      "dataExecucao": 1,
+      "cavalo.nome": 1,
+      "treinamento.titulo": 1,
+    })
+    .sort({dataExecucao: -1, _id: -1})
+    .limit(limit)
+    .toArray();
+}
+
+// idx_registros_cavalo_data filtra pelos cavalos; a ordenação por
+// dataExecucao é feita em memória sobre as execuções deles.
+export const findRecentExecutionsByHorses = (
+  horseIds: ObjectId[],
+  limit: number
+) => findRecentExecutions({"cavalo._id": {$in: horseIds}}, limit);
+
+// idx_registros_treinador_status (treinador, status, dataExecucao).
+export const findRecentExecutionsByTrainer = (
+  trainerId: string,
+  limit: number
+) => findRecentExecutions({"treinador._id": trainerId}, limit);
 
 /** Conta as execuções dos cavalos na semana, no mês e desde sempre.
  * @param {ObjectId[]} horseIds IDs dos cavalos.

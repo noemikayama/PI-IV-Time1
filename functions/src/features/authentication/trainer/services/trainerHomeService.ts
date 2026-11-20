@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Treinos do dia por findRecordsByTrainer (consulta por período).
+//
 // Data: 16/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Renomeação da nomenclatura para trainer.
@@ -21,7 +25,7 @@ import {countActiveExercisesByTrainer} from "../../../exercises";
 import {
   countTrainerExecutions,
   countTrainerFeedbacks,
-  findDayRecordsByTrainer,
+  findRecordsByTrainer,
 } from "../../../training";
 import {HOME_LIST_LIMIT, toProgress, toRef} from "../../shared";
 import {
@@ -44,7 +48,7 @@ export async function getTrainerHome(
 
   const [todayRecords, weekExecutions, weekFeedbacks, totalExercises] =
         await Promise.all([
-          findDayRecordsByTrainer(uid, periods.day),
+          findRecordsByTrainer(uid, periods.day),
           countTrainerExecutions(uid, periods.week),
           countTrainerFeedbacks(uid, periods.week),
           countActiveExercisesByTrainer(uid),

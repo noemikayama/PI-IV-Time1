@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Planos ativos e não vencidos dos cavalos ou do treinador,
+// usados pela agenda.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Movido da feature de treinamentos para a feature de planos.
@@ -16,12 +21,17 @@
 
 // Coleção 'planos'. Índices do DD 5.1; idx_planos_cavalo_ativo garante no
 // banco no máximo um plano ATIVO por cavalo.
-import type {ClientSession, IndexDescription, ObjectId} from "mongodb";
+import type {
+  ClientSession,
+  Document,
+  IndexDescription,
+  ObjectId,
+} from "mongodb";
 import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
 import {ensureIndexesOnce} from "../../../shared/database/indexes";
 import {nextCode} from "../../../shared/database/sequence";
-import type {PlanDocument} from "../types";
+import type {ActivePlanSummary, PlanDocument} from "../types";
 
 const PLAN_INDEXES: IndexDescription[] = [
   {key: {codigo: 1}, name: "codigo_unico", unique: true},
@@ -126,3 +136,37 @@ export async function isActivePlanAuthor(
   );
   return plan !== null;
 }
+
+/** Planos ATIVO ainda não vencidos (dataFim >= hoje), em ordem de início.
+ * Um plano vencido continua ATIVO até outro plano ser criado para o
+ * cavalo, por isso o filtro de data.
+ * @param {Document} owner Filtro dos cavalos ou do treinador.
+ * @param {Date} today Hoje (meia-noite UTC, como getDayStart()).
+ * @return {Promise<ActivePlanSummary[]>} Planos encontrados.
+ */
+async function findActivePlans(
+  owner: Document,
+  today: Date
+): Promise<ActivePlanSummary[]> {
+  const db = await getDatabase();
+  return db
+    .collection<PlanDocument>(COLLECTIONS.Planos)
+    .find({...owner, status: "ATIVO", dataFim: {$gte: today}})
+    .project<ActivePlanSummary>({
+      "titulo": 1,
+      "cavalo.nome": 1,
+      "treinador.nome": 1,
+      "dataInicio": 1,
+      "dataFim": 1,
+    })
+    .sort({dataInicio: 1, _id: 1})
+    .toArray();
+}
+
+// idx_planos_cavalo_ativo (parcial em status ATIVO).
+export const findActivePlansByHorses = (horseIds: ObjectId[], today: Date) =>
+  findActivePlans({"cavalo._id": {$in: horseIds}}, today);
+
+// idx_planos_treinador_status.
+export const findActivePlansByTrainer = (trainerId: string, today: Date) =>
+  findActivePlans({"treinador._id": trainerId}, today);

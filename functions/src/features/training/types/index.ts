@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: TrainingRecordSummary no lugar de DayTrainingRecord e
+// exportação de RecentExecutionRecord.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da cópia do treinamento e do documento do registro.
@@ -22,13 +27,14 @@ export type {
   TrainingView,
 } from "./training";
 export type {
-  DayTrainingRecord,
   ExecutionCount,
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
   PerformedExercise,
+  RecentExecutionRecord,
   TrainingRecordDocument,
   TrainingRecordStatus,
+  TrainingRecordSummary,
   TrainingRecordTraining,
 } from "./trainingRecord";

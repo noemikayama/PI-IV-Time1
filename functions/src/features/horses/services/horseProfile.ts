@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: TrainingRecordSummary no lugar de DayTrainingRecord.
+//
 // Data: 04/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Treino do dia CONCLUIDO só quando REALIZADO ou PARCIAL (mesma
@@ -16,7 +20,7 @@
 
 import {getPeriods} from "../../../shared/utils/dates";
 import {EXECUTED_STATUSES, findDayRecordsByHorsePlan} from "../../training";
-import type {DayTrainingRecord} from "../../training";
+import type {TrainingRecordSummary} from "../../training";
 import type {
   CurrentPlanRef,
   HorseDayTrainingState,
@@ -49,21 +53,21 @@ function toPermissions(relations: HorseRelation[]): HorseProfilePermissions {
 }
 
 /** Se o treino foi feito (REALIZADO ou PARCIAL), como no dashboard.
- * @param {DayTrainingRecord} record Registro do dia.
+ * @param {TrainingRecordSummary} record Registro do dia.
  * @return {boolean} Se o treino está concluído.
  */
-const isDone = (record: DayTrainingRecord): boolean =>
+const isDone = (record: TrainingRecordSummary): boolean =>
   EXECUTED_STATUSES.includes(record.status);
 
 /** Treino de hoje do plano. Havendo mais de um registro no dia, mostra o
  * primeiro ainda pendente; sem pendentes, o último concluído.
- * @param {DayTrainingRecord[]} records Registros do dia, em ordem de _id.
+ * @param {TrainingRecordSummary[]} records Registros do dia, por criação.
  * @param {CurrentPlanRef} plan Plano ATIVO do cavalo.
  * @param {HorseRelation[]} relations Relação de quem consulta.
  * @return {HorseDayTrainingState} Situação explícita e o card.
  */
 function toDayTraining(
-  records: DayTrainingRecord[],
+  records: TrainingRecordSummary[],
   plan: CurrentPlanRef,
   relations: HorseRelation[]
 ): HorseDayTrainingState {
@@ -123,7 +127,7 @@ export async function buildHorseProfile(
     Promise.all(horse.imagens.map(toHorseImageView)),
     plan ?
       findDayRecordsByHorsePlan(horse._id, plan._id, getPeriods().day) :
-      Promise.resolve([] as DayTrainingRecord[]),
+      Promise.resolve([] as TrainingRecordSummary[]),
   ]);
 
   const [trainer] = horse.treinadores;

@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Treinos do dia por findRecordsByHorses (consulta por período).
+//
 // Data: 15/10/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Criação do service da home do responsável.
@@ -10,7 +14,7 @@
 import {AppError} from "../../../../shared/errors/AppError";
 import {getPeriods} from "../../../../shared/utils/dates";
 import {findTrainersOfHorses} from "../../../horses";
-import {countHorseExecutions, findDayRecordsByHorses} from "../../../training";
+import {countHorseExecutions, findRecordsByHorses} from "../../../training";
 import {HOME_LIST_LIMIT, toProgress, toRef} from "../../shared";
 import {findGuardianHomeSource} from "../repositories/guardianRepository";
 import type {HomeResponsavel} from "../types";
@@ -30,7 +34,7 @@ export async function getGuardianHome(
   const periods = getPeriods();
 
   const [todayRecords, executions, trainers] = await Promise.all([
-    findDayRecordsByHorses(horseIds, periods.day),
+    findRecordsByHorses(horseIds, periods.day),
     countHorseExecutions(horseIds, periods.week, periods.month),
     // Treinadores não ficam em responsaveis.cavalos: vêm dos cavalos.
     findTrainersOfHorses(horseIds, HOME_LIST_LIMIT),
