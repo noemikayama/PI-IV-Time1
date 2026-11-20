@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura do link "Cadastrar plano de treino" na barra lateral
+// do treinador abrindo o fluxo de cadastro de planos de treinamento.
+//
 // Data: 18/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Atualização do teste da Sidebar para a rota modular do cadastro;
@@ -44,7 +49,7 @@ import 'package:horse_life/features/horses/presentation/screens/horse_relationsh
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
 import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
-import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
+import 'package:horse_life/features/training_plans/presentation/screens/training_plan_title_screen.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_title_screen.dart';
 
 void main() {
@@ -181,6 +186,38 @@ void main() {
 
       expect(find.byType(TrainingTitleScreen), findsOneWidget);
       expect(find.text('Título do treinamento'), findsOneWidget);
+    },
+  );
+
+  // --- Navegação para cadastro de planos de treinamento ---------------------
+  testWidgets(
+    'opens training plan registration flow when tapping Cadastrar plano de treino in TrainerSidebar',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainerHomeScreen(
+            loader: _TrainerHomeLoader(),
+            onLogout: () async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Abrir menu'));
+      await tester.pumpAndSettle();
+
+      final createPlanTile = find.byKey(
+        const Key('trainer-sidebar-create-training-plan'),
+      );
+      expect(createPlanTile, findsOneWidget);
+      expect(find.text('Cadastrar plano de treino'), findsOneWidget);
+
+      await tester.tap(createPlanTile);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TrainingPlanTitleScreen), findsOneWidget);
+      expect(find.text('Título do plano'), findsOneWidget);
     },
   );
 }
