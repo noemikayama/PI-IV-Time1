@@ -40,6 +40,16 @@
 // Alteração: Navegação para a listagem de cavalos, com cadastro reaproveitado
 // de features/horses e sincronização após retorno do cadastro.
 //
+// Data: 15/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Restauração da Future da Home após o merge e correção da
+// atualização assíncrona de estado no recarregamento.
+//
+// Data: 13/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Correção da navegação para o Dashboard após atualização da developer;
+// manutenção dos destinos tipados e remoção de estado duplicado.
+//
 // Data: 10/11/2026 (organização após integração)
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Organização dos imports e comentários; integração do botão
@@ -117,6 +127,9 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/features/dashboard/dashboard_composition.dart';
+import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
+import 'package:horse_life/features/dashboard/presentation/screens/guardian/guardian_dashboard_screen.dart';
 
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
@@ -148,6 +161,7 @@ class GuardianHomeScreen extends StatefulWidget {
     required this.onLogout,
     this.mockScenario,
     this.loader,
+    this.dashboardRepository,
     this.onRegisterHorse,
     this.horseRegistrationRepository,
     this.guardianProfileLoader,
@@ -164,6 +178,9 @@ class GuardianHomeScreen extends StatefulWidget {
 
   /// Carregador da Home. Quando ausente, usa a composição padrão.
   final HomeLoader<GuardianHomeData>? loader;
+
+  /// Fonte opcional para testes; no app usa Firebase.
+  final DashboardRepository? dashboardRepository;
 
   // Permite que a aplicação forneça outra rota para o cadastro de cavalos.
   final VoidCallback? onRegisterHorse;
@@ -202,6 +219,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
   final List<String> _sessionMockHorses = [];
   late HomeLoader<GuardianHomeData> _loader;
+  late Future<GuardianHomeData>
+  _homeFuture; // Compartilhada entre Home, Sidebar e Dashboard.
   bool _isOpeningHorseProfile = false;
 
   // O repositório é criado sob demanda e reutilizado no carregamento e edição.
@@ -483,6 +502,22 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   }
 
   // --- Composição visual e navegação ----------------------------------------
+  // Abre o painel do perfil sem alterar o destino atual da Home.
+  // Ao voltar, os dados já carregados da Home continuam disponíveis.
+  Future<void> _openDashboard() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => GuardianDashboardScreen(
+          onLogout: widget.onLogout,
+          onHome: () => Navigator.of(context).pop(),
+          homeFuture: _homeFuture,
+          repository:
+              widget.dashboardRepository ?? DashboardComposition.production(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -522,7 +557,13 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       // Barra inferior de navegação.
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: _selectedDestination,
-        onDestinationSelected: _onNavigationDestination,
+        onDestinationSelected: (destination) {
+          if (destination == HomeNavigationDestination.dashboard) {
+            _openDashboard();
+            return;
+          }
+          setState(() => _selectedDestination = destination);
+        },
       ),
     );
   }

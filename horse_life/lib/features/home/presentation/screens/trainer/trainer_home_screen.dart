@@ -25,6 +25,11 @@
 // Alteração: Aba Cavalos e Mostrar tudo abrem somente a callable listHorses,
 // com a barra de navegação e Sidebar institucionais.
 //
+// Data: 13/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Correção da navegação para o Dashboard após atualização da developer;
+// manutenção dos destinos tipados e remoção de estado duplicado.
+//
 // Data: 10/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ampliação da composição do perfil com os callbacks de upload de
@@ -66,6 +71,9 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/features/dashboard/dashboard_composition.dart';
+import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
+import 'package:horse_life/features/dashboard/presentation/screens/trainer/trainer_dashboard_screen.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
@@ -102,6 +110,7 @@ class TrainerHomeScreen extends StatefulWidget {
     required this.onLogout,
     this.mockScenario,
     this.loader,
+    this.dashboardRepository,
     this.repository,
     this.onViewTraining,
     this.onSelectHorse,
@@ -138,6 +147,9 @@ class TrainerHomeScreen extends StatefulWidget {
 
   /// Preferencialmente injetado pela raiz do aplicativo.
   final HomeLoader<TrainerHomeData>? loader;
+
+  /// Fonte opcional para testes; no app usa Firebase.
+  final DashboardRepository? dashboardRepository;
 
   /// Injeção opcional de repositório (por exemplo, em testes).
   final TrainerRepository? repository;
@@ -440,6 +452,22 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   }
 
   // --- Composição visual e navegação ----------------------------------------
+  // Abre o painel do perfil sem alterar o destino atual da Home.
+  // Ao voltar, os dados já carregados da Home continuam disponíveis.
+  Future<void> _openDashboard() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => TrainerDashboardScreen(
+          onLogout: widget.onLogout,
+          onHome: () => Navigator.of(context).pop(),
+          homeFuture: _homeFuture,
+          repository:
+              widget.dashboardRepository ?? DashboardComposition.production(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -498,6 +526,14 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           : null,
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: _selectedDestination,
+        onDestinationSelected: (destination) {
+          widget.onNavigationSelected?.call(destination.index);
+          if (destination == HomeNavigationDestination.dashboard) {
+            _openDashboard();
+            return;
+          }
+          setState(() => _selectedDestination = destination);
+        },
         onDestinationSelected: _onNavigationDestination,
       ),
     );
