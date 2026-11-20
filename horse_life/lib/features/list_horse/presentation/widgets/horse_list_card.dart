@@ -52,13 +52,11 @@ class HorseListCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 118,
           child: Row(
             children: <Widget>[
-              // Fotografia real ocupa toda a lateral esquerda, como no Figma.
               SizedBox(
-                width: 116,
-                height: 118,
+                width: 125,
+                height: 125,
                 child: _HorsePhoto(horse: horse),
               ),
               Expanded(
@@ -72,11 +70,7 @@ class HorseListCard extends StatelessWidget {
                         horse.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          height: 1.1,
-                        ),
+                        style: Theme.of(context).textTheme.titleLarge
                       ),
                       const SizedBox(height: 5),
                       Container(
@@ -91,7 +85,7 @@ class HorseListCard extends StatelessWidget {
                         child: Text(
                           isProfessional ? 'Treinador' : horse.relation,
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                           maxLines: 1,
@@ -133,7 +127,7 @@ class _DetailLine extends StatelessWidget {
         children: <TextSpan>[
           TextSpan(
             text: label,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
           TextSpan(text: value),
         ],

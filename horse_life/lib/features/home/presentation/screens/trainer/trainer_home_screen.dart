@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Correção da duplicidade em onDestinationSelected na HomeBottomNavBar,
+// conexão unificada do fluxo de navegação e repasse ao Dashboard.
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Conexão dos atalhos de plano de treinos e treinamento do menu
@@ -465,17 +471,22 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   // Abre o painel do perfil sem alterar o destino atual da Home.
   // Ao voltar, os dados já carregados da Home continuam disponíveis.
   Future<void> _openDashboard() async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => TrainerDashboardScreen(
+    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
+      MaterialPageRoute<HomeNavigationDestination>(
+        builder: (dashboardContext) => TrainerDashboardScreen(
           onLogout: widget.onLogout,
-          onHome: () => Navigator.of(context).pop(),
+          onHome: () => Navigator.of(dashboardContext).pop(),
+          onNavigationSelected: (selected) {
+            Navigator.of(dashboardContext).pop(selected);
+          },
           homeFuture: _homeFuture,
           repository:
               widget.dashboardRepository ?? DashboardComposition.production(),
         ),
       ),
     );
+    if (!mounted || destination == null) return;
+    _onNavigationDestination(destination);
   }
 
   @override
@@ -535,14 +546,12 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: _selectedDestination,
         onDestinationSelected: (destination) {
-          widget.onNavigationSelected?.call(destination.index);
           if (destination == HomeNavigationDestination.dashboard) {
             _openDashboard();
             return;
           }
-          setState(() => _selectedDestination = destination);
+          _onNavigationDestination(destination);
         },
-        onDestinationSelected: _onNavigationDestination,
       ),
     );
   }

@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Correção da saída do cadastro no cancelamento/confirmação para
+// fechar a rota corretamente usando Navigator.of(context).pop(), desarmando
+// o bloqueio do PopScope ao sair.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Desacoplamento da persistência e estado com HorseRegistrationController,
@@ -77,6 +83,8 @@ class _HorseRelationshipScreenState extends State<HorseRelationshipScreen> {
     _selectedRelationship = _draft.relationship;
   }
 
+  bool _canPop = false;
+
   Future<void> _goBack() async {
     final onBack = widget.onBack;
     if (onBack != null) {
@@ -84,7 +92,8 @@ class _HorseRelationshipScreenState extends State<HorseRelationshipScreen> {
       return;
     }
     if (await confirmHorseRegistrationExit(context) && mounted) {
-      Navigator.maybePop(context);
+      setState(() => _canPop = true);
+      Navigator.of(context).pop();
     }
   }
 
@@ -130,7 +139,7 @@ class _HorseRelationshipScreenState extends State<HorseRelationshipScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return PopScope(
-      canPop: false,
+      canPop: _canPop,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
           _goBack();

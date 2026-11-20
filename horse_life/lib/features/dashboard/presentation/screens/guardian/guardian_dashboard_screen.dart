@@ -2,29 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 01/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Navegação Home ↔ Dashboard por perfil com repository injetável.
-//
-// Data: 29/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Dashboard Guardian modular.
-//
-// Data: 29/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Mock relacional, filtros por cavalo/período e listas horizontais.
-//
-// Data: 30/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Ajustes de proporções, espaçamento e alinhamento ao Figma.
-//
-// Data: 03/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Remoção do modo mock; dashboard passa a exigir repository para consultar dados reais.
-//
-// Data: 03/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Padronização do cabeçalho histórico e inclusão de comentários pontuais sobre a responsabilidade do arquivo.
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Integração da barra de navegação tipada com callback de destino
+// para permitir navegação para todas as abas (Home, Treinos, Cavalos, Perfil) e
+// integração das ações da lista de treinos recentes.
 //
 // Data: 11/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
@@ -47,13 +29,32 @@ class GuardianDashboardScreen extends StatelessWidget {
     super.key,
     required this.onLogout,
     this.onHome,
+    this.onNavigationSelected,
     required this.repository,
     this.homeFuture,
   });
   final Future<void> Function() onLogout;
   final VoidCallback? onHome;
+  final ValueChanged<HomeNavigationDestination>? onNavigationSelected;
   final DashboardRepository repository;
   final Future<GuardianHomeData>? homeFuture;
+
+  void _onDestinationSelected(BuildContext context, HomeNavigationDestination destination) {
+    if (destination == HomeNavigationDestination.dashboard) return;
+    if (destination == HomeNavigationDestination.home) {
+      if (onHome != null) {
+        onHome!();
+      } else {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+    if (onNavigationSelected != null) {
+      onNavigationSelected!(destination);
+    } else {
+      Navigator.of(context).pop(destination);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -61,16 +62,9 @@ class GuardianDashboardScreen extends StatelessWidget {
     appBar: const HomeAppBar(),
     drawer: GuardianSidebar(onLogout: onLogout, homeFuture: homeFuture),
     bottomNavigationBar: HomeBottomNavBar(
-      selectedIndex: 3,
-      onItemSelected: (index) {
-        if (index == 0) {
-          if (onHome != null) {
-            onHome!();
-          } else {
-            Navigator.of(context).maybePop();
-          }
-        }
-      },
+      selectedDestination: HomeNavigationDestination.dashboard,
+      onDestinationSelected: (destination) =>
+          _onDestinationSelected(context, destination),
     ),
     body: Center(
       child: ConstrainedBox(
@@ -89,7 +83,11 @@ class GuardianDashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            DashboardLiveTrainingContent(repository: repository),
+            DashboardLiveTrainingContent(
+              repository: repository,
+              onShowAllTrainings: () =>
+                  _onDestinationSelected(context, HomeNavigationDestination.trainings),
+            ),
           ],
         ),
       ),
