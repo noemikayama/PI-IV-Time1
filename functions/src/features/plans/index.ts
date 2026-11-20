@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da visualização, do cancelamento e da edição do
+// plano.
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos planos ativos para a agenda.
@@ -19,4 +24,7 @@ export {
 export {createTrainingPlan} from "./handlers/createTrainingPlan";
 export {listHorseEvaluations} from "./handlers/listHorseEvaluations";
 export {listTrainingGallery} from "./handlers/listTrainingGallery";
+export {getTrainingPlanDetails} from "./handlers/getTrainingPlanDetails";
+export {cancelTrainingPlan} from "./handlers/cancelTrainingPlan";
+export {updateTrainingPlan} from "./handlers/updateTrainingPlan";
 export type {ActivePlanSummary} from "./types";

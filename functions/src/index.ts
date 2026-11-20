@@ -5,6 +5,8 @@
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos detalhes e da edição do treinamento.
+// Alteração: Exportação da visualização, do cancelamento e da edição do
+// plano.
 //
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -132,6 +134,9 @@ export {
   createTrainingPlan,
   listHorseEvaluations,
   listTrainingGallery,
+  getTrainingPlanDetails,
+  cancelTrainingPlan,
+  updateTrainingPlan,
 } from "./features/plans";
 export {
   getTrainingAgenda,

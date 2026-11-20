@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: splitByHorse aceita a cópia do treinamento guardada no plano
+// (edição do plano).
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Galeria de treinamentos do cadastro de plano e separação dos
@@ -29,15 +34,18 @@ const collator = new Intl.Collator("pt-BR", {
 /** Separa os treinamentos que usam exercício específico de outro cavalo,
  * que não podem entrar no plano do cavalo informado. A cópia do exercício
  * no treinamento não guarda a privacidade, então ela é lida em
- * 'exercicios' (uma consulta para todos).
- * @param {TrainingDocument[]} trainings Treinamentos do treinador.
+ * 'exercicios' (uma consulta para todos). Aceita o treinamento ou a cópia
+ * guardada no plano.
+ * @param {Object[]} trainings Treinamentos (ou cópias) com os exercícios.
  * @param {ObjectId} horseId _id do cavalo do plano.
  * @return {Promise<Object>} Treinamentos aceitos e recusados.
  */
-export async function splitByHorse(
-  trainings: TrainingDocument[],
+export async function splitByHorse<
+  T extends Pick<TrainingDocument, "exercicios">,
+>(
+  trainings: T[],
   horseId: ObjectId
-): Promise<{usable: TrainingDocument[]; blocked: TrainingDocument[]}> {
+): Promise<{usable: T[]; blocked: T[]}> {
   const exerciseIds = new Map(
     trainings.flatMap((training) =>
       training.exercicios.map((exercise) => [
@@ -51,8 +59,8 @@ export async function splitByHorse(
       .map((id) => id.toHexString())
   );
 
-  const usable: TrainingDocument[] = [];
-  const blocked: TrainingDocument[] = [];
+  const usable: T[] = [];
+  const blocked: T[] = [];
   for (const training of trainings) {
     const isBlocked = training.exercicios.some((exercise) =>
       foreign.has(exercise._id.toHexString())

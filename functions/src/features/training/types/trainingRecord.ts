@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Estado dos registros do plano lido pela edição do plano.
+// Alteração: Projeção dos treinos do plano lida pela visualização.
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Projeção das listagens por período (home e agenda), com a
@@ -106,6 +111,19 @@ export type TrainingRecordSummary = {
     treinador?: {nome: string};
     treinamento?: {titulo: string; duracaoEstimadaMinutos: number};
 };
+
+// Registro do plano visto pela edição, que decide o que manter.
+export type PlanRecordState = Pick<
+    TrainingRecordDocument,
+    "_id" | "itemPlanejamento" | "dataPlanejada" | "status"
+> & {exercicios: Pick<PerformedExercise, "realizacao">[]};
+
+// Treino agendado do plano, como a visualização mostra: a cópia do
+// treinamento e os nomes dos exercícios guardados no registro.
+export type PlanSessionRecord = Pick<
+    TrainingRecordDocument,
+    "_id" | "dataPlanejada" | "treinamento"
+> & {exercicios: {exercicio: Pick<TrainingExercise, "nome">}[]};
 
 // Projeção das execuções recentes (histórico da agenda).
 export type RecentExecutionRecord = {
