@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 17/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Código 'unavailable', para quando o servidor Java de microchip
+// não pode ser consultado.
+//
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Código 'failed-precondition' (ex.: envios ainda em andamento).
@@ -24,6 +29,7 @@ export type AppErrorCode =
     | "permission-denied"
     | "not-found"
     | "failed-precondition"
+    | "unavailable"
     | "internal";
 
 /** Erro de domínio com código compatível com o HttpsError. */

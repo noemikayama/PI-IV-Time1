@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - RA 25016900
+// Alteração: validateMicrochip no dublê do serviço remoto, que ganhou o
+// método.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação e cobertura dos fluxos de exclusão, timeout,
@@ -452,6 +457,9 @@ class _RecordingImageService implements HorseRegistrationRemoteService {
   Future<Map<String, dynamic>> registerHorse(
     Map<String, Object?> payload,
   ) async => const {};
+
+  @override
+  Future<void> validateMicrochip(String code) async {}
 
   @override
   Future<void> removeImage(String horseId, String path) async {}

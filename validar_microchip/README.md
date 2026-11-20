@@ -151,6 +151,128 @@ Recebem `PAIS_INVALIDO`, porque não representam um país:
 - os códigos **não atribuídos**, como `000`;
 - os códigos **regionais da ONU (M49)**, que não fazem parte da ISO 3166-1, como `001` (Mundo), `019` (Américas) e `419` (América Latina e Caribe).
 
+## 7. Rodando com o app (local)
+
+O app não fala direto com este servidor. O caminho é este:
+
+```
+app (Flutter) ──callable──▶ Functions no emulador (127.0.0.1:5001) ──TCP──▶ servidor Java (127.0.0.1:7700)
+```
+
+Três callables consultam o servidor, pelo protocolo da seção 3:
+
+- `validateMicrochip`, na etapa do microchip do cadastro;
+- `registerHorse`, antes de gravar o cavalo;
+- `updateHorse`, só quando o microchip é enviado.
+
+A consulta só acontece quando o parâmetro `MICROCHIP_HOST` está preenchido, e ele só é definido no `functions/.env.local`, que só o emulador lê. Nas Functions publicadas ele fica vazio, e só o formato de 15 dígitos é conferido.
+
+### 7.1. Preparação (uma vez)
+
+1. Instale o JDK 25, o Node, o Flutter e o Firebase CLI. As Functions declaram o Node 24; com outra versão, o emulador avisa e usa a da máquina (testado com o Node 22).
+
+   ```bash
+   npm install -g firebase-tools   # pode exigir sudo; sem instalar, use "npx firebase-tools" no lugar de "firebase"
+   ```
+
+2. Instale as dependências das Functions:
+
+   ```bash
+   cd functions
+   npm ci
+   ```
+
+3. Crie dois arquivos em `functions/`. Os dois ficam fora do git (regra `*.local`), e só o emulador os lê.
+
+   `functions/.env.local`
+
+   ```
+   MONGODB_DB=<nome do banco, peça ao time>
+   MICROCHIP_HOST=127.0.0.1
+   MICROCHIP_PORTA=7700
+   ```
+
+   `functions/.secret.local`
+
+   ```
+   MONGODB_URI=<peça ao time>
+   WEB_API_KEY=<peça ao time>
+   ```
+
+   - Deixe as três chaves no `.env.local`. Se faltar alguma, o CLI pergunta o valor ao subir o emulador.
+   - Sem o `.secret.local`, o emulador tenta ler `MONGODB_URI` e `WEB_API_KEY` do Secret Manager do projeto, com a conta do `firebase login`. Isso só funciona se essa conta tiver acesso aos segredos.
+
+### 7.2. Toda vez: três terminais
+
+| # | Pasta | Comando | Pronto quando |
+|---|---|---|---|
+| 1 | `validar_microchip/` | `java -jar target/servidor-microchip.jar` | o log mostra `Servidor de microchip escutando na porta 7700.` |
+| 2 | `functions/` | `npm run serve` | aparecem a URL `.../southamerica-east1/validateMicrochip` e `All emulators ready!` |
+| 3 | `horse_life/` | `flutter run --dart-define=FUNCTIONS_EMULATOR_HOST=<host>` | o app abre |
+
+- Terminal 1: na primeira vez, e sempre que o código Java mudar, rode antes `./mvnw clean package`.
+- Terminal 2: sem o CLI instalado, use `npm run build && npx firebase-tools emulators:start --only functions`.
+
+O `<host>` do terminal 3 depende de onde o app roda:
+
+| Onde o app roda | `<host>` |
+|---|---|
+| Emulador Android | `10.0.2.2` (o plugin também converte `127.0.0.1` para esse endereço) |
+| Chrome (web) | `127.0.0.1` |
+| Simulador iOS (só no macOS) | `127.0.0.1` |
+| Celular na mesma rede Wi-Fi | o IP do computador na rede. Também acrescente `"host": "0.0.0.0"` em `emulators.functions` no `firebase.json`; é uma mudança só local, não faça commit dela. |
+
+- O Linux desktop não serve: o `firebase_options.dart` não tem configuração para Linux.
+- Sem o `--dart-define`, o app usa as Functions publicadas, como antes.
+- O emulador sempre encontra o servidor em `127.0.0.1:7700`, porque os dois rodam no mesmo computador.
+- No Android, só o build de debug aceita o HTTP do emulador (`android:usesCleartextTraffic` no manifest de debug).
+
+### 7.3. Conferência sem o app
+
+Com os terminais 1 e 2 rodando:
+
+```bash
+# token sem assinatura, com o papel guardian: o emulador não confere a assinatura
+TOKEN='eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ0ZXN0ZS1sb2NhbCIsInJvbGUiOiJndWFyZGlhbiJ9.'
+URL=http://127.0.0.1:5001/horselife-2717b/southamerica-east1/validateMicrochip
+
+curl -s -w '\n' -X POST $URL -H 'Content-Type: application/json' -H "Authorization: Bearer $TOKEN" \
+  -d '{"data":{"codigo":"076987654321017"}}'
+curl -s -w '\n' -X POST $URL -H 'Content-Type: application/json' -H "Authorization: Bearer $TOKEN" \
+  -d '{"data":{"codigo":"076987654321018"}}'
+```
+
+Respostas esperadas:
+
+```json
+{"result":{"valido":true}}
+{"error":{"message":"Os dígitos verificadores não conferem.","status":"INVALID_ARGUMENT"}}
+```
+
+- Cada consulta aparece no log do terminal 1: `conexão ip=127.0.0.1 comando=VALIDAR_MICROCHIP resultado=...`.
+- Com o terminal 1 parado, a resposta é `{"error":{"message":"Não foi possível verificar o microchip agora. Tente novamente.","status":"UNAVAILABLE"}}`.
+- O token só funciona no emulador, que decodifica o token sem verificar a assinatura. As Functions publicadas o recusam.
+
+### 7.4. O que conferir no app
+
+| Ação | Resultado esperado |
+|---|---|
+| Etapa do microchip com `076987654321017` | avança; o terminal 1 registra `resultado=VALIDO` |
+| `076987654321018` | "Código inválido": "Os dígitos verificadores não conferem." |
+| `999123456789004` | "Código inválido": "O código de país não corresponde a um país ISO 3166-1." |
+| Parar o terminal 1 e tentar `076987654321017` | "Erro na validação": "Não foi possível validar o microchip. Tente novamente."; nada é gravado |
+| Subir o terminal 1 de novo e concluir um cadastro | o cavalo é salvo; com o mesmo microchip de novo, "Este microchip já está cadastrado." |
+| Editar só o nome de um cavalo | é salvo, e o terminal 1 não registra nenhuma conexão |
+| Deixar `MICROCHIP_HOST=` vazio no `.env.local` (sem apagar a linha) e reiniciar o terminal 2 | `076987654321018` é aceito, porque o Java não é consultado. Depois, volte para `127.0.0.1`. |
+
+### 7.5. Limites do ambiente local
+
+- Só as Functions rodam no emulador. Auth, MongoDB e Storage são os reais do projeto, então um cavalo cadastrado no teste vai para o banco real. Ao subir, o emulador avisa que usa as credenciais da máquina (*Application Default Credentials*) para esses serviços.
+- O envio de imagens usa URLs assinadas e pode falhar no emulador sem uma chave de conta de serviço. O cadastro funciona mesmo assim, porque as imagens são opcionais.
+- As Functions publicadas não consultam o servidor Java. Para ligar a consulta na nuvem, é preciso hospedar o JAR numa máquina acessível e definir `MICROCHIP_HOST` (e `MICROCHIP_PORTA`, se não for `7700`) no deploy, sem mudar código.
+- No primeiro `firebase deploy` depois desta mudança, o CLI pergunta uma vez o valor de `MICROCHIP_HOST` e de `MICROCHIP_PORTA`. Enter mantém o vazio e `7700`, ou seja, a consulta continua desligada na nuvem. As respostas ficam em `functions/.env.horselife-2717b`.
+- O app desta versão chama a callable `validateMicrochip`. Publique as Functions (`firebase deploy --only functions`) antes de usar o app contra a nuvem (sem o `--dart-define`): enquanto a callable não estiver publicada, a etapa do microchip mostra "Erro na validação" e nenhum cavalo pode ser cadastrado.
+
 ## Limitação conhecida
 
 Ao encerrar com `Ctrl+C` ou `kill`, as linhas de log escritas depois do sinal podem não aparecer (por exemplo, `Servidor de microchip encerrado.`). O `java.util.logging` registra o próprio *shutdown hook*, que fecha a saída do log, e a JVM executa os *hooks* em paralelo, sem ordem definida. O encerramento continua gracioso: as requisições em andamento terminam e novas conexões são recusadas. Só essas linhas de log se perdem.

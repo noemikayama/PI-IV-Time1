@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - RA 25016900
+// Alteração: Cenários da callable validateMicrochip: payload enviado, recusa
+// do microchip e falha do servidor.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação e documentação dos cenários de timeout, autenticação e
@@ -13,6 +18,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:horse_life/features/horses/data/repositories/horse_microchip_validator.dart';
 import 'package:horse_life/features/horses/data/services/firebase_horse_registration_service.dart';
 import 'package:horse_life/features/horses/data/services/horse_registration_remote_service.dart';
 import 'package:http/http.dart' as http;
@@ -133,6 +139,63 @@ void main() {
               'details',
               contains('SignatureDoesNotMatch'),
             ),
+      ),
+    );
+  });
+
+  test('validateMicrochip envia o código à callable validateMicrochip', () async {
+    String? functionName;
+    Map<String, Object?>? payload;
+    final service = FirebaseHorseRegistrationService(
+      call: (name, data) async {
+        functionName = name;
+        payload = data;
+        return {'valido': true};
+      },
+    );
+
+    await service.validateMicrochip('076987654321017');
+
+    expect(functionName, 'validateMicrochip');
+    expect(payload, {'codigo': '076987654321017'});
+  });
+
+  test('microchip recusado pelo servidor vira falha com a mensagem dele', () {
+    final service = FirebaseHorseRegistrationService(
+      call: (_, _) async => throw FirebaseFunctionsException(
+        code: 'invalid-argument',
+        message: 'Os dígitos verificadores não conferem.',
+      ),
+    );
+
+    expect(
+      service.validateMicrochip('076987654321018'),
+      throwsA(
+        isA<HorseMicrochipValidationFailure>().having(
+          (failure) => failure.message,
+          'message',
+          'Os dígitos verificadores não conferem.',
+        ),
+      ),
+    );
+  });
+
+  test('servidor indisponível não vira microchip inválido', () {
+    final service = FirebaseHorseRegistrationService(
+      call: (_, _) async => throw FirebaseFunctionsException(
+        code: 'unavailable',
+        message: 'Não foi possível verificar o microchip agora. Tente novamente.',
+      ),
+    );
+
+    expect(
+      service.validateMicrochip('076987654321017'),
+      throwsA(
+        isA<FirebaseFunctionsException>().having(
+          (error) => error.code,
+          'code',
+          'unavailable',
+        ),
       ),
     );
   });
