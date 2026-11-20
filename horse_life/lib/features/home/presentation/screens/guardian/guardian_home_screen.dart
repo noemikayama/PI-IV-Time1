@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Correção da navegação da barra inferior para chamar _onNavigationDestination,
+// permitindo acesso à listagem de cavalos, e repasse do callback ao Dashboard.
+//
 // Data: 18/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração da agenda semanal do responsável à navegação inferior,
@@ -219,8 +225,6 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
   final List<String> _sessionMockHorses = [];
   late HomeLoader<GuardianHomeData> _loader;
-  late Future<GuardianHomeData>
-  _homeFuture; // Compartilhada entre Home, Sidebar e Dashboard.
   bool _isOpeningHorseProfile = false;
 
   // O repositório é criado sob demanda e reutilizado no carregamento e edição.
@@ -461,6 +465,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         );
       },
     );
+  }
   /// Listagem autenticada exclusivamente pela callable listHorses.
   Future<void> _openHorseList() async {
     final destination = await Navigator.of(context)
@@ -505,17 +510,22 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Abre o painel do perfil sem alterar o destino atual da Home.
   // Ao voltar, os dados já carregados da Home continuam disponíveis.
   Future<void> _openDashboard() async {
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => GuardianDashboardScreen(
+    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
+      MaterialPageRoute<HomeNavigationDestination>(
+        builder: (dashboardContext) => GuardianDashboardScreen(
           onLogout: widget.onLogout,
-          onHome: () => Navigator.of(context).pop(),
+          onHome: () => Navigator.of(dashboardContext).pop(),
+          onNavigationSelected: (selected) {
+            Navigator.of(dashboardContext).pop(selected);
+          },
           homeFuture: _homeFuture,
           repository:
               widget.dashboardRepository ?? DashboardComposition.production(),
         ),
       ),
     );
+    if (!mounted || destination == null) return;
+    _onNavigationDestination(destination);
   }
 
   @override
@@ -562,7 +572,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             _openDashboard();
             return;
           }
-          setState(() => _selectedDestination = destination);
+          _onNavigationDestination(destination);
         },
       ),
     );
