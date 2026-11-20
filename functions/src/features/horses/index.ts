@@ -2,9 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação dos cavalos vinculados a uma pessoa, usados pelo
+// acesso ao exercício.
+//
 // Data: 19/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação da conferência do microchip no servidor Java.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportações usadas pela feature de planos.
@@ -47,6 +53,7 @@
 
 export {
   findActiveHorseById,
+  findLinkedHorseIds,
   findTrainersOfHorses,
   updateHorseDocument,
 } from "./repositories/horseRepository";
