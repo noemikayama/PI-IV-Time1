@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do tipo e cavalo do exercício.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos tipos da galeria e do tempo total.
@@ -21,6 +25,7 @@ export type {
   ExerciseGallerySource,
   ExerciseHorseRef,
   ExerciseImageContentType,
+  ExerciseKindSource,
   ExerciseMaterial,
   ExerciseMediaContentType,
   ExerciseMediaField,

@@ -2,15 +2,20 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação da edição de treinamentos, com as regras do cadastro.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do cadastro de treinamentos.
 // -----------------------------------------------------------------------------
 
 import {AppError} from "../../../shared/errors/AppError";
-import {asRecord} from "../../authentication/shared";
-import {parseExerciseIds} from "../../exercises";
-import type {TrainingRegistrationInput} from "../types";
+import {asRecord, assertAllowedFields} from "../../authentication/shared";
+import {MAX_SELECTED_EXERCISES, parseExerciseIds} from "../../exercises";
+import type {TrainingRegistrationInput, TrainingUpdateInput} from "../types";
+import {parseCode} from "./validateTrainingDetails";
 
 const MAX_ORIENTATIONS = 30;
 const MAX_ITEM_LENGTH = 500;
@@ -111,5 +116,56 @@ export function validateTrainingRegistration(
     orientacoes: parseOrientacoes(record.orientacoes),
     duracaoEstimadaMinutos: parseDuracao(record.duracaoEstimadaMinutos),
     exercicios: parseExerciseIds(record.exercicios, 1),
+  };
+}
+
+/** Valida os códigos dos exercícios da edição: strings só com dígitos, na
+ * ordem de execução, com pelo menos um. Como no cadastro, um exercício pode
+ * aparecer mais de uma vez.
+ * @param {unknown} value Valor recebido.
+ * @return {number[]} Códigos convertidos, na ordem recebida.
+ */
+function parseExerciseCodes(value: unknown): number[] {
+  if (!Array.isArray(value)) {
+    throw invalid("Exercícios: envie a lista de códigos.");
+  }
+  if (value.length < 1) throw invalid("Selecione pelo menos um exercício.");
+  if (value.length > MAX_SELECTED_EXERCISES) {
+    throw invalid(`Selecione no máximo ${MAX_SELECTED_EXERCISES} exercícios.`);
+  }
+  return value.map((item) => parseCode(item, "Código de exercício inválido."));
+}
+
+/** Valida a edição do treinamento: o estado final da tela, com as mesmas
+ * regras de texto e duração do cadastro. Como a edição substitui tudo,
+ * 'descricao' e 'orientacoes' são obrigatórias (aceitam "" e []): um campo
+ * esquecido pelo app não apaga o conteúdo sem aviso.
+ * @param {unknown} data Dados recebidos pelo endpoint.
+ * @return {TrainingUpdateInput} Dados validados e normalizados.
+ */
+export function validateTrainingUpdate(data: unknown): TrainingUpdateInput {
+  const record = asRecord(data ?? {}, "Dados da edição inválidos.");
+  assertAllowedFields(record, [
+    "codigo",
+    "titulo",
+    "descricao",
+    "duracaoEstimada",
+    "orientacoes",
+    "exercicioCodigos",
+  ]);
+  if (typeof record.descricao !== "string") {
+    throw invalid("Descrição: envie o texto (\"\" quando não houver).");
+  }
+  if (!Array.isArray(record.orientacoes)) {
+    throw invalid("Orientações: envie a lista ([] quando não houver).");
+  }
+  const descricao = parseDescricao(record.descricao);
+  return {
+    codigo: parseCode(record.codigo, "Código do treinamento inválido."),
+    titulo: parseText(record.titulo, "O título", 3, 80),
+    ...(descricao && {descricao}),
+    orientacoes: parseOrientacoes(record.orientacoes),
+    duracaoEstimadaMinutos: parseDuracao(record.duracaoEstimada),
+    exercicioCodigos: parseExerciseCodes(record.exercicioCodigos),
   };
 }

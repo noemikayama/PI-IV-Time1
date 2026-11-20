@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipo e cavalo do exercício lidos pelos detalhes do treinamento.
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipos da galeria de exercícios e do tempo total da seleção.
@@ -125,6 +129,12 @@ export type ExerciseGalleryInput = {
 export type ExerciseGallerySource = Pick<
     ExerciseDocument,
     "_id" | "nome" | "duracaoPadraoMinutos" | "privacidade" | "cavalo"
+>;
+
+// Tipo e cavalo do exercício, lidos pelos detalhes do treinamento.
+export type ExerciseKindSource = Pick<
+    ExerciseDocument,
+    "_id" | "privacidade" | "cavalo"
 >;
 
 // Item da galeria; 'cavalo' só no exercício específico.

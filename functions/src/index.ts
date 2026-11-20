@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos detalhes e da edição do treinamento.
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da agenda de treinos.
@@ -119,6 +123,8 @@ export {
 } from "./features/exercises";
 export {
   registerTraining,
+  getTrainingDetails,
+  updateTraining,
 } from "./features/training";
 export {
   createTrainingPlan,

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Busca de um treinamento pelo código, usada nos detalhes.
+// Alteração: Gravação dos campos editáveis do treinamento.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Busca dos treinamentos do treinador, usada pelo plano.
@@ -19,7 +24,11 @@ import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
 import {ensureIndexesOnce} from "../../../shared/database/indexes";
 import {nextCode} from "../../../shared/database/sequence";
-import type {NewTraining, TrainingDocument} from "../types";
+import type {
+  NewTraining,
+  TrainingContent,
+  TrainingDocument,
+} from "../types";
 
 const TRAINING_INDEXES: IndexDescription[] = [
   {key: {codigo: 1}, name: "codigo_unico", unique: true},
@@ -70,4 +79,38 @@ export async function findTrainerTrainings(
     .collection<TrainingDocument>(COLLECTIONS.Treinamentos)
     .find({"treinador._id": trainerId, ...(ids && {_id: {$in: ids}})})
     .toArray();
+}
+
+/** Busca um treinamento pelo código sequencial. Usa o índice codigo_unico.
+ * @param {number} codigo Código do treinamento.
+ * @return {Promise<TrainingDocument|null>} Treinamento, ou null.
+ */
+export async function findTrainingByCode(
+  codigo: number
+): Promise<TrainingDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<TrainingDocument>(COLLECTIONS.Treinamentos)
+    .findOne({codigo});
+}
+
+/** Substitui os campos editáveis do treinamento.
+ * @param {ObjectId} trainingId _id do treinamento.
+ * @param {TrainingContent} content Novos valores.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<void>} Resolvida quando o treinamento for gravado.
+ */
+export async function updateTrainingContent(
+  trainingId: ObjectId,
+  {descricao, ...content}: TrainingContent,
+  session: ClientSession
+): Promise<void> {
+  const db = await getDatabase();
+  await db.collection<TrainingDocument>(COLLECTIONS.Treinamentos).updateOne(
+    {_id: trainingId},
+    descricao ?
+      {$set: {...content, descricao}} :
+      {$set: content, $unset: {descricao: ""}},
+    {session}
+  );
 }
