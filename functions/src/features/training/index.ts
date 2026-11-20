@@ -7,6 +7,7 @@
 // Alteração: Exportação da consulta de detalhes do treinamento.
 // Alteração: Exportação da edição do treinamento e das cópias usadas pelos
 // planos.
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Registros por período (findRecordsByHorses e
