@@ -442,6 +442,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         );
       },
     );
+  }
+  
   /// Listagem autenticada exclusivamente pela callable listHorses.
   Future<void> _openHorseList() async {
     final destination = await Navigator.of(context)

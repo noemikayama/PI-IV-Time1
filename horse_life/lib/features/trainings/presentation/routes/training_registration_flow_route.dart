@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte ao parâmetro opcional onTrainingCreated para retorno
+// integrado ao fluxo de planos de treinamento após criar um novo treino.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Definição de routeName para retorno ao finalizar o fluxo e
@@ -18,6 +23,7 @@ import 'package:flutter/material.dart';
 import '../../../exercises/data/repositories/firebase_trainer_linked_horse_repository.dart';
 import '../../../exercises/data/repositories/trainer_linked_horse_repository.dart';
 import '../../application/controllers/training_registration_controller.dart';
+import '../../application/states/training_registration_draft.dart';
 import '../../data/repositories/firebase_training_exercise_gallery_repository.dart';
 import '../../data/repositories/firebase_training_registration_repository.dart';
 import '../../data/repositories/training_exercise_gallery_repository.dart';
@@ -34,6 +40,11 @@ abstract final class TrainingRegistrationFlowRoute {
     TrainingExerciseGalleryRepository? galleryRepository,
     TrainerLinkedHorseRepository? horseRepository,
     TrainingRegistrationRepository? registrationRepository,
+    void Function(
+      TrainingRegistrationDraft draft,
+      TrainingRegistrationResult? result,
+    )?
+    onTrainingCreated,
   }) {
     final resolvedGalleryRepository =
         galleryRepository ?? const FirebaseTrainingExerciseGalleryRepository();
@@ -43,11 +54,14 @@ abstract final class TrainingRegistrationFlowRoute {
         registrationRepository ??
         const FirebaseTrainingRegistrationRepository();
     final resolvedController =
-        controller ??
+        controller?.withOnTrainingCreated(
+          onTrainingCreated ?? controller.onTrainingCreated,
+        ) ??
         TrainingRegistrationController(
           galleryRepository: resolvedGalleryRepository,
           horseRepository: resolvedHorseRepository,
           registrationRepository: resolvedRegistrationRepository,
+          onTrainingCreated: onTrainingCreated,
         );
 
     return MaterialPageRoute<void>(
