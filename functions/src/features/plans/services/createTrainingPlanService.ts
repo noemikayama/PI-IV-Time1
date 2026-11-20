@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Cópia do treinamento montada pela feature de treinamentos.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Cadastro do plano de treinamento já ATIVO, com a geração dos
@@ -27,8 +31,9 @@ import {
   ensureTrainingRecordIndexes,
   findTrainerTrainings,
   insertTrainingRecords,
+  toTrainingSnapshot,
 } from "../../training";
-import type {TrainingDocument, TrainingSnapshot} from "../../training";
+import type {TrainingDocument} from "../../training";
 import {
   concludePlan,
   ensurePlanIndexes,
@@ -53,21 +58,6 @@ import {
 const ACTIVE_PLAN_MESSAGE = "Este cavalo já tem um plano ativo.";
 
 const toDate = (ymd: string): Date => new Date(`${ymd}T00:00:00.000Z`);
-
-/** Copia o treinamento no momento da inclusão, com os exercícios (DD 3.6):
- * edições posteriores no treinamento não alteram o plano.
- * @param {TrainingDocument} training Treinamento de origem.
- * @return {TrainingSnapshot} Cópia guardada no item.
- */
-const toSnapshot = (training: TrainingDocument): TrainingSnapshot => ({
-  _id: training._id,
-  codigo: training.codigo,
-  titulo: training.titulo,
-  ...(training.descricao && {descricao: training.descricao}),
-  orientacoes: training.orientacoes,
-  duracaoEstimadaMinutos: training.duracaoEstimadaMinutos,
-  exercicios: training.exercicios,
-});
 
 /** Copia a avaliação que originou o plano (DD 2.7), com o _id da original.
  * @param {EvaluationDocument} evaluation Avaliação de origem.
@@ -130,7 +120,7 @@ async function buildPlanning(
     codigo: index + 1,
     ativo: true,
     diasSemana: group.diasSemana,
-    treinamento: toSnapshot(
+    treinamento: toTrainingSnapshot(
       byId.get(group.treinamentoId.toHexString()) as TrainingDocument
     ),
   }));

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Índice e renovação da cópia do treinamento nos planos em
+// andamento.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Movido da feature de treinamentos para a feature de planos.
@@ -21,6 +26,7 @@ import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
 import {ensureIndexesOnce} from "../../../shared/database/indexes";
 import {nextCode} from "../../../shared/database/sequence";
+import type {TrainingSnapshot} from "../../training";
 import type {PlanDocument} from "../types";
 
 const PLAN_INDEXES: IndexDescription[] = [
@@ -34,6 +40,10 @@ const PLAN_INDEXES: IndexDescription[] = [
   {
     key: {"treinador._id": 1, "status": 1},
     name: "idx_planos_treinador_status",
+  },
+  {
+    key: {"planejamento.treinamento._id": 1},
+    name: "idx_planos_treinamento",
   },
 ];
 
@@ -125,4 +135,36 @@ export async function isActivePlanAuthor(
     {projection: {_id: 1}, session}
   );
   return plan !== null;
+}
+
+/** Renova a cópia do treinamento nos itens ativos dos planos RASCUNHO e
+ * ATIVO (edição do treinamento). Itens inativos e planos CONCLUIDO ou
+ * CANCELADO guardam a versão antiga. Usa idx_planos_treinamento.
+ * @param {TrainingSnapshot} snapshot Nova cópia do treinamento.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<void>} Resolvida quando os planos forem alterados.
+ */
+export async function refreshPlanTrainingSnapshots(
+  snapshot: TrainingSnapshot,
+  session: ClientSession
+): Promise<void> {
+  const db = await getDatabase();
+  await db.collection<PlanDocument>(COLLECTIONS.Planos).updateMany(
+    {
+      "planejamento.treinamento._id": snapshot._id,
+      "status": {$in: ["RASCUNHO", "ATIVO"]},
+    },
+    {
+      $set: {
+        "planejamento.$[item].treinamento": snapshot,
+        "atualizadoEm": new Date(),
+      },
+    },
+    {
+      arrayFilters: [
+        {"item.treinamento._id": snapshot._id, "item.ativo": true},
+      ],
+      session,
+    }
+  );
 }

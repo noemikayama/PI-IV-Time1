@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da consulta de detalhes do treinamento.
+// Alteração: Exportação da edição do treinamento e das cópias usadas pelos
+// planos.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportações usadas pela feature de planos; a consulta do
@@ -42,6 +48,10 @@ export {
   findDayRecordsByTrainer,
 } from "./repositories/trainingRecordRepository";
 export {findTrainerTrainings} from "./repositories/trainingRepository";
+export {
+  toRecordTraining,
+  toTrainingSnapshot,
+} from "./services/trainingSnapshot";
 export type {
   DayTrainingRecord,
   ExecutionCount,
@@ -54,3 +64,5 @@ export type {
 } from "./types/trainingRecord";
 export type {TrainingDocument, TrainingSnapshot} from "./types/training";
 export {registerTraining} from "./handlers/registerTraining";
+export {getTrainingDetails} from "./handlers/getTrainingDetails";
+export {updateTraining} from "./handlers/updateTraining";

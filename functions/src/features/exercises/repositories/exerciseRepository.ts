@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Consultas por código do treinador e do tipo e cavalo dos
+// exercícios, usadas pela edição e pelos detalhes do treinamento.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exercícios específicos de outro cavalo, usados pelo plano.
@@ -45,6 +50,7 @@ import type {DatePeriod} from "../../../shared/utils/dates";
 import type {
   ExerciseDocument,
   ExerciseGallerySource,
+  ExerciseKindSource,
   ExerciseMediaField,
   ExercisePrivacy,
   NewExercise,
@@ -228,6 +234,41 @@ export async function findTrainerExercisesByIds(
   return db
     .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
     .find({"_id": {$in: ids}, "treinador._id": trainerId, "ativo": true})
+    .toArray();
+}
+
+/** Busca, entre os códigos informados, os exercícios ativos cadastrados
+ * pelo treinador. Os que não existem, foram excluídos ou são de outro dono
+ * não voltam. Usa o índice único de 'codigo'.
+ * @param {string} trainerId UID do treinador.
+ * @param {number[]} codes Códigos dos exercícios, sem repetição.
+ */
+export async function findTrainerExercisesByCodes(
+  trainerId: string,
+  codes: number[]
+): Promise<ExerciseDocument[]> {
+  if (codes.length === 0) return [];
+  const db = await getDatabase();
+  return db
+    .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
+    .find({"codigo": {$in: codes}, "treinador._id": trainerId, "ativo": true})
+    .toArray();
+}
+
+/** Lê o tipo (privacidade) e o cavalo dos exercícios, inclusive os
+ * inativos, porque a cópia no treinamento continua valendo. Consulta direta
+ * por _id.
+ * @param {ObjectId[]} ids _id dos exercícios (cópias dos treinamentos).
+ */
+export async function findExerciseKinds(
+  ids: ObjectId[]
+): Promise<ExerciseKindSource[]> {
+  if (ids.length === 0) return [];
+  const db = await getDatabase();
+  return db
+    .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
+    .find({_id: {$in: ids}})
+    .project<ExerciseKindSource>({privacidade: 1, cavalo: 1})
     .toArray();
 }
 
