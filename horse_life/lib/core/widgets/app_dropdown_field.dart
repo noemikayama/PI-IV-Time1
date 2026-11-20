@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 17/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão de hint no estilo rounded para exibir o rótulo quando
+// nenhuma opção estiver selecionada (value == null).
+//
 // Data: 09/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Extração do dropdown reutilizável a partir dos seletores já
@@ -133,6 +139,17 @@ class AppDropdownField<T> extends StatelessWidget {
           child: DropdownButton<T>(
             key: dropdownKey,
             value: options.contains(value) ? value : null,
+            hint: label == null
+                ? null
+                : Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      label!,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(color: AppColors.text, fontSize: 20),
+                    ),
+                  ),
             isExpanded: true,
             borderRadius: const BorderRadius.all(Radius.circular(18)),
             menuMaxHeight: 320,

@@ -2,10 +2,20 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do contrato e das regras de localização, intervalo
+// e entrada digitável do calendário compartilhado.
+//
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Re-exportação e delegação do seletor de data para showAppDatePicker
 // em core/widgets, com localização em português e padrão DD/MM/AAAA.
+//
+// Data: 13/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Localização do seletor em português do Brasil e configuração da
+// entrada digitada no formato DD/MM/AAAA.
 //
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763

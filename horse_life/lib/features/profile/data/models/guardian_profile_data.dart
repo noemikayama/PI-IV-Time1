@@ -1,6 +1,14 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos contratos imutáveis do perfil, dos cavalos
+// vinculados e do resultado de atualização do responsável.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do id no resumo de cavalo do responsável.
 //
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -26,11 +34,13 @@
 /// Resumo de um cavalo exibido no perfil do responsável.
 class GuardianProfileHorse {
   const GuardianProfileHorse({
+    this.id = '',
     required this.name,
     required this.relationship,
     this.imageUrl,
   });
 
+  final String id;
   final String name;
 
   /// Papel do responsável em relação ao cavalo, pronto para exibição.

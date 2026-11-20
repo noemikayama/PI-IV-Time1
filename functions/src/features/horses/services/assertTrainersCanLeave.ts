@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Consulta do autor do plano ativo importada da feature de
+// planos.
+//
 // Data: 04/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Regra do autor do plano ativo (RF05003), antes em
@@ -10,7 +15,7 @@
 
 import type {ClientSession, ObjectId} from "mongodb";
 import {AppError} from "../../../shared/errors/AppError";
-import {isActivePlanAuthor} from "../../training";
+import {isActivePlanAuthor} from "../../plans";
 import type {AccountRef} from "../types";
 
 /** Recusa a saída de um treinador que seja autor do plano ATIVO do cavalo

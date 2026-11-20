@@ -2,6 +2,19 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação da conferência do microchip no servidor Java.
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de planos, das avaliações do cavalo e
+// da galeria de treinamentos.
+//
+// Data: 14/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da galeria de exercícios, do tempo total dos
+// exercícios selecionados e do cadastro de treinamentos.
+//
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do cadastro de exercícios e do envio, da confirmação
@@ -75,6 +88,7 @@ export {
 } from "./features/modalities";
 export {
   registerHorse,
+  validateMicrochip,
   updateHorse,
   getHorseProfile,
   listHorses,
@@ -97,4 +111,14 @@ export {
   createExerciseMediaUpload,
   confirmExerciseMedia,
   removeExerciseMedia,
+  listExerciseGallery,
+  sumExerciseDurations,
 } from "./features/exercises";
+export {
+  registerTraining,
+} from "./features/training";
+export {
+  createTrainingPlan,
+  listHorseEvaluations,
+  listTrainingGallery,
+} from "./features/plans";

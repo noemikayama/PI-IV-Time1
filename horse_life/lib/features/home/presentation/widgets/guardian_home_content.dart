@@ -1,22 +1,35 @@
 // RESPONSÁVEL PELA ATUALIZAÇÃO: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos segmentos de carregamento, erro, estado vazio e
+// composição dos cards da Home do responsável.
+//
+// Data: 10/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ação de toque nos cavalos persistidos da Home.
+//
+// Data: 15/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Conecta Mostrar tudo à listagem de cavalos e remove cavalos
+// temporários de sessão; dados exibidos vêm da Home real.
 //
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Exibe cavalos de demonstração somente durante a sessão atual,
 // sem depender de novo carregamento da Home após o cadastro mockado.
 //
-// Data: 18/10/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Revisão e padronização dos componentes e dados simulados da Home do Responsável, preservando a integração existente.
-// -----------------------------------------------------------------------------
-//
 // Data: 25/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do GuardianRepository e dos modelos com as Cloud
 // Functions; documentação das responsabilidades e lógicas principais,
 // preservando o comportamento anterior da interface.
+//
+// Data: 18/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Revisão e padronização dos componentes e dados simulados da Home
+// do Responsável, preservando a integração existente.
 // -----------------------------------------------------------------------------
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
@@ -33,13 +46,18 @@ class GuardianHomeContent extends StatefulWidget {
     required this.homeFuture,
     required this.onRetry,
     this.onRegisterHorse,
+    this.onShowAllHorses,
     this.sessionMockHorses = const [],
+    this.onSelectHorse,
   });
 
   final Future<GuardianHomeData> homeFuture;
   final VoidCallback onRetry;
   final VoidCallback? onRegisterHorse;
+  /// Abre a listagem autenticada de cavalos.
+  final VoidCallback? onShowAllHorses;
   final List<String> sessionMockHorses;
+  final ValueChanged<String>? onSelectHorse;
 
   @override
   State<GuardianHomeContent> createState() => _GuardianHomeContentState();
@@ -163,11 +181,19 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                       const SizedBox(height: 24),
                       GuardianListCard(
                         title: 'Meus cavalos',
+                        onShowAll: widget.onShowAllHorses,
                         icon: Icons.pets,
                         useHorseAsset: true,
                         maxVisibleItems: 2,
                         showArrow: true,
                         items: [...data.horses, ...widget.sessionMockHorses],
+                        onItemTap: widget.onSelectHorse == null
+                            ? null
+                            : (index) {
+                                if (index < data.horseIds.length) {
+                                  widget.onSelectHorse!(data.horseIds[index]);
+                                }
+                              },
                         onRegisterHorse:
                             widget.onRegisterHorse ??
                             () {

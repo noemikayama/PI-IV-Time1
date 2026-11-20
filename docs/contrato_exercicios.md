@@ -4,6 +4,10 @@ Callables na região `southamerica-east1`. `_id` sempre como string
 hexadecimal. Todas exigem login de **treinador**; com outro perfil, retornam
 `permission-denied`.
 
+A galeria de exercícios (`listExerciseGallery`) e o tempo total da seleção
+(`sumExerciseDurations`), usados no cadastro de treinamentos, estão em
+[contrato_treinamentos.md](contrato_treinamentos.md).
+
 ## Fluxo da tela de cadastro
 
 1. O treinador escolhe o tipo: **genérico** (`GENERICO`) ou **específico**

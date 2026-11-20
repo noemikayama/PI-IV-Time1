@@ -8,6 +8,7 @@ Callables na região `southamerica-east1`. Datas sempre em `AAAA-MM-DD`
 | Callable | Quem chama | Uso |
 | --- | --- | --- |
 | [registerHorse](#registerhorse) | Responsável proprietário | Cadastro |
+| [validateMicrochip](#validatemicrochip) | Responsável | Etapa do microchip no cadastro |
 | [listHorses](#listhorses) | Responsável ou treinador | Lista de cavalos (ordenação e busca) |
 | [getHorseProfile](#gethorseprofile) | Proprietário, atleta ou treinador | Perfil inteiro: cabeçalho e abas "Dados", "Plano atual" e "Avaliações" |
 | [updateHorse](#updatehorse) | Proprietário | "Editar animal" |
@@ -79,7 +80,7 @@ Exige login de **responsável**. Só cadastra quem é proprietário: se
 
 | Campo | Regra |
 | --- | --- |
-| `codigo` | Microchip: exatamente 15 dígitos, único entre todos os cavalos, inclusive os excluídos (`already-exists` se repetido). |
+| `codigo` | Microchip: exatamente 15 dígitos, único entre todos os cavalos, inclusive os excluídos (`already-exists` se repetido). Com o servidor Java de validação configurado, também precisa passar nas regras dele (país e dígitos verificadores): se não passar, `invalid-argument` com a mensagem do Java; se o servidor não responder, `unavailable` e nada é gravado. |
 | `responsabilidades` | `["PROPRIETARIO"]` ou `["PROPRIETARIO", "ATLETA"]`. |
 | `nome` | 2 a 80 caracteres. |
 | `dataNascimento` | Data válida, não futura, até 50 anos atrás. |
@@ -94,14 +95,39 @@ Resposta: `{ "id": "...", "codigo": "123123456789012", "nome": "Trovão" }`.
 O cavalo é criado com `imagens: []`. As imagens são enviadas depois, com o
 `id` devolvido aqui (ver [Imagens](#imagens)).
 
+## validateMicrochip
+
+Exige login de **responsável**. Usada na etapa do microchip do cadastro, para
+mostrar o erro antes do restante do formulário. Confere o formato (15 dígitos)
+e, com o servidor Java de validação configurado (`MICROCHIP_HOST`), também o
+país e os dígitos verificadores. Não confere se o microchip já está
+cadastrado: isso continua no `registerHorse` (`already-exists`).
+
+```json
+{ "codigo": "076987654321017" }
+```
+
+Resposta: `{ "valido": true }`.
+
+| Erro | Quando |
+| --- | --- |
+| `unauthenticated` / `permission-denied` | Sem login, ou quem chama não é responsável. |
+| `invalid-argument` | Microchip recusado. A mensagem é a que deve aparecer para o usuário (ex.: "Os dígitos verificadores não conferem."). |
+| `unavailable` | O servidor Java está configurado, mas não respondeu. Nada foi conferido; tente de novo. |
+
+Sem `MICROCHIP_HOST` (o padrão, como nas functions publicadas), só o formato
+é conferido.
+
 ## updateHorse
 
 Exige login de **responsável** e só pode ser chamada pelo proprietário. Envie
 `id` e apenas os campos que mudaram: um campo ausente não é alterado. Os campos
 seguem as regras do cadastro: a modalidade não pode ser removida
 (`modalidadeId` nulo retorna `invalid-argument`) e um microchip (`codigo`) já
-usado por outro cavalo retorna `already-exists`. `responsabilidades` não pode
-ser editado; os vínculos mudam em [updateHorseLinks](#updatehorselinks).
+usado por outro cavalo retorna `already-exists`. Um `codigo` enviado também
+passa pelo servidor Java, como no cadastro; sem `codigo`, o Java não é
+consultado. `responsabilidades` não pode ser editado; os vínculos mudam em
+[updateHorseLinks](#updatehorselinks).
 
 As listas (`limitacoesFisicas`, `observacoesSaude` e `historicoLesoes`) não são
 enviadas inteiras: cada uma recebe `{ "adicionar": [...], "remover": [...] }`,
@@ -109,35 +135,10 @@ aplicado sobre a lista gravada no momento da edição. Assim, uma tela
 desatualizada não apaga o que outra pessoa incluiu nesse meio-tempo.
 
 ```json
-{
-  "id": "66e1a0c2f1b2c3d4e5f60050",
-  "nome": "Trovão II",
-  "codigo": "123123456789013",
-  "limitacoesFisicas": { "adicionar": ["Evitar terreno duro"] },
-  "historicoLesoes": {
-    "remover": [
-      { "data": "2025-03-12", "descricao": "Distensão leve", "prescricao": "Repouso de 3 semanas" }
-    ]
-  }
-}
+{ "id": "66e1a0c2f1b2c3d4e5f60050", "nome": "Trovão II", "modalidadeId": null }
 ```
 
-| Regra das listas | Resposta |
-| --- | --- |
-| Item a remover não está na lista | `not-found` |
-| Item a incluir já está na lista, ou se repete no pedido | `invalid-argument` |
-| O mesmo item em `adicionar` e em `remover` | `invalid-argument` |
-| Lista final acima do limite (30 itens; 50 lesões) | `invalid-argument` |
-
-Os itens são comparados sem diferença de maiúsculas e minúsculas. Uma lesão é
-identificada por `data`, `descricao` e `prescricao` juntas. As lesões continuam
-em ordem decrescente de data.
-
-Ao mudar `nome` ou `codigo`, as cópias do cavalo em `responsaveis`,
-`treinadores`, `avaliacoes`, `planos` e `registros_treino` são atualizadas na
-mesma transação.
-
-Resposta: o perfil atualizado, no mesmo formato de `getHorseProfile`.
+Resposta: o cavalo atualizado, no mesmo formato de `getHorse`.
 
 ## getHorseProfile
 

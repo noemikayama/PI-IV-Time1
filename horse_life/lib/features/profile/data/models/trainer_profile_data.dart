@@ -1,6 +1,14 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 15/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos blocos de cavalo, documentos, regiões e dados
+// agregados do perfil profissional.
+//
+// Data: 10/11/2026 (perfil do cavalo)
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do id no resumo de cavalo do treinador.
 //
 // Data: 10/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -20,7 +28,9 @@
 
 /// Resumo de um cavalo acompanhado pelo treinador.
 class TrainerProfileHorse {
-  const TrainerProfileHorse({required this.name, this.imageUrl});
+  const TrainerProfileHorse({this.id = '', required this.name, this.imageUrl});
+
+  final String id;
 
   /// Nome exibido no card do vínculo.
   final String name;
