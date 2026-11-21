@@ -2,6 +2,17 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Recarregamento automático dos dados do perfil do cavalo ao
+// retornar de TrainingPlanDetailScreen após alteração ou cancelamento de plano.
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Retorno do destino selecionado na barra inferior via Navigator.pop(destination)
+// para permitir redirecionamento direto para a tela escolhida em rotas empilhadas.
+// Conexão do plano ativo às abas do perfil com link para TrainingPlanDetailScreen.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos segmentos de carregamento, permissões, abas,
@@ -47,6 +58,7 @@ import 'package:horse_life/features/horses/presentation/widgets/horse_injury_dia
 import 'package:horse_life/features/horses/presentation/widgets/horse_relationships_dialog.dart';
 import 'package:horse_life/features/horses/presentation/widgets/horse_text_entry_dialog.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_edit_screen.dart';
+import 'package:horse_life/features/training_plans/presentation/screens/training_plan_detail_screen.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 typedef HorseRemovalRequested = Future<void> Function(HorseProfileData horse);
@@ -288,9 +300,36 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
   // --- Integração com navegação e permissões --------------------------------
 
   void _selectNavigationDestination(HomeNavigationDestination destination) {
-    if (destination == HomeNavigationDestination.horses) return;
-    widget.onNavigationSelected?.call(destination);
-    if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop(destination);
+    } else {
+      widget.onNavigationSelected?.call(destination);
+    }
+  }
+
+  Future<void> _openTrainingPlan(HorseProfileData horse, String planId) async {
+    final result = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (_) => TrainingPlanDetailScreen(
+          planId: planId,
+          currentUserId: _currentUserId(horse),
+          isTrainer: widget.isTrainer,
+          onNavigationSelected: (dest) {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop(dest);
+            }
+          },
+        ),
+      ),
+    );
+    if (!mounted || result == null) return;
+    if (result is HomeNavigationDestination) {
+      _selectNavigationDestination(result);
+      return;
+    }
+    if (result == true) {
+      _reload();
+    }
   }
 
   String _currentUserId(HorseProfileData horse) {
@@ -400,10 +439,16 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
                         onAddHealthNote: () => _addHealthNote(horse),
                         onAddInjury: () => _addInjury(horse),
                         onRemove: () => _requestRemoval(horse),
+                        onOpenPlan: horse.currentPlan != null
+                            ? () => _openTrainingPlan(horse, horse.currentPlan!.id)
+                            : null,
                       ),
                       _PlanTab(
                         plan: horse.currentPlan,
                         showTrainerAction: widget.isTrainer,
+                        onOpenPlan: horse.currentPlan != null
+                            ? () => _openTrainingPlan(horse, horse.currentPlan!.id)
+                            : null,
                       ),
                       _EvaluationsTab(
                         evaluations: horse.evaluations,
@@ -545,6 +590,7 @@ class _DataTab extends StatelessWidget {
     required this.onAddHealthNote,
     required this.onAddInjury,
     required this.onRemove,
+    this.onOpenPlan,
   });
 
   final HorseProfileData horse;
@@ -555,6 +601,7 @@ class _DataTab extends StatelessWidget {
   final VoidCallback onAddHealthNote;
   final VoidCallback onAddInjury;
   final VoidCallback onRemove;
+  final VoidCallback? onOpenPlan;
 
   @override
   Widget build(BuildContext context) {
@@ -606,10 +653,32 @@ class _DataTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _line('Modalidade', horse.modality?.name ?? 'Não informada'),
-              _line(
-                'Plano ativo',
-                horse.currentPlan?.title ?? 'Nenhum plano ativo',
-              ),
+              if (horse.currentPlan != null && onOpenPlan != null)
+                InkWell(
+                  key: const Key('horse-current-plan-link'),
+                  onTap: onOpenPlan,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _line('Plano ativo', horse.currentPlan!.title),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.open_in_new,
+                          size: 16,
+                          color: AppColors.seaGreen,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                _line(
+                  'Plano ativo',
+                  horse.currentPlan?.title ?? 'Nenhum plano ativo',
+                ),
             ],
           ),
         ),
@@ -802,9 +871,14 @@ class _RelationshipUser extends StatelessWidget {
 // --- Abas de plano e avaliações --------------------------------------------
 
 class _PlanTab extends StatelessWidget {
-  const _PlanTab({required this.plan, required this.showTrainerAction});
+  const _PlanTab({
+    required this.plan,
+    required this.showTrainerAction,
+    this.onOpenPlan,
+  });
   final HorseProfilePlan? plan;
   final bool showTrainerAction;
+  final VoidCallback? onOpenPlan;
 
   @override
   Widget build(BuildContext context) => plan == null
@@ -834,7 +908,31 @@ class _PlanTab extends StatelessWidget {
             ],
             CollapsibleSectionCard(
               title: 'Plano atual',
-              child: Text(plan!.title),
+              child: InkWell(
+                key: const Key('horse-plan-tab-item'),
+                onTap: onOpenPlan,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          plan!.title,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      if (onOpenPlan != null)
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: AppColors.seaGreen,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         );

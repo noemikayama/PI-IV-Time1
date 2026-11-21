@@ -1,6 +1,10 @@
 // RESPONSÁVEL PELA IMPLEMENTAÇÃO FLUTTER: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Filtragem defensiva de treinos com status CANCELADO em todayTrainings.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Definição de valor padrão 0 para activePlans quando o backend
@@ -21,6 +25,7 @@ extension TrainerHomeToViewData on TrainerHomeModel {
     specialty: specialty,
     totalLinkedHorses: totalHorses,
     todayTrainings: todayTrainings
+        .where((training) => training.status != 'CANCELADO')
         .map(
           (training) => TrainerTraining(
             id: training.recordId,

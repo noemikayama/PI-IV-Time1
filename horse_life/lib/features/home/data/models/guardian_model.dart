@@ -1,6 +1,10 @@
 // RESPONSÁVEL PELA IMPLEMENTAÇÃO FLUTTER: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição do status canceled ('CANCELADO') a GuardianTrainingStatus.
+//
 // Data: 25/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Modelos tipados para as callable Functions do responsável.
@@ -40,7 +44,8 @@ enum GuardianTrainingStatus {
   planned('PLANEJADO'),
   completed('REALIZADO'),
   partial('PARCIAL'),
-  notCompleted('NAO_REALIZADO');
+  notCompleted('NAO_REALIZADO'),
+  canceled('CANCELADO');
 
   const GuardianTrainingStatus(this.apiValue);
   final String apiValue;
