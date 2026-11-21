@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Revisão da documentação das dependências injetáveis e do ciclo de
+// criação tardia dos carregadores da Home e da agenda.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do carregador da agenda entre as dependências de longa
+// duração, com criação tardia do repositório Firebase de produção.
+//
 // Data: 27/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Criação da composição de dependências de autenticação e das
@@ -14,6 +24,7 @@ import 'package:horse_life/features/home/application/controllers/home_loader.dar
 import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/home_composition.dart';
+import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
 
 /// Dependências de longa duração. Não mantém o estado visual do aplicativo.
 /// Pode receber repositories e loaders fake em testes.
@@ -22,18 +33,23 @@ class AppDependencies {
     required this.sessionRepository,
     HomeLoader<GuardianHomeData>? guardianLoader,
     HomeLoader<TrainerHomeData>? trainerLoader,
+    TrainingAgendaLoader? trainingAgendaLoader,
   }) : _guardianLoader = guardianLoader,
-       _trainerLoader = trainerLoader;
+       _trainerLoader = trainerLoader,
+       _trainingAgendaLoader = trainingAgendaLoader;
 
   /// Não acessa FirebaseAuth.instance durante a criação da composição.
   factory AppDependencies.production() => AppDependencies(
     sessionRepository: const FirebaseAuthenticationSessionRepository(),
   );
 
+  /// Fonte da sessão usada pelo gate para observar autenticação e encerrar o
+  /// acesso atual.
   final AuthenticationSessionRepository sessionRepository;
 
   HomeLoader<GuardianHomeData>? _guardianLoader;
   HomeLoader<TrainerHomeData>? _trainerLoader;
+  TrainingAgendaLoader? _trainingAgendaLoader;
 
   /// A primeira leitura deve ocorrer após FirebaseBootstrap.initialize.
   HomeLoader<GuardianHomeData> get guardianLoader =>
@@ -42,4 +58,8 @@ class AppDependencies {
   /// O retorno de getHome para trainer depende do contrato real do backend.
   HomeLoader<TrainerHomeData> get trainerLoader =>
       _trainerLoader ??= HomeComposition.trainer();
+
+  /// Cria a integração da agenda somente após a inicialização do Firebase.
+  TrainingAgendaLoader get trainingAgendaLoader =>
+      _trainingAgendaLoader ??= FirebaseTrainingAgendaRepository();
 }

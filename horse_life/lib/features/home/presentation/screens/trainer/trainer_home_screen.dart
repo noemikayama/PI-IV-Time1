@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do carregador conectado da agenda profissional e da
+// adaptação dos treinos da API para os callbacks da Home.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conexão opcional da agenda profissional ao backend, preservando
+// os callbacks de consulta de planos, treinos e histórico da Home.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da duplicidade em onDestinationSelected na HomeBottomNavBar,
@@ -104,6 +114,8 @@ import 'package:horse_life/features/profile/presentation/screens/trainer_experie
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import 'package:horse_life/core/widgets/add_trainer_certifications_dialog.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
+import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/widgets/training_agenda_floating_menu.dart';
 import 'package:horse_life/features/training_plans/presentation/routes/training_plan_registration_flow_route.dart';
@@ -153,6 +165,7 @@ class TrainerHomeScreen extends StatefulWidget {
     this.onCreateTrainingPlan,
     this.onCreateTraining,
     this.onCreateExercise,
+    this.agendaLoader,
   });
 
   // --- Fontes de dados -------------------------------------------------------
@@ -214,6 +227,10 @@ class TrainerHomeScreen extends StatefulWidget {
   final VoidCallback? onCreateTrainingPlan;
   final VoidCallback? onCreateTraining;
   final VoidCallback? onCreateExercise;
+
+  /// Fonte da agenda completa. Quando ausente, mantém a adaptação dos dados da
+  /// Home usada pelos cenários legados e pelos testes existentes.
+  final TrainingAgendaLoader? agendaLoader;
 
   @override
   State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
@@ -350,7 +367,41 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     }
   }
 
+  // Prioriza a resposta completa da agenda quando disponível e converte cada
+  // item consultado para o modelo que a Home já expõe aos seus consumidores.
   Widget _buildTrainingAgenda() {
+    final agendaLoader = widget.agendaLoader;
+    if (agendaLoader != null) {
+      return ConnectedTrainingAgendaScreen(
+        loader: agendaLoader,
+        onViewPlans: widget.onViewPlans,
+        onViewPlan: widget.onViewPlans == null
+            ? null
+            : (_) => widget.onViewPlans!(),
+        onViewTraining: widget.onViewTraining == null
+            ? null
+            : (entry) => widget.onViewTraining!(
+                TrainerTraining(
+                  id: entry.id,
+                  title: entry.title,
+                  horseName: entry.horseName,
+                  planName: entry.planName,
+                  status: trainingAgendaStatusToApi(entry.status),
+                ),
+              ),
+        onViewHistory: widget.onViewTraining == null
+            ? null
+            : (entry) => widget.onViewTraining!(
+                TrainerTraining(
+                  id: entry.id,
+                  title: entry.title,
+                  horseName: entry.horseName,
+                  planName: entry.planName,
+                  status: trainingAgendaStatusToApi(entry.status),
+                ),
+              ),
+      );
+    }
     // Converte o resumo retornado pela Home nos contratos reutilizáveis da
     // agenda, preservando os modelos originais para os callbacks externos.
     return FutureBuilder<TrainerHomeData>(
@@ -434,25 +485,29 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       },
     );
   }
-  
+
   /// Treinador consulta cavalos vinculados; cadastro segue exclusivo do responsável.
   Future<void> _openHorseList() async {
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
-        builder: (listContext) => ProfessionalHorseListScreen(
-          appBar: const HomeAppBar(),
-          drawer: TrainerSidebar(onLogout: widget.onLogout, homeFuture: _homeFuture),
-          bottomNavigationBar: HomeBottomNavBar(
-            selectedDestination: HomeNavigationDestination.horses,
-            onDestinationSelected: (selected) {
-              if (selected != HomeNavigationDestination.horses) {
-                Navigator.of(listContext).pop(selected);
-              }
-            },
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (listContext) => ProfessionalHorseListScreen(
+              appBar: const HomeAppBar(),
+              drawer: TrainerSidebar(
+                onLogout: widget.onLogout,
+                homeFuture: _homeFuture,
+              ),
+              bottomNavigationBar: HomeBottomNavBar(
+                selectedDestination: HomeNavigationDestination.horses,
+                onDestinationSelected: (selected) {
+                  if (selected != HomeNavigationDestination.horses) {
+                    Navigator.of(listContext).pop(selected);
+                  }
+                },
+              ),
+            ),
           ),
-        ),
-      ),
-    );
+        );
     if (!mounted || destination == null) return;
     setState(() => _selectedDestination = destination);
   }
@@ -471,20 +526,22 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   // Abre o painel do perfil sem alterar o destino atual da Home.
   // Ao voltar, os dados já carregados da Home continuam disponíveis.
   Future<void> _openDashboard() async {
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
-        builder: (dashboardContext) => TrainerDashboardScreen(
-          onLogout: widget.onLogout,
-          onHome: () => Navigator.of(dashboardContext).pop(),
-          onNavigationSelected: (selected) {
-            Navigator.of(dashboardContext).pop(selected);
-          },
-          homeFuture: _homeFuture,
-          repository:
-              widget.dashboardRepository ?? DashboardComposition.production(),
-        ),
-      ),
-    );
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (dashboardContext) => TrainerDashboardScreen(
+              onLogout: widget.onLogout,
+              onHome: () => Navigator.of(dashboardContext).pop(),
+              onNavigationSelected: (selected) {
+                Navigator.of(dashboardContext).pop(selected);
+              },
+              homeFuture: _homeFuture,
+              repository:
+                  widget.dashboardRepository ??
+                  DashboardComposition.production(),
+            ),
+          ),
+        );
     if (!mounted || destination == null) return;
     _onNavigationDestination(destination);
   }

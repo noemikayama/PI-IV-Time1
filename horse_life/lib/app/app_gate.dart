@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação da composição das Homes autenticadas e do repasse do
+// carregador conectado da agenda conforme o papel da sessão.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Injeção do carregador conectado da agenda nas Homes autenticadas
+// de responsável e treinador.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Observação da sessão persistente para alternar entre o conteúdo
@@ -31,11 +41,12 @@ import 'package:horse_life/features/home/presentation/screens/trainer/trainer_ho
 import 'package:horse_life/features/splash/presentation/screens/splash_screen.dart';
 
 /// Permite testar o gate sem montar os cards de cada Home.
-typedef SessionHomeBuilder = Widget Function(
-  BuildContext context,
-  LoginSession session,
-  Future<void> Function() onLogout,
-);
+typedef SessionHomeBuilder =
+    Widget Function(
+      BuildContext context,
+      LoginSession session,
+      Future<void> Function() onLogout,
+    );
 
 class AppGate extends StatefulWidget {
   const AppGate({
@@ -87,7 +98,8 @@ class _AppGateState extends State<AppGate> {
   void didUpdateWidget(covariant AppGate oldWidget) {
     super.didUpdateWidget(oldWidget);
     final previousRepository =
-        oldWidget.dependencies?.sessionRepository ?? oldWidget.sessionRepository;
+        oldWidget.dependencies?.sessionRepository ??
+        oldWidget.sessionRepository;
     if (!identical(previousRepository, _sessionRepository)) {
       _sessionStream = null;
     }
@@ -153,11 +165,8 @@ class _AppGateState extends State<AppGate> {
         }
         return _buildFlow(
           identity: 'authenticated:${session.uid}:${session.role.value}',
-          pageBuilder: (context) => _buildAuthenticatedHome(
-            context,
-            session,
-            repository.signOut,
-          ),
+          pageBuilder: (context) =>
+              _buildAuthenticatedHome(context, session, repository.signOut),
         );
       },
     );
@@ -172,10 +181,8 @@ class _AppGateState extends State<AppGate> {
     return HeroControllerScope.none(
       child: Navigator(
         key: ValueKey<String>('horse-life-flow:$identity'),
-        onGenerateRoute: (settings) => MaterialPageRoute<void>(
-          settings: settings,
-          builder: pageBuilder,
-        ),
+        onGenerateRoute: (settings) =>
+            MaterialPageRoute<void>(settings: settings, builder: pageBuilder),
       ),
     );
   }
@@ -190,6 +197,8 @@ class _AppGateState extends State<AppGate> {
       widget.trainerLoader ??
       (_legacyTrainerLoader ??= HomeComposition.trainer());
 
+  // Escolhe a Home pelo papel autenticado e compartilha as dependências
+  // criadas pela raiz. Builders injetados continuam tendo precedência em teste.
   Widget _buildAuthenticatedHome(
     BuildContext context,
     LoginSession session,
@@ -201,12 +210,14 @@ class _AppGateState extends State<AppGate> {
             GuardianHomeScreen(
               onLogout: onLogout,
               loader: _guardianLoader,
+              agendaLoader: widget.dependencies?.trainingAgendaLoader,
             );
       case AuthenticationRole.trainer:
         return widget.trainerHomeBuilder?.call(context, session, onLogout) ??
             TrainerHomeScreen(
               onLogout: onLogout,
               loader: _trainerLoader,
+              agendaLoader: widget.dependencies?.trainingAgendaLoader,
             );
     }
   }

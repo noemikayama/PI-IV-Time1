@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção e detalhamento da documentação do fluxo conectado da
+// agenda e da adaptação dos callbacks legados do responsável.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conexão opcional da agenda do responsável ao backend, com
+// adaptação dos treinos retornados para as ações já expostas pela Home.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da navegação da barra inferior para chamar _onNavigationDestination,
@@ -151,6 +161,8 @@ import 'package:horse_life/features/profile/data/repositories/guardian_profile_r
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_edit_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
+import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 
 import '../../../application/controllers/home_loader.dart';
@@ -176,6 +188,7 @@ class GuardianHomeScreen extends StatefulWidget {
     this.onStartTraining,
     this.onViewTraining,
     this.onViewPlans,
+    this.agendaLoader,
     super.key,
   });
 
@@ -202,10 +215,14 @@ class GuardianHomeScreen extends StatefulWidget {
   final VoidCallback? onEditGuardianProfile;
   final VoidCallback? onShowAllGuardianHorses;
 
-  // Ações da agenda. O backend ainda fornece somente os treinos de hoje.
+  // Ações legadas da Home. A agenda conectada adapta seus contratos antes de
+  // encaminhar um treino para esses callbacks.
   final ValueChanged<GuardianTraining>? onStartTraining;
   final ValueChanged<GuardianTraining>? onViewTraining;
   final VoidCallback? onViewPlans;
+
+  /// Fonte da agenda completa. Ausente mantém a adaptação legada para testes.
+  final TrainingAgendaLoader? agendaLoader;
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
@@ -348,7 +365,35 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     }
   }
 
+  // Usa a agenda completa quando o carregador foi injetado. A adaptação local
+  // preserva a API pública da Home para os fluxos de iniciar e consultar treino.
   Widget _buildTrainingAgenda() {
+    final agendaLoader = widget.agendaLoader;
+    if (agendaLoader != null) {
+      GuardianTraining toGuardianTraining(TrainingAgendaEntry entry) =>
+          GuardianTraining(
+            title: entry.title,
+            horseName: entry.horseName,
+            trainerName: entry.trainerName,
+            durationMinutes: entry.durationMinutes,
+            planName: entry.planName,
+            recordId: entry.id,
+            status: trainingAgendaStatusToApi(entry.status),
+          );
+      return ConnectedTrainingAgendaScreen(
+        loader: agendaLoader,
+        onViewPlans: widget.onViewPlans,
+        onStartTraining: widget.onStartTraining == null
+            ? null
+            : (entry) => widget.onStartTraining!(toGuardianTraining(entry)),
+        onViewTraining: widget.onViewTraining == null
+            ? null
+            : (entry) => widget.onViewTraining!(toGuardianTraining(entry)),
+        onViewHistory: widget.onViewTraining == null
+            ? null
+            : (entry) => widget.onViewTraining!(toGuardianTraining(entry)),
+      );
+    }
     // A Home fornece os treinos, enquanto o perfil determina se o vínculo com
     // cada cavalo permite iniciar a execução ou somente consultar o treino.
     return FutureBuilder<GuardianHomeData>(
@@ -466,7 +511,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       },
     );
   }
-  
+
   /// Listagem autenticada exclusivamente pela callable listHorses.
   Future<void> _openHorseList() async {
     final destination = await Navigator.of(context)
@@ -511,20 +556,22 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Abre o painel do perfil sem alterar o destino atual da Home.
   // Ao voltar, os dados já carregados da Home continuam disponíveis.
   Future<void> _openDashboard() async {
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
-        builder: (dashboardContext) => GuardianDashboardScreen(
-          onLogout: widget.onLogout,
-          onHome: () => Navigator.of(dashboardContext).pop(),
-          onNavigationSelected: (selected) {
-            Navigator.of(dashboardContext).pop(selected);
-          },
-          homeFuture: _homeFuture,
-          repository:
-              widget.dashboardRepository ?? DashboardComposition.production(),
-        ),
-      ),
-    );
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (dashboardContext) => GuardianDashboardScreen(
+              onLogout: widget.onLogout,
+              onHome: () => Navigator.of(dashboardContext).pop(),
+              onNavigationSelected: (selected) {
+                Navigator.of(dashboardContext).pop(selected);
+              },
+              homeFuture: _homeFuture,
+              repository:
+                  widget.dashboardRepository ??
+                  DashboardComposition.production(),
+            ),
+          ),
+        );
     if (!mounted || destination == null) return;
     _onNavigationDestination(destination);
   }
