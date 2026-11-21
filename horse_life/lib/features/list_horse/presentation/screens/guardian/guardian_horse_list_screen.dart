@@ -17,6 +17,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import '../../../data/models/horse_list_item.dart';
 import '../../../data/repositories/horse_list_repository.dart';
 import '../horse_list_screen.dart';
@@ -52,7 +53,10 @@ class GuardianHorseListScreen extends StatelessWidget {
       onRegistrationCompleted: onRegistrationCompleted,
       onHorseSelected: onHorseSelected,
       onMenuPressed: onMenuPressed,
-      onNavigationSelected: onNavigationSelected,
+      onNavigationSelected: onNavigationSelected ??
+          (index) {
+            Navigator.of(context).pop(HomeNavigationDestination.values[index]);
+          },
       appBar: appBar,
       bottomNavigationBar: bottomNavigationBar,
       drawer: drawer,

@@ -1,6 +1,10 @@
 // RESPONSÁVEL PELA DOCUMENTAÇÃO/INTEGRAÇÃO: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Filtragem defensiva de treinos com status canceled em todayTrainings.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do bloco de conversão entre o modelo remoto e os
@@ -23,6 +27,7 @@ extension GuardianHomeToViewData on GuardianHomeModel {
   GuardianHomeData toViewData() => GuardianHomeData(
     guardianName: name,
     todayTrainings: todayTrainings
+        .where((training) => training.status != GuardianTrainingStatus.canceled)
         .map(
           (training) => GuardianTraining(
             title: training.title,

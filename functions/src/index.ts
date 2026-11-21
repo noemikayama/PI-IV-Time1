@@ -3,6 +3,10 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação dos detalhes e da edição do exercício.
+//
+// Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos detalhes e da edição do treinamento.
 // Alteração: Exportação da visualização, do cancelamento e da edição do
@@ -124,6 +128,8 @@ export {
   removeExerciseMedia,
   listExerciseGallery,
   sumExerciseDurations,
+  getExercise,
+  updateExercise,
 } from "./features/exercises";
 export {
   registerTraining,

@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação dos tipos da consulta, da resposta, da edição e do
+// acesso ao exercício.
+//
+// Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do tipo e cavalo do exercício.
 //
@@ -16,6 +21,8 @@
 // -----------------------------------------------------------------------------
 
 export type {
+  AuthoredExercise,
+  ExerciseAccess,
   ExerciseDetailsInput,
   ExerciseDocument,
   ExerciseDurationSumResult,
@@ -24,8 +31,10 @@ export type {
   ExerciseGalleryResult,
   ExerciseGallerySource,
   ExerciseHorseRef,
+  ExerciseHorseView,
   ExerciseImageContentType,
   ExerciseKindSource,
+  ExerciseLookup,
   ExerciseMaterial,
   ExerciseMediaContentType,
   ExerciseMediaField,
@@ -33,11 +42,15 @@ export type {
   ExerciseMediaUploadInput,
   ExerciseMediaUploadResult,
   ExerciseMediaView,
+  ExercisePermissions,
   ExercisePrivacy,
   ExerciseRegistrant,
   ExerciseRegistrationInput,
   ExerciseRegistrationResult,
   ExerciseTrainerRef,
+  ExerciseUpdateChanges,
+  ExerciseUpdateInput,
   ExerciseVideoContentType,
+  ExerciseView,
   NewExercise,
 } from "./exercise";
