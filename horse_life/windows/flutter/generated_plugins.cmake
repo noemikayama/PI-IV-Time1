@@ -3,15 +3,9 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  file_selector_windows
-  firebase_core
-  firebase_auth
-  permission_handler_windows
-  url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
-  jni
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)
