@@ -4,7 +4,4 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- O emulador das Functions responde em HTTP puro; só o build de debug
-         aceita tráfego sem TLS. O build de release continua bloqueando. -->
-    <application android:usesCleartextTraffic="true"/>
 </manifest>
