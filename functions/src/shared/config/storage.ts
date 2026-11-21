@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Listagem por prefixo (listObjects), que busca as mídias
+// disponíveis do exercício para o treino agendado.
+//
 // Data: 10/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Leitura de um trecho do objeto (readRange, no lugar de
@@ -86,6 +91,18 @@ export async function createReadUrl(
     expires: Date.now() + ttlMs,
   });
   return url;
+}
+
+/** Lista os objetos cujo caminho começa pelo prefixo, com uma chamada ao
+ * Storage. Os caminhos voltam no formato do DD (com a barra inicial).
+ * @param {string} prefix Começo do caminho ('/videos/exercicios/12_').
+ * @return {Promise<string[]>} Caminhos encontrados.
+ */
+export async function listObjects(prefix: string): Promise<string[]> {
+  const [files] = await getStorage()
+    .bucket()
+    .getFiles({prefix: prefix.replace(/^\/+/, "")});
+  return files.map((file) => `/${file.name}`);
 }
 
 /** Lê tamanho, content-type e data de criação do objeto; devolve null se

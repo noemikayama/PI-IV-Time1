@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação das leituras e gravações da execução e do feedback, dos
+// tipos usados por elas e do parseCode.
+//
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da consulta de detalhes do treinamento.
@@ -60,7 +65,13 @@ export {
   findRecentExecutionsByTrainer,
   findRecordsByHorses,
   findRecordsByTrainer,
+  REPORTED_STATUSES,
+  findPendingFeedbackRecords,
+  findTrainingRecordById,
+  saveTrainingExecution,
+  saveTrainingFeedback,
 } from "./repositories/trainingRecordRepository";
+export {parseCode} from "./validations/validateTrainingDetails";
 export {findTrainerTrainings} from "./repositories/trainingRepository";
 export {
   toRecordTraining,
@@ -68,13 +79,20 @@ export {
 } from "./services/trainingSnapshot";
 export type {
   ExecutionCount,
+  ExecutionReport,
+  ExerciseCompletion,
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
+  PendingFeedbackRecord,
   PerformedExercise,
   PlanRecordState,
   PlanSessionRecord,
   RecentExecutionRecord,
+  RecordAccountRef,
+  ReportedRecordStatus,
+  TrainingFeedback,
+  TrainingRecordDocument,
   TrainingRecordStatus,
   TrainingRecordSummary,
   TrainingRecordTraining,

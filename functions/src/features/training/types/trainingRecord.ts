@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Percepção de desempenho como nota de 1 a 10; tipos da execução
+// (ExecutionReport), das execuções sem feedback e da referência de conta.
+//
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Estado dos registros do plano lido pela edição do plano.
@@ -37,7 +42,7 @@ export type TrainingRecordStatus =
     | "CANCELADO";
 
 // Referência resumida a uma conta (responsável ou treinador).
-type AccountRef = {_id: string; codigo: number; nome: string};
+export type RecordAccountRef = {_id: string; codigo: number; nome: string};
 
 // Cópia do treinamento (DD 3.7): a do item do planejamento, sem os
 // exercícios, que ficam em 'exercicios'.
@@ -73,9 +78,9 @@ export type TrainingRecordDocument = {
     itemPlanejamento: number;
     // Atleta do cavalo na geração, omitido se não houver. A agenda é lida
     // por cavalo, então a troca de atleta não esconde nenhum registro.
-    responsavel?: AccountRef;
+    responsavel?: RecordAccountRef;
     cavalo: {_id: ObjectId; codigo: string; nome: string};
-    treinador: AccountRef;
+    treinador: RecordAccountRef;
     // Semana do plano: 1 são os 7 primeiros dias a partir de dataInicio.
     semana: number;
     status: TrainingRecordStatus;
@@ -84,7 +89,8 @@ export type TrainingRecordDocument = {
     // Campos da execução e do feedback: ausentes até o registro.
     dataExecucao?: Date;
     duracaoEfetivaMinutos?: number;
-    percepcaoDesempenho?: string;
+    // Nota de 1 a 10 (10 é o desempenho máximo); o DD previa texto livre.
+    percepcaoDesempenho?: number;
     dificuldade?: string;
     observacoes?: string[];
     treinamento: TrainingRecordTraining;
@@ -146,3 +152,31 @@ export type HorseExecutionCounts = {
 
 // Das sessões executadas no período, quantas já têm feedback.
 export type FeedbackCount = {withFeedback: number; executed: number};
+
+// Situações que um relato do atleta pode gravar.
+export type ReportedRecordStatus = "REALIZADO" | "PARCIAL" | "NAO_REALIZADO";
+
+// Campos gravados pela execução. 'dataExecucao' vai também no NAO_REALIZADO
+// relatado: é ela que separa o relato do atleta do encerramento do plano.
+export type ExecutionReport = {
+    status: ReportedRecordStatus;
+    dataExecucao: Date;
+    duracaoEfetivaMinutos?: number;
+    percepcaoDesempenho?: number;
+    dificuldade?: string;
+    observacoes?: string[];
+    exercicios: PerformedExercise[];
+    responsavel: RecordAccountRef;
+};
+
+// Projeção da lista de execuções que esperam feedback. 'dataExecucao' falta
+// em registros REALIZADO ou PARCIAL antigos, gravados sem ela.
+export type PendingFeedbackRecord = {
+    _id: ObjectId;
+    status: ReportedRecordStatus;
+    dataExecucao?: Date;
+    duracaoEfetivaMinutos?: number;
+    cavalo: {nome: string};
+    treinamento: {titulo: string};
+    responsavel?: {nome: string};
+};
