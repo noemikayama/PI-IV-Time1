@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Consulta do exercício ativo pelo código (detalhes do
+// exercício) e gravação da edição pelo autor.
+//
+// Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Consultas por código do treinador e do tipo e cavalo dos
 // exercícios, usadas pela edição e pelos detalhes do treinamento.
@@ -114,6 +119,43 @@ export async function findActiveExerciseById(
   return db
     .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
     .findOne({_id: id, ativo: true});
+}
+
+/** Busca um exercício ativo pelo código sequencial. Usa o índice único de
+ * 'codigo'.
+ * @param {number} codigo Código do exercício.
+ * @return {Promise<ExerciseDocument|null>} Exercício, ou null.
+ */
+export async function findActiveExerciseByCode(
+  codigo: number
+): Promise<ExerciseDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
+    .findOne({codigo, ativo: true});
+}
+
+/** Aplica a edição se o exercício estiver ativo e for do treinador
+ * informado, e devolve o documento já atualizado. O filtro pelo autor
+ * repete a conferência do service, como defesa extra.
+ * @param {ObjectId} id _id do exercício.
+ * @param {string} trainerId UID do treinador que edita.
+ * @param {UpdateFilter<ExerciseDocument>} update Alterações ($set e $unset).
+ * @return {Promise<ExerciseDocument|null>} Exercício atualizado, ou null.
+ */
+export async function updateAuthorExercise(
+  id: ObjectId,
+  trainerId: string,
+  update: UpdateFilter<ExerciseDocument>
+): Promise<ExerciseDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
+    .findOneAndUpdate(
+      {"_id": id, "ativo": true, "treinador._id": trainerId},
+      update,
+      {returnDocument: "after"}
+    );
 }
 
 /** Acrescenta o caminho de uma mídia, respeitando o limite do campo.

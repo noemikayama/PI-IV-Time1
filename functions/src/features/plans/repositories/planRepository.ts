@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Índice dos planos por cavalo e situação, usado pela consulta do
+// exercício.
+//
+// Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Índice e renovação da cópia do treinamento nos planos em
 // andamento.
@@ -54,6 +59,13 @@ const PLAN_INDEXES: IndexDescription[] = [
   {
     key: {"planejamento.treinamento._id": 1},
     name: "idx_planos_treinamento",
+  },
+  // Planos de um cavalo em qualquer situação, lidos pela consulta do
+  // exercício (exercises/repositories/exerciseUsageRepository.ts). O
+  // idx_planos_cavalo_ativo é parcial e só serve para os planos ATIVO.
+  {
+    key: {"cavalo._id": 1, "status": 1},
+    name: "idx_planos_cavalo_status",
   },
 ];
 
