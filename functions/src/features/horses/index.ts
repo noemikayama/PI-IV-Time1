@@ -2,10 +2,14 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Remoção do espaço sobrando no cabeçalho, que quebrava o lint.
+//
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação de relationsOf para a visualização do plano.
-// 
+//
 // Data: 20/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação dos cavalos vinculados a uma pessoa, usados pelo
