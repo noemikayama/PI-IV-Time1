@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Tipos da consulta de detalhes do treinamento.
+// Alteração: Tipo e cavalo do exercício nos detalhes; entrada da edição.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Cópia do treinamento guardada no item do planejamento do plano.
@@ -76,4 +81,62 @@ export type TrainingView = Omit<
     exercicios: TrainingExerciseView[];
     criadoEm: string;
     atualizadoEm: string;
+};
+
+// Consulta de detalhes: 'codigo' chega como string e é convertido.
+export type TrainingDetailsInput = {codigo: number};
+
+// Cargo lido da conta no MongoDB, nunca do cliente. O app mostra "Editar
+// treino" só para o treinador.
+export type TrainingDetailsCargo = "treinador" | "responsavel";
+
+// Lidos do exercício de origem (privacidade e cavalo não mudam depois do
+// cadastro). Ficam null para o responsável.
+export type TrainingDetailsExerciseKind = "generico" | "especifico";
+
+export type TrainingDetailsExercise = {
+    codigo: string;
+    nome: string;
+    // Minutos (duracaoPadraoMinutos da cópia do exercício).
+    duracao: number;
+    descricao: string;
+    tipo: TrainingDetailsExerciseKind | null;
+    // Só no 'especifico'; 'codigo' é o microchip.
+    cavalo: {codigo: string; nome: string} | null;
+};
+
+export type TrainingDetailsResult = {
+    codigo: string;
+    titulo: string;
+    // "" quando o treinamento não tem descrição.
+    descricao: string;
+    // Minutos (duracaoEstimadaMinutos do treinamento).
+    duracaoEstimada: number;
+    // Na ordem de execução do treinamento.
+    exercicios: TrainingDetailsExercise[];
+    orientacoes: string[];
+    cargo: TrainingDetailsCargo;
+};
+
+// Campos substituídos pela edição; 'descricao' ausente é removida.
+export type TrainingContent = Pick<
+    TrainingDocument,
+    | "titulo"
+    | "descricao"
+    | "orientacoes"
+    | "duracaoEstimadaMinutos"
+    | "exercicios"
+    | "atualizadoEm"
+>;
+
+// Edição: estado final da tela, que substitui o atual. Códigos chegam como
+// string e são convertidos; 'exercicioCodigos' vem na ordem de execução.
+export type TrainingUpdateInput = {
+    codigo: number;
+    titulo: string;
+    // Omitida quando vazia.
+    descricao?: string;
+    orientacoes: string[];
+    duracaoEstimadaMinutos: number;
+    exercicioCodigos: number[];
 };

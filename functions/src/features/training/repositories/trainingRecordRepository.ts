@@ -2,6 +2,17 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Consulta se o treinamento foi agendado para algum dos cavalos
+// (acesso aos detalhes do treinamento).
+// Alteração: Índice por treinamento e renovação da cópia do treinamento nos
+// registros PLANEJADO a partir de hoje (edição do treinamento).
+// Alteração: closePlannedRecords também atende o cancelamento do plano.
+// Alteração: Leitura dos registros do plano a partir de um dia e gravação
+// das mudanças da edição do plano.
+// Alteração: Treinos agendados do plano, lidos pela visualização.
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Registros de qualquer período (o dia na home, a semana na
@@ -30,10 +41,12 @@
 // -----------------------------------------------------------------------------
 
 import type {
+  AnyBulkWriteOperation,
   ClientSession,
   Document,
   IndexDescription,
   ObjectId,
+  UpdateFilter,
 } from "mongodb";
 import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
@@ -46,9 +59,13 @@ import type {
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
+  PerformedExercise,
+  PlanRecordState,
+  PlanSessionRecord,
   RecentExecutionRecord,
   TrainingRecordDocument,
   TrainingRecordSummary,
+  TrainingRecordTraining,
 } from "../types/trainingRecord";
 
 // Índices do DD 5.1. O único em plano + item + data substitui o único em
@@ -73,6 +90,10 @@ const RECORD_INDEXES: IndexDescription[] = [
   {
     key: {"treinador._id": 1, "status": 1, "dataExecucao": 1},
     name: "idx_registros_treinador_status",
+  },
+  {
+    key: {"treinamento._id": 1, "status": 1, "dataPlanejada": 1},
+    name: "idx_registros_treinamento",
   },
 ];
 
@@ -108,22 +129,152 @@ export async function insertTrainingRecords(
     );
 }
 
-/** Na conclusão do plano, os registros ainda PLANEJADO passam para
- * NAO_REALIZADO (DD 5.2). Usa idx_registros_plano_status.
+/** Encerra os registros ainda PLANEJADO do plano (DD 5.2). Na conclusão,
+ * todos passam para NAO_REALIZADO. No cancelamento ('cancelFrom'), passam
+ * para CANCELADO a partir desse dia; os de dias anteriores não foram feitos
+ * e viram NAO_REALIZADO, para continuarem no percentual de cumprimento.
+ * Uma única escrita. Usa idx_registros_plano_status.
  * @param {ObjectId} planId _id do plano.
  * @param {ClientSession} session Sessão da transação.
+ * @param {Date} cancelFrom Primeiro dia cancelado (meia-noite UTC), se o
+ * plano foi cancelado.
  * @return {Promise<void>} Resolvida quando os registros forem alterados.
  */
 export async function closePlannedRecords(
   planId: ObjectId,
+  session: ClientSession,
+  cancelFrom?: Date
+): Promise<void> {
+  const db = await getDatabase();
+  const status = cancelFrom ?
+    {
+      $cond: [
+        {$lt: ["$dataPlanejada", cancelFrom]},
+        "NAO_REALIZADO",
+        "CANCELADO",
+      ],
+    } :
+    "NAO_REALIZADO";
+  await db.collection(COLLECTIONS.RegistrosTreino).updateMany(
+    {"plano._id": planId, "status": "PLANEJADO"},
+    [{$set: {status, atualizadoEm: new Date()}}],
+    {session}
+  );
+}
+
+/** Registros do plano a partir do dia informado, de qualquer status, com
+ * o que a edição precisa para decidir o que manter. Usa o prefixo de
+ * idx_registros_plano_item.
+ * @param {ObjectId} planId _id do plano.
+ * @param {Date} from Primeiro dia (meia-noite UTC).
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<PlanRecordState[]>} Registros encontrados.
+ */
+export async function findPlanRecordsFrom(
+  planId: ObjectId,
+  from: Date,
+  session: ClientSession
+): Promise<PlanRecordState[]> {
+  const db = await getDatabase();
+  return db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .find({"plano._id": planId, "dataPlanejada": {$gte: from}}, {session})
+    .project<PlanRecordState>({
+      "itemPlanejamento": 1,
+      "dataPlanejada": 1,
+      "status": 1,
+      "exercicios.realizacao": 1,
+    })
+    .toArray();
+}
+
+/** Treinos agendados do plano, sem os CANCELADO, em ordem de data: o que
+ * de fato foi (ou está) agendado em cada dia, com a cópia guardada no
+ * registro. Usa o prefixo de idx_registros_plano_status.
+ * @param {ObjectId} planId _id do plano.
+ * @param {ClientSession} session Sessão da transação, se houver.
+ * @return {Promise<PlanSessionRecord[]>} Registros do plano.
+ */
+export async function findPlanSessionRecords(
+  planId: ObjectId,
+  session?: ClientSession
+): Promise<PlanSessionRecord[]> {
+  const db = await getDatabase();
+  return db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .find({"plano._id": planId, "status": {$ne: "CANCELADO"}}, {session})
+    .project<PlanSessionRecord>({
+      "dataPlanejada": 1,
+      "treinamento": 1,
+      "exercicios.exercicio.nome": 1,
+    })
+    .sort({dataPlanejada: 1, _id: 1})
+    .toArray();
+}
+
+// Mudanças da edição do plano nos registros já gravados.
+export type PlanRecordChanges = {
+    // Título atual do plano, copiado em todos os registros (inclusive os
+    // passados, porque é só a referência ao plano).
+    titulo: string;
+    // Registros mantidos, renovados com a versão atual (mesmo plano, item e
+    // data); voltam a PLANEJADO se tinham sido cancelados por outra edição.
+    refresh: {id: ObjectId; record: NewTrainingRecord}[];
+    // Registros PLANEJADO que saíram do plano.
+    cancel: ObjectId[];
+};
+
+/** Grava as mudanças da edição do plano em uma única ida ao banco.
+ * @param {ObjectId} planId _id do plano.
+ * @param {PlanRecordChanges} changes Mudanças calculadas pela edição.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<void>} Resolvida quando os registros forem alterados.
+ */
+export async function applyPlanRecordChanges(
+  planId: ObjectId,
+  {titulo, refresh, cancel}: PlanRecordChanges,
   session: ClientSession
 ): Promise<void> {
   const db = await getDatabase();
-  await db.collection(COLLECTIONS.RegistrosTreino).updateMany(
-    {"plano._id": planId, "status": "PLANEJADO"},
-    {$set: {status: "NAO_REALIZADO", atualizadoEm: new Date()}},
-    {session}
-  );
+  const now = new Date();
+  const operations: AnyBulkWriteOperation<TrainingRecordDocument>[] = [
+    {
+      updateMany: {
+        filter: {"plano._id": planId},
+        update: {$set: {"plano.titulo": titulo}},
+      },
+    },
+    ...refresh.map(({id, record}) => {
+      // _id, codigo e criadoEm do registro existente são mantidos; plano,
+      // item e data são os mesmos.
+      const fields = {
+        plano: record.plano,
+        cavalo: record.cavalo,
+        treinador: record.treinador,
+        semana: record.semana,
+        status: record.status,
+        treinamento: record.treinamento,
+        exercicios: record.exercicios,
+        atualizadoEm: now,
+      };
+      const update: UpdateFilter<TrainingRecordDocument> =
+        record.responsavel ?
+          {$set: {...fields, responsavel: record.responsavel}} :
+          {$set: fields, $unset: {responsavel: ""}};
+      return {updateOne: {filter: {_id: id}, update}};
+    }),
+  ];
+  if (cancel.length > 0) {
+    operations.push({
+      updateMany: {
+        filter: {_id: {$in: cancel}},
+        update: {$set: {status: "CANCELADO", atualizadoEm: now}},
+      },
+    });
+  }
+  await db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .bulkWrite(operations, {session});
 }
 
 // Mesma regra do dashboard: treino realizado = REALIZADO ou PARCIAL.
@@ -241,6 +392,57 @@ export const findRecentExecutionsByTrainer = (
   trainerId: string,
   limit: number
 ) => findRecentExecutions({"treinador._id": trainerId}, limit);
+
+/** Diz se existe registro de treino (de qualquer status) do treinamento
+ * para algum dos cavalos. Usa o prefixo de idx_registros_cavalo_data.
+ * @param {ObjectId} trainingId _id do treinamento de origem.
+ * @param {ObjectId[]} horseIds IDs dos cavalos.
+ * @return {Promise<boolean>} Se algum registro foi encontrado.
+ */
+export async function hasTrainingRecordForHorses(
+  trainingId: ObjectId,
+  horseIds: ObjectId[]
+): Promise<boolean> {
+  if (horseIds.length === 0) return false;
+  const records = await getCollection();
+  const record = await records.findOne(
+    {"cavalo._id": {$in: horseIds}, "treinamento._id": trainingId},
+    {projection: {_id: 1}}
+  );
+  return record !== null;
+}
+
+/** Renova a cópia do treinamento nos registros ainda PLANEJADO a partir
+ * do dia informado e sem nenhum exercício marcado (todos PENDENTE), porque
+ * a renovação volta os exercícios a PENDENTE. Os anteriores, os já
+ * começados e os executados ou encerrados guardam a versão com que foram
+ * agendados. Usa idx_registros_treinamento.
+ * @param {ObjectId} trainingId _id do treinamento de origem.
+ * @param {Date} from Primeiro dia alterado (meia-noite UTC).
+ * @param {object} copy 'treinamento' e 'exercicios' novos do registro.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<void>} Resolvida quando os registros forem alterados.
+ */
+export async function refreshPlannedRecordsTraining(
+  trainingId: ObjectId,
+  from: Date,
+  copy: {treinamento: TrainingRecordTraining; exercicios: PerformedExercise[]},
+  session: ClientSession
+): Promise<void> {
+  const db = await getDatabase();
+  await db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .updateMany(
+      {
+        "treinamento._id": trainingId,
+        "status": "PLANEJADO",
+        "dataPlanejada": {$gte: from},
+        "exercicios": {$not: {$elemMatch: {realizacao: {$ne: "PENDENTE"}}}},
+      },
+      {$set: {...copy, atualizadoEm: new Date()}},
+      {session}
+    );
+}
 
 /** Conta as execuções dos cavalos na semana, no mês e desde sempre.
  * @param {ObjectId[]} horseIds IDs dos cavalos.

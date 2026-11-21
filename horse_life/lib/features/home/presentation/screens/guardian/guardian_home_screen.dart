@@ -14,6 +14,11 @@
 //
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização de _homeFuture ao retornar do perfil de cavalos e da
+// listagem, e filtragem de treinos cancelados na montagem da agenda.
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da navegação da barra inferior para chamar _onNavigationDestination,
 // permitindo acesso à listagem de cavalos, e repasse do callback ao Dashboard.
 //
@@ -260,18 +265,20 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     _isOpeningHorseProfile = true;
 
     try {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
           builder: (_) => HorseProfileScreen(
             horseId: id,
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: false,
-            onNavigationSelected: (destination) {
-              if (mounted) setState(() => _selectedDestination = destination);
-            },
           ),
         ),
       );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
     } finally {
       _isOpeningHorseProfile = false;
     }
@@ -432,7 +439,10 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
                 <String>{};
             final home = homeSnapshot.data!;
             final today = DateTime.now();
-            final entries = home.todayTrainings
+            final activeTodayTrainings = home.todayTrainings
+                .where((training) => training.status != 'CANCELADO')
+                .toList(growable: false);
+            final entries = activeTodayTrainings
                 .map(
                   (training) => TrainingAgendaEntry(
                     id:
@@ -455,7 +465,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             final plansByKey = <String, TrainingAgendaPlan>{};
             // O resumo da Home não possui uma coleção própria de planos. A
             // chave composta elimina repetições entre treinos do mesmo plano.
-            for (final training in home.todayTrainings) {
+            for (final training in activeTodayTrainings) {
               final key = '${training.planName}:${training.horseName}';
               plansByKey.putIfAbsent(
                 key,
@@ -473,7 +483,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
             GuardianTraining? sourceFor(TrainingAgendaEntry entry) {
               // Recupera o contrato original esperado pelos callbacks da Home.
-              for (final training in home.todayTrainings) {
+              for (final training in activeTodayTrainings) {
                 final id =
                     training.recordId ??
                     '${training.planName}:${training.horseName}';
@@ -515,8 +525,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   /// Listagem autenticada exclusivamente pela callable listHorses.
   Future<void> _openHorseList() async {
     final destination = await Navigator.of(context)
-        .push<HomeNavigationDestination>(
-          MaterialPageRoute<HomeNavigationDestination>(
+        .push<dynamic>(
+          MaterialPageRoute<dynamic>(
             builder: (listContext) => GuardianHorseListScreen(
               onRegistrationCompleted: (result) {
                 if (mounted && result.isPersisted) _retryHome();
@@ -539,14 +549,19 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             ),
           ),
         );
-    if (!mounted || destination == null) return;
-    setState(() => _selectedDestination = destination);
+    if (!mounted) return;
+    setState(() => _homeFuture = _fetchHome());
+    if (destination is HomeNavigationDestination) {
+      _onNavigationDestination(destination);
+    }
   }
 
   /// Mantém a aba atual quando a listagem é aberta como rota secundária.
   void _onNavigationDestination(HomeNavigationDestination destination) {
     if (destination == HomeNavigationDestination.horses) {
       _openHorseList();
+    } else if (destination == HomeNavigationDestination.dashboard) {
+      _openDashboard();
     } else {
       setState(() => _selectedDestination = destination);
     }

@@ -14,6 +14,11 @@
 //
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização de _homeFuture ao retornar do perfil de cavalos e da
+// listagem, e filtragem de treinos cancelados na montagem da agenda.
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da duplicidade em onDestinationSelected na HomeBottomNavBar,
 // conexão unificada do fluxo de navegação e repasse ao Dashboard.
 //
@@ -257,18 +262,20 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     _isOpeningHorseProfile = true;
 
     try {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
           builder: (_) => HorseProfileScreen(
             horseId: id,
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: true,
-            onNavigationSelected: (destination) {
-              if (mounted) setState(() => _selectedDestination = destination);
-            },
           ),
         ),
       );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
     } finally {
       _isOpeningHorseProfile = false;
     }
@@ -422,7 +429,10 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
         final home = snapshot.data!;
         final today = DateTime.now();
-        final entries = home.todayTrainings
+        final activeTodayTrainings = home.todayTrainings
+            .where((training) => training.status != 'CANCELADO')
+            .toList(growable: false);
+        final entries = activeTodayTrainings
             .map(
               (training) => TrainingAgendaEntry(
                 id: training.id,
@@ -441,7 +451,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         final plansByKey = <String, TrainingAgendaPlan>{};
         // Agrupa treinos por plano e cavalo, pois a Home não retorna os planos
         // como uma lista independente.
-        for (final training in home.todayTrainings) {
+        for (final training in activeTodayTrainings) {
           final key = '${training.planName}:${training.horseName}';
           plansByKey.putIfAbsent(
             key,
@@ -459,7 +469,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
         TrainerTraining? sourceFor(TrainingAgendaEntry entry) {
           // Resolve o item adaptado de volta ao modelo exposto pela Home.
-          for (final training in home.todayTrainings) {
+          for (final training in activeTodayTrainings) {
             if (training.id == entry.id) return training;
           }
           return null;
@@ -488,34 +498,36 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
   /// Treinador consulta cavalos vinculados; cadastro segue exclusivo do responsável.
   Future<void> _openHorseList() async {
-    final destination = await Navigator.of(context)
-        .push<HomeNavigationDestination>(
-          MaterialPageRoute<HomeNavigationDestination>(
-            builder: (listContext) => ProfessionalHorseListScreen(
-              appBar: const HomeAppBar(),
-              drawer: TrainerSidebar(
-                onLogout: widget.onLogout,
-                homeFuture: _homeFuture,
-              ),
-              bottomNavigationBar: HomeBottomNavBar(
-                selectedDestination: HomeNavigationDestination.horses,
-                onDestinationSelected: (selected) {
-                  if (selected != HomeNavigationDestination.horses) {
-                    Navigator.of(listContext).pop(selected);
-                  }
-                },
-              ),
-            ),
+    final destination = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (listContext) => ProfessionalHorseListScreen(
+          appBar: const HomeAppBar(),
+          drawer: TrainerSidebar(onLogout: widget.onLogout, homeFuture: _homeFuture),
+          bottomNavigationBar: HomeBottomNavBar(
+            selectedDestination: HomeNavigationDestination.horses,
+            onDestinationSelected: (selected) {
+              if (selected != HomeNavigationDestination.horses) {
+                Navigator.of(listContext).pop(selected);
+              }
+            },
           ),
-        );
-    if (!mounted || destination == null) return;
-    setState(() => _selectedDestination = destination);
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _homeFuture = _fetchHome());
+    if (destination is HomeNavigationDestination) {
+      _onNavigationDestination(destination);
+    }
   }
 
   void _onNavigationDestination(HomeNavigationDestination destination) {
     if (destination == HomeNavigationDestination.horses) {
       widget.onNavigationSelected?.call(destination.index);
       _openHorseList();
+    } else if (destination == HomeNavigationDestination.dashboard) {
+      widget.onNavigationSelected?.call(destination.index);
+      _openDashboard();
     } else {
       setState(() => _selectedDestination = destination);
       widget.onNavigationSelected?.call(destination.index);

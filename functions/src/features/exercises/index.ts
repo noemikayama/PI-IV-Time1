@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação dos detalhes e da edição do exercício.
+//
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação das consultas usadas pela edição e pelos detalhes
+// do treinamento.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportações usadas pela feature de planos.
@@ -28,7 +37,9 @@
 
 export {
   countActiveExercisesByTrainer,
+  findExerciseKinds,
   findForeignSpecificExerciseIds,
+  findTrainerExercisesByCodes,
 } from "./repositories/exerciseRepository";
 export {registerExercise} from "./handlers/registerExercise";
 export {
@@ -38,10 +49,13 @@ export {confirmExerciseMedia} from "./handlers/confirmExerciseMedia";
 export {removeExerciseMedia} from "./handlers/removeExerciseMedia";
 export {listExerciseGallery} from "./handlers/listExerciseGallery";
 export {sumExerciseDurations} from "./handlers/sumExerciseDurations";
+export {getExercise} from "./handlers/getExercise";
+export {updateExercise} from "./handlers/updateExercise";
 export {loadTrainerExercises} from "./services/trainerExercises";
 export {
+  MAX_SELECTED_EXERCISES,
   parseBusca,
   parseExerciseIds,
   parseObjectId,
 } from "./validations/validateExerciseSelection";
-export type {ExerciseDocument} from "./types";
+export type {ExerciseDocument, ExerciseKindSource} from "./types";

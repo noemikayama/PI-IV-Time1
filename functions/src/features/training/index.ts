@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da consulta de detalhes do treinamento.
+// Alteração: Exportação da edição do treinamento e das cópias usadas pelos
+// planos.
+// Alteração: Exportação da leitura e da gravação dos registros usadas pela
+// edição do plano.
+// Alteração: Exportação dos treinos agendados do plano (visualização).
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Registros por período (findRecordsByHorses e
@@ -37,6 +46,7 @@
 
 export {
   EXECUTED_STATUSES,
+  applyPlanRecordChanges,
   countHorseExecutions,
   countTrainerExecutions,
   countTrainerFeedbacks,
@@ -44,18 +54,26 @@ export {
   ensureTrainingRecordIndexes,
   insertTrainingRecords,
   findDayRecordsByHorsePlan,
+  findPlanRecordsFrom,
+  findPlanSessionRecords,
   findRecentExecutionsByHorses,
   findRecentExecutionsByTrainer,
   findRecordsByHorses,
   findRecordsByTrainer,
 } from "./repositories/trainingRecordRepository";
 export {findTrainerTrainings} from "./repositories/trainingRepository";
+export {
+  toRecordTraining,
+  toTrainingSnapshot,
+} from "./services/trainingSnapshot";
 export type {
   ExecutionCount,
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
   PerformedExercise,
+  PlanRecordState,
+  PlanSessionRecord,
   RecentExecutionRecord,
   TrainingRecordStatus,
   TrainingRecordSummary,
@@ -63,3 +81,5 @@ export type {
 } from "./types/trainingRecord";
 export type {TrainingDocument, TrainingSnapshot} from "./types/training";
 export {registerTraining} from "./handlers/registerTraining";
+export {getTrainingDetails} from "./handlers/getTrainingDetails";
+export {updateTraining} from "./handlers/updateTraining";

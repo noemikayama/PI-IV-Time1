@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Campos do treinamento no registro montados pela feature de
+// treinamentos.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Agrupamento dos treinos por dia da semana e geração dos
@@ -13,6 +18,7 @@
 // nunca é deslocado por fuso.
 import {ObjectId} from "mongodb";
 import {addDays} from "../../../shared/utils/dates";
+import {toRecordTraining} from "../../training";
 import type {NewTrainingRecord} from "../../training";
 import {DIAS_SEMANA} from "../types";
 import type {
@@ -114,25 +120,18 @@ export function buildTrainingRecords(
   now: Date,
   from?: Date
 ): NewTrainingRecord[] {
-  return listPlannedDates(plan, from).map(({data, item}) => {
-    const {exercicios, ...treinamento} = item.treinamento;
-    return {
-      _id: new ObjectId(),
-      plano: {_id: plan._id, codigo: plan.codigo, titulo: plan.titulo},
-      itemPlanejamento: item.codigo,
-      ...(plan.responsavel && {responsavel: plan.responsavel}),
-      cavalo: plan.cavalo,
-      treinador: plan.treinador,
-      semana: weekOf(plan.dataInicio, data),
-      status: "PLANEJADO",
-      dataPlanejada: data,
-      treinamento,
-      exercicios: exercicios.map((exercicio) => ({
-        exercicio,
-        realizacao: "PENDENTE",
-      })),
-      criadoEm: now,
-      atualizadoEm: now,
-    };
-  });
+  return listPlannedDates(plan, from).map(({data, item}) => ({
+    _id: new ObjectId(),
+    plano: {_id: plan._id, codigo: plan.codigo, titulo: plan.titulo},
+    itemPlanejamento: item.codigo,
+    ...(plan.responsavel && {responsavel: plan.responsavel}),
+    cavalo: plan.cavalo,
+    treinador: plan.treinador,
+    semana: weekOf(plan.dataInicio, data),
+    status: "PLANEJADO",
+    dataPlanejada: data,
+    ...toRecordTraining(item.treinamento),
+    criadoEm: now,
+    atualizadoEm: now,
+  }));
 }

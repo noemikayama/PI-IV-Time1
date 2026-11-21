@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Filtragem defensiva de treinos CANCELADO no carrossel de treinos do dia.
+//
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Criação do carrossel horizontal dos treinos do Profissional,
@@ -64,7 +68,9 @@ class _TrainerDailyTrainingCardState
 
   @override
   Widget build(BuildContext context) {
-    final trainings = widget.trainings;
+    final trainings = widget.trainings
+        .where((t) => t.status != 'CANCELADO')
+        .toList(growable: false);
 
     return HomeSectionCard(
       title: 'Treinos do dia',

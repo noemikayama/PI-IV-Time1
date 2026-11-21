@@ -1,12 +1,15 @@
 # Contrato das callables de exercícios
 
 Callables na região `southamerica-east1`. `_id` sempre como string
-hexadecimal. Todas exigem login de **treinador**; com outro perfil, retornam
-`permission-denied`.
+hexadecimal. Todas exigem login de **treinador**, exceto
+[getExercise](#getexercise), que também atende o **responsável**; com outro
+perfil, retornam `permission-denied`.
 
 A galeria de exercícios (`listExerciseGallery`) e o tempo total da seleção
 (`sumExerciseDurations`), usados no cadastro de treinamentos, estão em
-[contrato_treinamentos.md](contrato_treinamentos.md).
+[contrato_treinamentos.md](contrato_treinamentos.md). Os detalhes e a edição
+de um exercício estão em [getExercise](#getexercise) e
+[updateExercise](#updateexercise).
 
 ## Fluxo da tela de cadastro
 
@@ -163,3 +166,138 @@ formato, o tamanho ou a duração aceitos, ele é apagado e a resposta é
 Mesmo corpo de `confirmExerciseMedia`. Apaga a mídia do exercício e do Storage
 e responde `{ "removido": true }`, ou `not-found` se ela não estiver no
 exercício.
+
+## getExercise
+
+Tela de detalhes do exercício, a mesma para o **treinador** e o
+**responsável**. Envie o `id` **ou** o `codigo` do exercício, só um dos
+dois:
+
+```json
+{ "id": "66e1a0c2f1b2c3d4e5f6c010" }
+```
+
+```json
+{ "codigo": "23" }
+```
+
+| Campo | Regra |
+| --- | --- |
+| `id` | `_id` do exercício, como vem do cadastro, da galeria e das mídias. |
+| `codigo` | Código do exercício, como string só com dígitos ou como inteiro. É o que a tela "Detalhes do treino" (`getTrainingDetails`) traz em `exercicios[].codigo`. |
+
+Outros campos são recusados.
+
+Quem recebe o exercício:
+
+- o **treinador que o cadastrou**, sempre;
+- quem tem vínculo hoje (proprietário, atleta ou treinador) com o cavalo de
+  um exercício **específico**;
+- quem tem vínculo hoje com um cavalo cujo **plano** (de qualquer situação)
+  ou **registro de treino** usa o exercício, genérico ou específico.
+
+Nos outros casos a resposta é `not-found`, como se o exercício não
+existisse. Os dados são os do exercício **como está hoje**, e não a cópia
+guardada no treinamento, no plano ou no registro.
+
+Resposta:
+
+```json
+{
+  "id": "66e1a0c2f1b2c3d4e5f6c010",
+  "codigo": 23,
+  "nome": "Transições trote-galope",
+  "descricao": "Alternar trote e galope em intervalos definidos.",
+  "orientacoes": ["Manter contato leve com as rédeas"],
+  "duracaoPadraoMinutos": 20,
+  "materiais": [{ "descricao": "Cavalete", "quantidade": 2 }],
+  "privacidade": "ESPECIFICO",
+  "cavalo": { "id": "66e1a0c2f1b2c3d4e5f60050", "codigo": "123123456789012", "nome": "Trovão" },
+  "treinador": { "id": "<uid>", "codigo": 92, "nome": "Carlos Mendes" },
+  "imagens": [{ "caminho": "/fotos/exercicios/23_1.jpg", "url": "https://storage.googleapis.com/..." }],
+  "videos": [],
+  "permissoes": { "editar": true },
+  "criadoEm": "2026-11-10T14:30:00.000Z",
+  "atualizadoEm": "2026-11-20T09:12:00.000Z"
+}
+```
+
+| Campo | Observação |
+| --- | --- |
+| `cavalo` | Só no `ESPECIFICO`, e só para o autor ou para quem tem vínculo com esse cavalo (`codigo` é o microchip). Se o exercício mudou de cavalo depois de entrar no plano de outro cavalo, quem só tem vínculo com o cavalo do plano recebe o exercício sem `cavalo`. |
+| `treinador` | Quem cadastrou o exercício. |
+| `imagens`, `videos` | Na ordem em que foram anexados, com `caminho` e `url`. A `url` é assinada e vale 15 minutos: se a tela ficar aberta mais que isso, chame `getExercise` de novo. Listas vazias quando não há mídia. |
+| `permissoes.editar` | `true` só para quem cadastrou o exercício. Mostre "Editar" e os botões de mídia só nesse caso. |
+| `criadoEm`, `atualizadoEm` | ISO 8601 (UTC). `atualizadoEm` também muda quando uma mídia é incluída ou removida. Para avisar que o exercício mudou depois do planejamento, compare com a data do plano. |
+
+| Erro | Quando |
+| --- | --- |
+| `unauthenticated` | Sem login. |
+| `permission-denied` | Conta inativa ou inexistente, ou perfil que não é treinador nem responsável. |
+| `invalid-argument` | Sem `id` e sem `codigo`, os dois juntos, um deles fora do formato, ou campo desconhecido. |
+| `not-found` | O exercício não existe, foi excluído ou o usuário não tem acesso a ele. |
+
+## updateExercise
+
+Salva a tela de edição. Só o **treinador que cadastrou** o exercício edita,
+em qualquer situação profissional, menos `INATIVO`.
+
+Envie o `id` e só os campos que mudaram (mandar o formulário inteiro também
+funciona):
+
+```json
+{
+  "id": "66e1a0c2f1b2c3d4e5f6c010",
+  "nome": "Transições curtas trote-galope",
+  "orientacoes": [],
+  "privacidade": "ESPECIFICO",
+  "cavaloId": "66e1a0c2f1b2c3d4e5f60051"
+}
+```
+
+| Campo | Regra |
+| --- | --- |
+| `id` | Obrigatório. |
+| `nome`, `descricao`, `orientacoes`, `duracaoPadraoMinutos`, `materiais` | Opcionais, com as mesmas regras de [registerExercise](#registerexercise). Campo ausente não muda; `[]` ou `null` em `orientacoes` e `materiais` esvazia a lista. |
+| `privacidade` | Opcional. `GENERICO` tira o cavalo; `ESPECIFICO` exige `cavaloId`. |
+| `cavaloId` | Só junto com `privacidade`, e proibido no `GENERICO`; `null` sem `privacidade` é ignorado. Se for o cavalo atual, ele é mantido sem conferir o vínculo de novo. Se for outro, precisa ser um cavalo ativo vinculado ao treinador (a lista `cavalos` de `getTrainerProfile`). |
+
+Outros campos são recusados, inclusive `codigo`, `imagens`, `videos`,
+`treinador` e as datas. Fotos e vídeos continuam pelo fluxo de
+[Mídias](#mídias). Um pedido sem nenhum campo além do `id` também é recusado.
+
+| Exercício hoje | Pedido | Resultado |
+| --- | --- | --- |
+| Qualquer | sem `privacidade` | Tipo e cavalo não mudam. |
+| Genérico | `ESPECIFICO` + cavalo H | Específico de H, se H estiver ativo e vinculado ao treinador. |
+| Específico de H | `ESPECIFICO` + H | Continua de H, mesmo que o vínculo tenha acabado. |
+| Específico de H | `ESPECIFICO` + H2 | Específico de H2, se H2 estiver ativo e vinculado ao treinador. |
+| Específico de H | `GENERICO` | Genérico, sem cavalo. |
+
+O que a edição não muda:
+
+- as cópias do exercício em treinamentos, planos e registros de treino: a
+  edição vale para os treinamentos montados depois;
+- os planos já criados, mesmo quando o tipo ou o cavalo mudam. A galeria de
+  treinamentos do plano (`listTrainingGallery`) passa a considerar o tipo e
+  o cavalo novos só nos planos criados depois.
+
+Resposta: o exercício atualizado, no formato de [getExercise](#getexercise),
+com `permissoes.editar: true`.
+
+| Erro | Quando |
+| --- | --- |
+| `unauthenticated` | Sem login. |
+| `permission-denied` | Perfil diferente de treinador; conta inativa; treinador que pode ver o exercício, mas não o cadastrou; cavalo novo sem vínculo com o treinador. |
+| `invalid-argument` | Campo fora das regras (a mensagem diz qual), campo desconhecido, `cavaloId` sem `privacidade`, ou nenhuma alteração. |
+| `not-found` | O exercício não existe, foi excluído ou o treinador não tem acesso a ele; ou o cavalo novo não existe ou foi excluído. |
+
+### Fluxo da tela de edição
+
+1. A tela abre com `getExercise` e preenche o formulário com a resposta.
+2. "Salvar" chama `updateExercise` com os campos alterados e mostra a
+   resposta.
+3. Fotos e vídeos são incluídos e removidos pelas callables de
+   [Mídias](#mídias), um arquivo de cada vez, como no cadastro.
+4. Depois de mexer nas mídias, ou se a tela ficar aberta mais de 15 minutos,
+   chame `getExercise` de novo para ter as URLs atualizadas.

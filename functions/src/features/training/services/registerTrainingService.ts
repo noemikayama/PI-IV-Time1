@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Cópia do exercício movida para trainingSnapshot (usada também
+// pela edição).
+//
 // Data: 14/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Cadastro de treinamentos pelo treinador.
@@ -11,7 +16,6 @@ import {ObjectId} from "mongodb";
 import {runInTransaction} from "../../../shared/config/mongodb";
 import {ROLES} from "../../../shared/constants/roles";
 import {loadTrainerExercises} from "../../exercises";
-import type {ExerciseDocument} from "../../exercises";
 import {assertActiveAccount} from "../../horses";
 import {
   ensureTrainingIndexes,
@@ -20,26 +24,10 @@ import {
 import type {
   NewTraining,
   TrainingDocument,
-  TrainingExercise,
   TrainingRegistrationInput,
   TrainingView,
 } from "../types";
-
-/** Copia os dados do exercício no momento da inclusão (DD 3.5): edições
- * posteriores no exercício não alteram o treinamento.
- * @param {ExerciseDocument} exercise Exercício de origem.
- * @return {TrainingExercise} Exercício em uso.
- */
-function toTrainingExercise(exercise: ExerciseDocument): TrainingExercise {
-  return {
-    _id: exercise._id,
-    codigo: exercise.codigo,
-    nome: exercise.nome,
-    descricao: exercise.descricao,
-    orientacoes: exercise.orientacoes,
-    duracaoPadraoMinutos: exercise.duracaoPadraoMinutos,
-  };
-}
+import {toTrainingExercise} from "./trainingSnapshot";
 
 /** Converte o documento no formato do app (o callable não converte
  * ObjectId nem Date).

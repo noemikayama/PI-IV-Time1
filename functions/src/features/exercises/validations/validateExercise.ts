@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Validação da consulta (id ou código) e da edição de exercícios,
+// com os mesmos parsers do cadastro.
+//
 // Data: 07/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do cadastro de exercícios.
@@ -9,12 +14,15 @@
 
 import {ObjectId} from "mongodb";
 import {AppError} from "../../../shared/errors/AppError";
-import {asRecord} from "../../authentication/shared";
+import {asRecord, assertAllowedFields} from "../../authentication/shared";
 import type {
   ExerciseDetailsInput,
+  ExerciseLookup,
   ExerciseMaterial,
   ExercisePrivacy,
   ExerciseRegistrationInput,
+  ExerciseUpdateChanges,
+  ExerciseUpdateInput,
 } from "../types";
 
 const PRIVACIES: readonly ExercisePrivacy[] = ["GENERICO", "ESPECIFICO"];
@@ -215,4 +223,87 @@ export function validateExerciseRegistration(
  */
 export function validateExerciseId(data: unknown): ObjectId {
   return parseObjectId(asRecord(data).id, "Exercício inválido.");
+}
+
+/** Valida o código sequencial do exercício: inteiro maior que zero ou
+ * string só com dígitos, sem os espaços das pontas. É a regra do parseCode
+ * de training (o formato de getTrainingDetails), repetida aqui porque
+ * importar de training criaria um ciclo entre as features.
+ * @param {unknown} value Valor recebido.
+ * @return {number} Código do exercício.
+ */
+function parseCode(value: unknown): number {
+  let codigo = Number.NaN;
+  if (typeof value === "number") {
+    codigo = value;
+  } else if (typeof value === "string" && /^\d{1,15}$/.test(value.trim())) {
+    codigo = Number(value.trim());
+  }
+  if (!Number.isSafeInteger(codigo) || codigo < 1) {
+    throw invalid("Código do exercício inválido.");
+  }
+  return codigo;
+}
+
+/** Diz se o campo foi informado: presente e diferente de null.
+ * @param {unknown} value Valor recebido.
+ * @return {boolean} Se o valor foi informado.
+ */
+const isInformed = (value: unknown): boolean =>
+  value !== undefined && value !== null;
+
+/** Valida a consulta de um exercício pelo 'id' ou pelo 'codigo', só um dos
+ * dois: a galeria e as mídias usam o id, e os detalhes do treinamento
+ * listam os exercícios pelo código.
+ * @param {unknown} data Dados recebidos pelo endpoint (podem faltar).
+ * @return {ExerciseLookup} Identificador validado.
+ */
+export function validateExerciseLookup(data: unknown): ExerciseLookup {
+  const record = asRecord(data ?? {}, "Dados da consulta inválidos.");
+  assertAllowedFields(record, ["id", "codigo"]);
+  const hasId = isInformed(record.id);
+  if (hasId === isInformed(record.codigo)) {
+    throw invalid("Informe o id ou o código do exercício, só um dos dois.");
+  }
+  return hasId ?
+    {id: parseObjectId(record.id, "Exercício inválido.")} :
+    {codigo: parseCode(record.codigo)};
+}
+
+// Campos aceitos na edição. Os demais (código, mídias, autor e datas) são
+// recusados: as mídias têm callables próprias e o resto não se edita.
+const UPDATE_FIELDS: readonly string[] = [
+  "id",
+  ...DETAIL_FIELDS,
+  "privacidade",
+  "cavaloId",
+];
+
+/** Valida a edição: o 'id' e só os campos enviados, com as regras do
+ * cadastro. 'cavaloId' só vale junto com 'privacidade', para que tipo e
+ * cavalo sejam conferidos juntos sem depender do exercício gravado.
+ * @param {unknown} data Dados recebidos pelo endpoint.
+ * @return {ExerciseUpdateInput} 'id' e alterações validadas.
+ */
+export function validateExerciseUpdate(data: unknown): ExerciseUpdateInput {
+  const record = asRecord(data, "Dados da edição inválidos.");
+  assertAllowedFields(record, UPDATE_FIELDS);
+  const id = parseObjectId(record.id, "Exercício inválido.");
+
+  const changes: ExerciseUpdateChanges = {};
+  for (const field of DETAIL_FIELDS) {
+    if (record[field] === undefined) continue;
+    Object.assign(changes, {[field]: DETAIL_PARSERS[field](record[field])});
+  }
+  if (record.privacidade !== undefined) {
+    changes.privacidade = parsePrivacidade(record.privacidade);
+    changes.cavaloId = parseCavaloId(record.cavaloId, changes.privacidade);
+  } else if (isInformed(record.cavaloId)) {
+    throw invalid("Informe a privacidade junto com o cavalo.");
+  }
+
+  if (Object.keys(changes).length === 0) {
+    throw invalid("Nenhuma alteração informada.");
+  }
+  return {id, changes};
 }

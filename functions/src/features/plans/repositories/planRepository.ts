@@ -2,6 +2,20 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Índice dos planos por cavalo e situação, usado pela consulta do
+// exercício.
+//
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Índice e renovação da cópia do treinamento nos planos em
+// andamento.
+// Alteração: Busca do plano pelo _id, usada pela visualização e pelo
+// cancelamento.
+// Alteração: concludePlan virou closePlan, que também cancela.
+// Alteração: Gravação dos campos editáveis do plano.
+//
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Planos ativos e não vencidos dos cavalos ou do treinador,
@@ -31,7 +45,13 @@ import {getDatabase} from "../../../shared/config/mongodb";
 import {COLLECTIONS} from "../../../shared/constants/collections";
 import {ensureIndexesOnce} from "../../../shared/database/indexes";
 import {nextCode} from "../../../shared/database/sequence";
-import type {ActivePlanSummary, PlanDocument} from "../types";
+import type {TrainingSnapshot} from "../../training";
+import type {
+  ActivePlanSummary,
+  PlanContent,
+  PlanDocument,
+  PlanStatus,
+} from "../types";
 
 const PLAN_INDEXES: IndexDescription[] = [
   {key: {codigo: 1}, name: "codigo_unico", unique: true},
@@ -44,6 +64,17 @@ const PLAN_INDEXES: IndexDescription[] = [
   {
     key: {"treinador._id": 1, "status": 1},
     name: "idx_planos_treinador_status",
+  },
+  {
+    key: {"planejamento.treinamento._id": 1},
+    name: "idx_planos_treinamento",
+  },
+  // Planos de um cavalo em qualquer situação, lidos pela consulta do
+  // exercício (exercises/repositories/exerciseUsageRepository.ts). O
+  // idx_planos_cavalo_ativo é parcial e só serve para os planos ATIVO.
+  {
+    key: {"cavalo._id": 1, "status": 1},
+    name: "idx_planos_cavalo_status",
   },
 ];
 
@@ -76,6 +107,44 @@ export async function insertPlan(
     .insertOne(plan, {session});
 }
 
+/** Busca um plano pelo _id, de qualquer status.
+ * @param {ObjectId} planId _id do plano.
+ * @param {ClientSession} session Sessão da transação, se houver.
+ * @return {Promise<PlanDocument|null>} Plano, ou null.
+ */
+export async function findPlanById(
+  planId: ObjectId,
+  session?: ClientSession
+): Promise<PlanDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<PlanDocument>(COLLECTIONS.Planos)
+    .findOne({_id: planId}, {session});
+}
+
+/** Substitui os campos editáveis do plano. Trocar o cavalo de um plano
+ * ATIVO para um que já tenha outro viola idx_planos_cavalo_ativo (erro de
+ * chave duplicada).
+ * @param {ObjectId} planId _id do plano.
+ * @param {PlanContent} content Novos valores.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<void>} Resolvida quando o plano for gravado.
+ */
+export async function updatePlanContent(
+  planId: ObjectId,
+  {avaliacaoInicial, ...content}: PlanContent,
+  session: ClientSession
+): Promise<void> {
+  const db = await getDatabase();
+  await db.collection<PlanDocument>(COLLECTIONS.Planos).updateOne(
+    {_id: planId},
+    avaliacaoInicial ?
+      {$set: {...content, avaliacaoInicial}} :
+      {$set: content, $unset: {avaliacaoInicial: ""}},
+    {session}
+  );
+}
+
 /** Busca o plano ATIVO do cavalo (idx_planos_cavalo_ativo).
  * @param {ObjectId} horseId _id do cavalo.
  * @param {ClientSession} session Sessão da transação.
@@ -94,24 +163,27 @@ export async function findActivePlan(
     );
 }
 
-/** Conclui o plano ATIVO (CONCLUIDO). Os registros e o planoAtual do
- * cavalo são tratados por quem chama, na mesma transação.
+/** Encerra o plano ATIVO (CONCLUIDO ou CANCELADO). Os registros e o
+ * planoAtual do cavalo são tratados por quem chama, na mesma transação.
  * @param {ObjectId} planId _id do plano.
+ * @param {string} status Novo status.
  * @param {ClientSession} session Sessão da transação.
- * @return {Promise<void>} Resolvida quando o plano for alterado.
+ * @return {Promise<boolean>} Se o plano ainda estava ATIVO e foi alterado.
  */
-export async function concludePlan(
+export async function closePlan(
   planId: ObjectId,
+  status: Extract<PlanStatus, "CONCLUIDO" | "CANCELADO">,
   session: ClientSession
-): Promise<void> {
+): Promise<boolean> {
   const db = await getDatabase();
-  await db
+  const result = await db
     .collection<PlanDocument>(COLLECTIONS.Planos)
     .updateOne(
       {_id: planId, status: "ATIVO"},
-      {$set: {status: "CONCLUIDO", atualizadoEm: new Date()}},
+      {$set: {status, atualizadoEm: new Date()}},
       {session}
     );
+  return result.modifiedCount === 1;
 }
 
 /** Indica se o treinador é autor do plano ATIVO do cavalo (RF05003).
@@ -137,6 +209,37 @@ export async function isActivePlanAuthor(
   return plan !== null;
 }
 
+/** Renova a cópia do treinamento nos itens ativos dos planos RASCUNHO e
+ * ATIVO (edição do treinamento). Itens inativos e planos CONCLUIDO ou
+ * CANCELADO guardam a versão antiga. Usa idx_planos_treinamento.
+ * @param {TrainingSnapshot} snapshot Nova cópia do treinamento.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<void>} Resolvida quando os planos forem alterados.
+ */
+export async function refreshPlanTrainingSnapshots(
+  snapshot: TrainingSnapshot,
+  session: ClientSession
+): Promise<void> {
+  const db = await getDatabase();
+  await db.collection<PlanDocument>(COLLECTIONS.Planos).updateMany(
+    {
+      "planejamento.treinamento._id": snapshot._id,
+      "status": {$in: ["RASCUNHO", "ATIVO"]},
+    },
+    {
+      $set: {
+        "planejamento.$[item].treinamento": snapshot,
+        "atualizadoEm": new Date(),
+      },
+    },
+    {
+      arrayFilters: [
+        {"item.treinamento._id": snapshot._id, "item.ativo": true},
+      ],
+      session,
+    }
+  );
+}
 /** Planos ATIVO ainda não vencidos (dataFim >= hoje), em ordem de início.
  * Um plano vencido continua ATIVO até outro plano ser criado para o
  * cavalo, por isso o filtro de data.
