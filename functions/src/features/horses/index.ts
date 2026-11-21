@@ -3,6 +3,10 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação de relationsOf para a visualização do plano.
+// 
+// Data: 20/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação dos cavalos vinculados a uma pessoa, usados pelo
 // acesso ao exercício.
@@ -62,6 +66,7 @@ export {
   getHorseForUser,
   HORSE_RULES,
   loadHorseAccess,
+  relationsOf,
 } from "./services/horseAccess";
 export {toRefView} from "./services/horseMappers";
 export type {

@@ -7,6 +7,9 @@
 // Alteração: Exportação da consulta de detalhes do treinamento.
 // Alteração: Exportação da edição do treinamento e das cópias usadas pelos
 // planos.
+// Alteração: Exportação da leitura e da gravação dos registros usadas pela
+// edição do plano.
+// Alteração: Exportação dos treinos agendados do plano (visualização).
 //
 // Data: 19/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
@@ -43,6 +46,7 @@
 
 export {
   EXECUTED_STATUSES,
+  applyPlanRecordChanges,
   countHorseExecutions,
   countTrainerExecutions,
   countTrainerFeedbacks,
@@ -50,6 +54,8 @@ export {
   ensureTrainingRecordIndexes,
   insertTrainingRecords,
   findDayRecordsByHorsePlan,
+  findPlanRecordsFrom,
+  findPlanSessionRecords,
   findRecentExecutionsByHorses,
   findRecentExecutionsByTrainer,
   findRecordsByHorses,
@@ -66,6 +72,8 @@ export type {
   HorseExecutionCounts,
   NewTrainingRecord,
   PerformedExercise,
+  PlanRecordState,
+  PlanSessionRecord,
   RecentExecutionRecord,
   TrainingRecordStatus,
   TrainingRecordSummary,
