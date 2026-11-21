@@ -2,10 +2,20 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação dos segmentos da resposta completa, das regras de
+// conversão de status e da validação defensiva dos campos recebidos da API.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do contrato completo retornado por getTrainingAgenda,
+// conversão do JSON da API e validação dos campos de semana, planos e treinos.
+//
 // Data: 18/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação dos contratos imutáveis da agenda, com públicos, ações,
-// planos e estados de execução convertidos a partir da API. Documentação dos 
+// planos e estados de execução convertidos a partir da API. Documentação dos
 // contratos, campos e regra de conversão da API.
 // -----------------------------------------------------------------------------
 
@@ -106,6 +116,186 @@ class TrainingAgendaPlan {
   final TrainingAgendaStatus status;
 }
 
+// Resposta completa da callable getTrainingAgenda. A separação entre semana,
+// hoje e histórico espelha o backend e evita que a interface deduza permissões.
+@immutable
+class TrainingAgendaData {
+  const TrainingAgendaData({
+    required this.audience,
+    required this.today,
+    required this.weekStart,
+    required this.weekEnd,
+    required this.activePlansCount,
+    required this.plans,
+    required this.weekTrainings,
+    required this.todayTrainings,
+    required this.history,
+  });
+
+  // Perfil autorizado que consultou a agenda.
+  final TrainingAgendaAudience audience;
+
+  // Data de referência calculada pelo backend.
+  final DateTime today;
+
+  // Limites inclusivos da semana retornada.
+  final DateTime weekStart;
+  final DateTime weekEnd;
+
+  // Resumo e detalhes dos planos ativos visíveis para o perfil.
+  final int activePlansCount;
+  final List<TrainingAgendaPlan> plans;
+
+  // Itens do calendário semanal, treinos acionáveis do dia e execuções
+  // históricas são mantidos separados conforme o contrato da callable.
+  final List<TrainingAgendaEntry> weekTrainings;
+  final List<TrainingAgendaEntry> todayTrainings;
+  final List<TrainingAgendaEntry> history;
+
+  // Converte a resposta sem confiar em casts implícitos. Campos estruturais
+  // ausentes ou inválidos produzem FormatException com o caminho do campo.
+  factory TrainingAgendaData.fromJson(Map<String, dynamic> json) {
+    final audience = switch (json['role']) {
+      'TREINADOR' => TrainingAgendaAudience.trainer,
+      'RESPONSAVEL' => TrainingAgendaAudience.guardian,
+      _ => throw const FormatException('Campo role inválido.'),
+    };
+    final today = _agendaDate(json['hoje'], 'hoje');
+    final week = _agendaMap(json['semana'], 'semana');
+    final plansPayload = _agendaMap(json['planosAtivos'], 'planosAtivos');
+    final weekPayload = _agendaList(json['treinamentos'], 'treinamentos');
+
+    final weekTrainings = weekPayload
+        .map((value) {
+          final item = _agendaMap(value, 'treinamentos[]');
+          return TrainingAgendaEntry(
+            id: _agendaString(item['id'], 'treinamentos[].id'),
+            title: _agendaString(
+              item['nomeTreinamento'],
+              'treinamentos[].nomeTreinamento',
+            ),
+            horseName: _agendaString(
+              item['nomeCavalo'],
+              'treinamentos[].nomeCavalo',
+            ),
+            trainerName: '',
+            planName: _agendaString(
+              item['nomePlano'],
+              'treinamentos[].nomePlano',
+            ),
+            date: _agendaDate(item['data'], 'treinamentos[].data'),
+            durationMinutes: 0,
+            status: trainingAgendaStatusFromApi(item['status'] as String?),
+            // A lista semanal é apenas consultiva para os dois perfis.
+            action: TrainingAgendaAction.view,
+          );
+        })
+        .toList(growable: false);
+
+    final statusById = <String, TrainingAgendaStatus>{
+      for (final training in weekTrainings) training.id: training.status,
+    };
+    final todayPayload = _agendaMap(json['treinosDoDia'], 'treinosDoDia');
+    final todayTrainings =
+        _agendaList(todayPayload['treinos'], 'treinosDoDia.treinos')
+            .map((value) {
+              final item = _agendaMap(value, 'treinosDoDia.treinos[]');
+              final id = _agendaString(item['id'], 'treinosDoDia.treinos[].id');
+              final role = _agendaString(
+                item['role'],
+                'treinosDoDia.treinos[].role',
+              );
+              return TrainingAgendaEntry(
+                id: id,
+                title: _agendaString(
+                  item['nomeTreinamento'],
+                  'treinosDoDia.treinos[].nomeTreinamento',
+                ),
+                horseName: _agendaString(
+                  item['nomeCavalo'],
+                  'treinosDoDia.treinos[].nomeCavalo',
+                ),
+                trainerName: item['nomeTreinador'] as String? ?? '',
+                planName: _agendaString(
+                  item['nomePlano'],
+                  'treinosDoDia.treinos[].nomePlano',
+                ),
+                date: today,
+                durationMinutes:
+                    (item['duracaoEstimadaMinutos'] as num?)?.toInt() ?? 0,
+                status: statusById[id] ?? TrainingAgendaStatus.planned,
+                // Somente o papel ATLETA é autorizado pelo backend a iniciar.
+                action: role == 'ATLETA'
+                    ? TrainingAgendaAction.start
+                    : TrainingAgendaAction.view,
+              );
+            })
+            .toList(growable: false);
+
+    final history =
+        _agendaList(json['historicoExecucoes'], 'historicoExecucoes')
+            .map((value) {
+              final item = _agendaMap(value, 'historicoExecucoes[]');
+              return TrainingAgendaEntry(
+                id: _agendaString(item['id'], 'historicoExecucoes[].id'),
+                title: _agendaString(
+                  item['nomeTreinamento'],
+                  'historicoExecucoes[].nomeTreinamento',
+                ),
+                horseName: _agendaString(
+                  item['nomeCavalo'],
+                  'historicoExecucoes[].nomeCavalo',
+                ),
+                trainerName: '',
+                planName: '',
+                date: _agendaDate(item['data'], 'historicoExecucoes[].data'),
+                durationMinutes: 0,
+                status: trainingAgendaStatusFromApi(item['status'] as String?),
+                action: TrainingAgendaAction.view,
+              );
+            })
+            .toList(growable: false);
+
+    final plans = _agendaList(plansPayload['planos'], 'planosAtivos.planos')
+        .map((value) {
+          final item = _agendaMap(value, 'planosAtivos.planos[]');
+          final title = _agendaString(
+            item['titulo'],
+            'planosAtivos.planos[].titulo',
+          );
+          return TrainingAgendaPlan(
+            id: _agendaString(item['id'], 'planosAtivos.planos[].id'),
+            trainingName: title,
+            horseName: _agendaString(
+              item['nomeCavalo'],
+              'planosAtivos.planos[].nomeCavalo',
+            ),
+            trainerName: item['nomeTreinador'] as String? ?? '',
+            planName: title,
+            date: _agendaDate(
+              item['dataInicio'],
+              'planosAtivos.planos[].dataInicio',
+            ),
+            status: TrainingAgendaStatus.planned,
+          );
+        })
+        .toList(growable: false);
+
+    return TrainingAgendaData(
+      audience: audience,
+      today: today,
+      weekStart: _agendaDate(week['dataInicio'], 'semana.dataInicio'),
+      weekEnd: _agendaDate(week['dataFim'], 'semana.dataFim'),
+      activePlansCount:
+          (plansPayload['quantidade'] as num?)?.toInt() ?? plans.length,
+      plans: plans,
+      weekTrainings: weekTrainings,
+      todayTrainings: todayTrainings,
+      history: history,
+    );
+  }
+}
+
 // Converte o estado textual da API para o domínio visual da agenda.
 //
 // Valores ausentes ou ainda desconhecidos são tratados como planejados para
@@ -117,4 +307,48 @@ TrainingAgendaStatus trainingAgendaStatusFromApi(String? value) {
     'NAO_REALIZADO' => TrainingAgendaStatus.notCompleted,
     _ => TrainingAgendaStatus.planned,
   };
+}
+
+// Converte o estado visual para o vocabulário aceito pelos modelos legados das
+// Homes. Esta função não envia dados à callable.
+String trainingAgendaStatusToApi(TrainingAgendaStatus value) => switch (value) {
+  TrainingAgendaStatus.completed => 'REALIZADO',
+  TrainingAgendaStatus.partial => 'PARCIAL',
+  TrainingAgendaStatus.notCompleted => 'NAO_REALIZADO',
+  TrainingAgendaStatus.planned => 'PLANEJADO',
+};
+
+// Validadores pequenos mantêm mensagens de erro uniformes durante a conversão.
+Map<String, dynamic> _agendaMap(Object? value, String field) {
+  if (value is! Map) throw FormatException('Campo $field inválido.');
+  return Map<String, dynamic>.from(value);
+}
+
+List<dynamic> _agendaList(Object? value, String field) {
+  if (value is! List) throw FormatException('Campo $field inválido.');
+  return value;
+}
+
+String _agendaString(Object? value, String field) {
+  if (value is! String) throw FormatException('Campo $field inválido.');
+  return value;
+}
+
+// Aceita somente datas civis ISO no formato AAAA-MM-DD e rejeita normalizações
+// automáticas, como 31 de fevereiro convertido pelo DateTime.
+DateTime _agendaDate(Object? value, String field) {
+  final text = _agendaString(value, field);
+  final parts = text.split('-');
+  if (parts.length != 3) throw FormatException('Campo $field inválido.');
+  final year = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  final day = int.tryParse(parts[2]);
+  if (year == null || month == null || day == null) {
+    throw FormatException('Campo $field inválido.');
+  }
+  final date = DateTime(year, month, day);
+  if (date.year != year || date.month != month || date.day != day) {
+    throw FormatException('Campo $field inválido.');
+  }
+  return date;
 }

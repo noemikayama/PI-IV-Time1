@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do teste de regressão que verifica a transferência do
+// círculo colorido para o novo dia selecionado no calendário e documentação do
+// cenário e da inspeção visual usada na asserção.
+//
 // Data: 18/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura da agenda semanal, estados vazios, perfis de acesso,
@@ -192,6 +198,47 @@ void main() {
     await tester.tap(find.byKey(const Key('agenda-next-week')));
     await tester.pump();
     expect(find.text('dezembro 2026'), findsOneWidget);
+  });
+
+  // Reproduz a seleção de um dia vazio após um dia com treino e inspeciona o
+  // preenchimento real dos círculos, não apenas o estado semântico do widget.
+  testWidgets('moves the colored date circle to the selected day', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildAgenda(
+        trainings: [
+          entry(
+            id: 'planejado',
+            horse: 'Trovão',
+            status: TrainingAgendaStatus.planned,
+            action: TrainingAgendaAction.start,
+          ),
+        ],
+      ),
+    );
+
+    // Lê a cor do AnimatedContainer pertencente à chave estável de cada dia.
+    Color? dateCircleColor(String dateKey) {
+      final day = find.byKey(ValueKey<String>(dateKey));
+      final circle = find.descendant(
+        of: day,
+        matching: find.byType(AnimatedContainer),
+      );
+      final decoration = tester.widget<AnimatedContainer>(circle).decoration;
+      return (decoration as BoxDecoration).color;
+    }
+
+    expect(dateCircleColor('agenda-day-2026-11-18'), isNotNull);
+    expect(dateCircleColor('agenda-day-2026-11-19'), isNull);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('agenda-day-2026-11-19')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(dateCircleColor('agenda-day-2026-11-18'), isNull);
+    expect(dateCircleColor('agenda-day-2026-11-19'), isNotNull);
   });
 
   testWidgets('shows all empty states and renders exactly one week', (
