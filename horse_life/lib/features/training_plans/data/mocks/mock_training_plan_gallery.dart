@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição de descrições aos treinamentos mockados para suporte à
+// visualização e edição de planos de treinamento.
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do catálogo estático mockado de treinamentos disponíveis
@@ -19,6 +24,7 @@ abstract final class MockTrainingPlanGallery {
       code: 41,
       title: 'Aquecimento e flexibilidade',
       estimatedDurationMinutes: 30,
+      description: 'Sessão leve focada em alongamento e soltura muscular.',
       exerciseNames: [
         'Aquecimento ao passo',
         'Alongamento de pescoço',
@@ -30,6 +36,7 @@ abstract final class MockTrainingPlanGallery {
       code: 42,
       title: 'Trabalho de transições',
       estimatedDurationMinutes: 45,
+      description: 'Sessão focada em equilíbrio nas transições de andamento.',
       exerciseNames: [
         'Aquecimento ao passo',
         'Transições trote-galope',
@@ -40,6 +47,7 @@ abstract final class MockTrainingPlanGallery {
       code: 43,
       title: 'Cavaletes e ritmo',
       estimatedDurationMinutes: 50,
+      description: 'Sequência de barras no solo para regularidade e ritmo.',
       exerciseNames: [
         'Círculos ao trote',
         'Cavaletes elevados',

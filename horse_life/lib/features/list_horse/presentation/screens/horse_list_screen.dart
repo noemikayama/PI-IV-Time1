@@ -219,23 +219,24 @@ class _HorseListScreenState extends State<HorseListScreen>
     return 'Não foi possível consultar os cavalos. Tente novamente.';
   }
 
-  void _openHorseDetails(HorseListItem horse) {
+  Future<void> _openHorseDetails(HorseListItem horse) async {
     if (widget.onHorseSelected != null) {
       widget.onHorseSelected!(horse);
       return;
     }
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
+    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
+      MaterialPageRoute<HomeNavigationDestination>(
         builder: (_) => HorseProfileScreen(
           horseId: horse.id,
           currentUserId: FirebaseAuth.instance.currentUser?.uid,
           isTrainer: widget.profile == HorseListProfile.professional,
-          onNavigationSelected: (destination) {
-            _navigate(destination.index);
-          },
         ),
       ),
     );
+    if (!mounted || destination == null) return;
+    if (destination != HomeNavigationDestination.horses) {
+      Navigator.of(context).pop(destination);
+    }
   }
 
   void _navigate(int tab) {
