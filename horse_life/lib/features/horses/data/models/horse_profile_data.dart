@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão dos contratos do treino do dia, período do plano ativo e
+// permissão efetiva para iniciar ou apenas consultar a execução.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos segmentos de identidade, vínculos, histórico,
@@ -48,12 +53,59 @@ class HorseProfileModality {
   final String name;
 }
 
+/// Ação autorizada no treino diário exibido pelo perfil do cavalo.
+enum HorseProfileTrainingAction { start, view, none }
+
+/// Treino de hoje já contextualizado pelo backend para quem consulta o perfil.
+class HorseProfileDayTraining {
+  const HorseProfileDayTraining({
+    required this.recordId,
+    required this.name,
+    required this.planName,
+    required this.durationMinutes,
+    required this.personRole,
+    required this.personName,
+    required this.status,
+  });
+
+  /// Identidade do registro e nomes usados na navegação da execução.
+  final String recordId;
+  final String name;
+  final String planName;
+
+  /// Duração planejada apresentada antes do carregamento dos detalhes.
+  final int durationMinutes;
+
+  /// Pessoa responsável exibida no card do treino diário.
+  final String personRole;
+  final String personName;
+
+  /// Situação persistida do registro no formato retornado pelo backend.
+  final String status;
+
+  /// Indica registros totais ou parciais que não podem ser iniciados novamente.
+  bool get isFinished => status == 'REALIZADO' || status == 'PARCIAL';
+}
+
 /// Plano ativo retornado pela consulta do cavalo.
 class HorseProfilePlan {
-  const HorseProfilePlan({required this.id, required this.title});
+  const HorseProfilePlan({
+    required this.id,
+    required this.title,
+    this.startDate,
+    this.endDate,
+    this.todayTraining,
+  });
 
   final String id;
   final String title;
+
+  /// Período do plano, opcional para manter compatibilidade com dados antigos.
+  final DateTime? startDate;
+  final DateTime? endDate;
+
+  /// Treino agendado para a data corrente, quando houver.
+  final HorseProfileDayTraining? todayTraining;
 }
 
 /// Avaliação registrada por um treinador.
@@ -125,6 +177,7 @@ class HorseProfileData {
     required this.currentPlan,
     required this.evaluations,
     required this.responsibilities,
+    this.trainingAction = HorseProfileTrainingAction.none,
   });
 
   final String id;
@@ -146,6 +199,16 @@ class HorseProfileData {
   final HorseProfilePlan? currentPlan;
   final List<HorseProfileEvaluation> evaluations;
   final List<String> responsibilities;
+
+  /// Ação calculada pelo backend para o usuário que consultou o perfil.
+  final HorseProfileTrainingAction trainingAction;
+
+  /// Prioriza o vínculo de atleta quando a permissão remota estiver ausente ou
+  /// desatualizada. O backend continua sendo a autoridade final no envio.
+  HorseProfileTrainingAction get effectiveTrainingAction =>
+      responsibilities.contains('ATLETA')
+      ? HorseProfileTrainingAction.start
+      : trainingAction;
 
   /// Somente o proprietário pode chamar `updateHorse` no contrato atual.
   bool get canEdit => responsibilities.contains('PROPRIETARIO');

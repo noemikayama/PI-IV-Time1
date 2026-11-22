@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura do modo somente leitura, que exibe os detalhes sem a
+// ação de iniciar a execução do treinamento.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação da fábrica da tela, dos estados ativo/finalizado e dos
 // dublês usados para carregar e concluir o treino.
 //
@@ -25,23 +30,25 @@ import 'package:horse_life/features/training/presentation/screens/training_execu
 
 void main() {
   // Constrói a tela nos dois estados possíveis usando dependências determinísticas.
-  Widget buildScreen({required bool finished}) => MaterialApp(
-    theme: AppTheme.light,
-    home: TrainingExecutionScreen(
-      loader: _FakeExecutionLoader(finished: finished),
-      completionSubmitter: const _FakeCompletionSubmitter(),
-      reference: TrainingExecutionReference(
-        recordId: 'registro-1',
-        planId: 'plano-1',
-        title: 'Trabalho de transições',
-        date: DateTime(2026, 11, 21),
-        durationMinutes: 45,
-        status: finished
-            ? TrainingAgendaStatus.completed
-            : TrainingAgendaStatus.planned,
-      ),
-    ),
-  );
+  Widget buildScreen({required bool finished, bool canStart = true}) =>
+      MaterialApp(
+        theme: AppTheme.light,
+        home: TrainingExecutionScreen(
+          loader: _FakeExecutionLoader(finished: finished),
+          completionSubmitter: const _FakeCompletionSubmitter(),
+          reference: TrainingExecutionReference(
+            recordId: 'registro-1',
+            planId: 'plano-1',
+            title: 'Trabalho de transições',
+            date: DateTime(2026, 11, 21),
+            durationMinutes: 45,
+            status: finished
+                ? TrainingAgendaStatus.completed
+                : TrainingAgendaStatus.planned,
+            canStart: canStart,
+          ),
+        ),
+      );
 
   // Um registro planejado apresenta detalhes e permite avançar à execução ativa.
   testWidgets('renders the prototype content and active start state', (
@@ -104,6 +111,21 @@ void main() {
     expect(find.text('Treino finalizado'), findsOneWidget);
     expect(find.text('Iniciar treino'), findsNothing);
   });
+
+  // A permissão falsa deve ocultar a ação sem esconder o conteúdo consultivo.
+  testWidgets('read-only training does not expose an execution action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildScreen(finished: false, canStart: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Trabalho de transições'), findsOneWidget);
+    expect(
+      find.byKey(const Key('training-execution-primary-action')),
+      findsNothing,
+    );
+    expect(find.text('Iniciar treino'), findsNothing);
+  });
 }
 
 TextSpan _spanStartingWith(InlineSpan span, String prefix) {
@@ -143,6 +165,7 @@ class _FakeExecutionLoader implements TrainingExecutionLoader {
       ),
     ],
     isFinished: finished,
+    canStart: reference.canStart,
   );
 }
 

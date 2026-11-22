@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura do mapeamento do período, treino diário e permissão de
+// execução retornados junto ao plano ativo do cavalo.
+//
 // Data: 19/11/2026
 // Autor: Davi Alves Froza - RA 25016900
 // Alteração: validateMicrochip no dublê do serviço remoto, que ganhou o
@@ -42,6 +47,10 @@ void main() {
     expect(horse.owner.name, 'Ana');
     expect(horse.trainers.single.name, 'Bruno');
     expect(horse.currentPlan?.title, 'Plano A');
+    expect(horse.currentPlan?.startDate, DateTime(2026, 11, 1));
+    expect(horse.currentPlan?.todayTraining?.name, 'Trabalho de transições');
+    expect(horse.currentPlan?.todayTraining?.personName, 'Bruno');
+    expect(horse.trainingAction, HorseProfileTrainingAction.view);
     expect(horse.evaluations.single.trainer.name, 'Bruno');
     expect(horse.canEdit, isTrue);
   });
@@ -490,7 +499,25 @@ Map<String, dynamic> _horseJson() => {
   'proprietario': {'id': 'owner-1', 'codigo': 1, 'nome': 'Ana'},
   'atleta': null,
   'treinador': {'id': 'trainer-1', 'codigo': 2, 'nome': 'Bruno'},
-  'planoAtual': {'id': 'plan-1', 'codigo': 3, 'titulo': 'Plano A'},
+  'planoAtual': {
+    'id': 'plan-1',
+    'codigo': 3,
+    'titulo': 'Plano A',
+    'dataInicio': '2026-11-01',
+    'dataFim': '2026-11-30',
+    'treinoDoDia': {
+      'situacao': 'PENDENTE',
+      'treino': {
+        'registroId': 'record-1',
+        'nomeTreino': 'Trabalho de transições',
+        'nomePlano': 'Plano A',
+        'duracaoMinutos': 45,
+        'pessoa': {'papel': 'TREINADOR', 'nome': 'Bruno'},
+        'status': 'PLANEJADO',
+      },
+    },
+  },
+  'permissoes': {'acaoTreino': 'VER'},
   'avaliacoes': [
     {
       'id': 'evaluation-1',

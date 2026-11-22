@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura do recarregamento síncrono da Home ao retornar de uma
+// lista de cavalos injetada, sem acesso aos serviços externos.
+//
 // Data: 18/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Adequação do teste à rota modular HorseRelationshipScreen e
@@ -25,6 +30,34 @@ import 'package:horse_life/features/horses/presentation/routes/horse_registratio
 import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 
 void main() {
+  // Reproduz a navegação completa e conta as consultas para validar a recarga.
+  testWidgets('refreshes home synchronously after returning from horse list', (
+    tester,
+  ) async {
+    final loader = _GuardianHomeLoader();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: GuardianHomeScreen(
+          loader: loader,
+          onLogout: () async {},
+          horseListBuilder: (_) => const Scaffold(
+            body: Center(child: Text('Lista de cavalos de teste')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Cavalos'));
+    await tester.pumpAndSettle();
+    Navigator.of(tester.element(find.text('Lista de cavalos de teste'))).pop();
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(loader.fetchCount, 2);
+  });
+
   testWidgets(
     'opens horse registration flow when tapping Cadastrar cavalo in GuardianSidebar',
     (tester) async {
@@ -67,18 +100,24 @@ void main() {
   );
 }
 
+// Carregador determinístico que registra quantas vezes a Home foi consultada.
 class _GuardianHomeLoader implements HomeLoader<GuardianHomeData> {
+  int fetchCount = 0;
+
   @override
-  Future<GuardianHomeData> fetchHome() async => const GuardianHomeData(
-    guardianName: 'Carlos Lima',
-    todayTrainings: [],
-    weeklyCompleted: 0,
-    weeklyPlanned: 0,
-    monthlyCompleted: 0,
-    monthlyPlanned: 0,
-    allTimeCompleted: 0,
-    horses: [],
-    totalHorses: 0,
-    trainers: [],
-  );
+  Future<GuardianHomeData> fetchHome() async {
+    fetchCount++;
+    return const GuardianHomeData(
+      guardianName: 'Carlos Lima',
+      todayTrainings: [],
+      weeklyCompleted: 0,
+      weeklyPlanned: 0,
+      monthlyCompleted: 0,
+      monthlyPlanned: 0,
+      allTimeCompleted: 0,
+      horses: [],
+      totalHorses: 0,
+      trainers: [],
+    );
+  }
 }

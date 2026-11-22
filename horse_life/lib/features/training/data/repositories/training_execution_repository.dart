@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Propagação da permissão de início da referência para os detalhes
+// consolidados da execução.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção e ampliação dos comentários sobre as três etapas de
 // consulta, enriquecimento tolerante dos exercícios e validação dos payloads.
 //
@@ -132,6 +137,7 @@ class FirebaseTrainingExecutionRepository implements TrainingExecutionLoader {
       guidelines: guidelines,
       exercises: exercises,
       isFinished: reference.isFinished,
+      canStart: reference.canStart,
     );
   }
 
