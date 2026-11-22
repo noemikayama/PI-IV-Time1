@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação da consulta do treino agendado, do registro da
+// execução e do feedback e das execuções que esperam feedback.
+//
 // Data: 20/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação dos detalhes e da edição do exercício.
@@ -147,3 +152,9 @@ export {
 export {
   getTrainingAgenda,
 } from "./features/agenda";
+export {
+  getTrainingRecord,
+  registerTrainingExecution,
+  registerTrainingFeedback,
+  listPendingFeedbacks,
+} from "./features/executions";

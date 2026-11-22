@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Leitura do objetivo do plano (findPlanObjective), mostrado no
+// treino agendado.
+//
 // Data: 20/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Índice dos planos por cavalo e situação, usado pela consulta do
@@ -120,6 +125,21 @@ export async function findPlanById(
   return db
     .collection<PlanDocument>(COLLECTIONS.Planos)
     .findOne({_id: planId}, {session});
+}
+
+/** Objetivo do plano, mostrado no treino agendado (o registro guarda só o
+ * título do plano). Consulta direta por _id, com projeção.
+ * @param {ObjectId} planId _id do plano.
+ * @return {Promise<string|null>} Objetivo, ou null se o plano não existir.
+ */
+export async function findPlanObjective(
+  planId: ObjectId
+): Promise<string | null> {
+  const db = await getDatabase();
+  const plan = await db
+    .collection<PlanDocument>(COLLECTIONS.Planos)
+    .findOne({_id: planId}, {projection: {objetivo: 1}});
+  return plan?.objetivo ?? null;
 }
 
 /** Substitui os campos editáveis do plano. Trocar o cavalo de um plano

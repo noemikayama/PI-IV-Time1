@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Leitura do código e dos materiais dos exercícios ativos
+// (findActiveExerciseExtras), usada pelo treino agendado.
+//
 // Data: 20/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Consulta do exercício ativo pelo código (detalhes do
@@ -54,6 +59,7 @@ import {inPeriod} from "../../../shared/utils/dates";
 import type {DatePeriod} from "../../../shared/utils/dates";
 import type {
   ExerciseDocument,
+  ExerciseExtrasSource,
   ExerciseGallerySource,
   ExerciseKindSource,
   ExerciseMediaField,
@@ -339,4 +345,23 @@ export async function findForeignSpecificExerciseIds(
     )
     .toArray();
   return found.map((exercise) => exercise._id);
+}
+
+/** Lê código e materiais dos exercícios ativos informados, para o treino
+ * agendado (a cópia no treino não guarda materiais, e o código localiza as
+ * mídias no Storage). Consulta direta por _id. Exercício inativo ou
+ * inexistente não volta.
+ * @param {ObjectId[]} ids _id dos exercícios, sem repetição.
+ * @return {Promise<ExerciseExtrasSource[]>} Exercícios encontrados.
+ */
+export async function findActiveExerciseExtras(
+  ids: ObjectId[]
+): Promise<ExerciseExtrasSource[]> {
+  if (ids.length === 0) return [];
+  const db = await getDatabase();
+  return db
+    .collection<ExerciseDocument>(COLLECTIONS.Exercicios)
+    .find({_id: {$in: ids}, ativo: true})
+    .project<ExerciseExtrasSource>({codigo: 1, materiais: 1})
+    .toArray();
 }

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Materiais e mídias atuais do exercício para o treino agendado
+// (ExerciseExtrasSource, ExerciseExtras).
+//
 // Data: 20/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Tipos da consulta, da resposta, da edição e do acesso ao
@@ -209,4 +214,19 @@ export type ExerciseAccess = {isAuthor: boolean; showHorse: boolean};
 // nunca chegam à consulta nem à edição.
 export type AuthoredExercise = ExerciseDocument & {
     treinador: ExerciseTrainerRef;
+};
+
+// Campos do exercício que não fazem parte da cópia guardada no treino
+// agendado: o treino lê os materiais da versão atual, e o código localiza
+// as mídias no Storage.
+export type ExerciseExtrasSource = Pick<
+    ExerciseDocument,
+    "_id" | "codigo" | "materiais"
+>;
+
+// Materiais e mídias que existem no Storage, já com URL de leitura.
+export type ExerciseExtras = {
+    materiais: ExerciseMaterial[];
+    imagens: ExerciseMediaView[];
+    videos: ExerciseMediaView[];
 };

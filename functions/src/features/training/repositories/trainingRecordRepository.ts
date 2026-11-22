@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Leitura do registro pelo _id, gravação da execução e do feedback
+// (uma única vez cada) e execuções que esperam feedback.
+//
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Consulta se o treinamento foi agendado para algum dos cavalos
@@ -44,6 +49,7 @@ import type {
   AnyBulkWriteOperation,
   ClientSession,
   Document,
+  Filter,
   IndexDescription,
   ObjectId,
   UpdateFilter,
@@ -56,13 +62,17 @@ import {inPeriod} from "../../../shared/utils/dates";
 import type {DatePeriod} from "../../../shared/utils/dates";
 import type {
   ExecutionCount,
+  ExecutionReport,
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
+  PendingFeedbackRecord,
   PerformedExercise,
   PlanRecordState,
   PlanSessionRecord,
   RecentExecutionRecord,
+  ReportedRecordStatus,
+  TrainingFeedback,
   TrainingRecordDocument,
   TrainingRecordSummary,
   TrainingRecordTraining,
@@ -531,4 +541,122 @@ export async function countTrainerFeedbacks(
     withFeedback: row?.withFeedback ?? 0,
     executed: row?.executed ?? 0,
   };
+}
+
+// Situações com relato possível do atleta.
+export const REPORTED_STATUSES: ReportedRecordStatus[] = [
+  "REALIZADO",
+  "PARCIAL",
+  "NAO_REALIZADO",
+];
+
+// Filtro do relato do atleta: REALIZADO e PARCIAL só existem por relato
+// (mesmo um registro antigo sem 'dataExecucao'); o NAO_REALIZADO precisa de
+// 'dataExecucao', que o encerramento e o cancelamento do plano não gravam.
+const ATHLETE_REPORT: Filter<TrainingRecordDocument> = {
+  $or: [
+    {status: {$in: ["REALIZADO", "PARCIAL"]}},
+    {status: "NAO_REALIZADO", dataExecucao: {$exists: true}},
+  ],
+};
+
+/** Busca o registro inteiro pelo _id, de qualquer situação. Dentro de uma
+ * transação, passe a sessão para a leitura fazer parte dela.
+ * @param {ObjectId} id _id do registro.
+ * @param {ClientSession} session Sessão da transação, se houver.
+ * @return {Promise<TrainingRecordDocument|null>} Registro, ou null.
+ */
+export async function findTrainingRecordById(
+  id: ObjectId,
+  session?: ClientSession
+): Promise<TrainingRecordDocument | null> {
+  const db = await getDatabase();
+  return db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .findOne({_id: id}, {session});
+}
+
+/** Grava a execução, só se o registro ainda estiver PLANEJADO: o filtro
+ * garante, no banco, que a execução é gravada uma única vez (RF09014).
+ * @param {ObjectId} id _id do registro.
+ * @param {ExecutionReport} report Campos da execução.
+ * @param {ClientSession} session Sessão da transação.
+ * @return {Promise<boolean>} Se o registro foi gravado.
+ */
+export async function saveTrainingExecution(
+  id: ObjectId,
+  report: ExecutionReport,
+  session: ClientSession
+): Promise<boolean> {
+  const db = await getDatabase();
+  const result = await db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .updateOne(
+      {_id: id, status: "PLANEJADO"},
+      {$set: {...report, atualizadoEm: new Date()}},
+      {session}
+    );
+  return result.matchedCount === 1;
+}
+
+/** Grava o feedback do treinador do plano, só se o registro tiver relato do
+ * atleta e ainda não tiver feedback: um único feedback, imutável (RF09011,
+ * RF09012), mesmo com envios simultâneos.
+ * @param {ObjectId} id _id do registro.
+ * @param {string} trainerId UID do treinador do plano.
+ * @param {TrainingFeedback} feedback Feedback com a data do servidor.
+ * @return {Promise<boolean>} Se o feedback foi gravado.
+ */
+export async function saveTrainingFeedback(
+  id: ObjectId,
+  trainerId: string,
+  feedback: TrainingFeedback
+): Promise<boolean> {
+  const db = await getDatabase();
+  const result = await db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .updateOne(
+      {
+        "_id": id,
+        "treinador._id": trainerId,
+        "feedback": {$exists: false},
+        ...ATHLETE_REPORT,
+      },
+      {$set: {feedback, atualizadoEm: new Date()}}
+    );
+  return result.matchedCount === 1;
+}
+
+/** Execuções dos planos do treinador que esperam feedback, da mais recente
+ * para a mais antiga. Usa idx_registros_treinador_status (treinador._id,
+ * status, dataExecucao); o filtro do feedback vem depois do índice. No
+ * mesmo dia, desempata pelo envio: 'atualizadoEm' é gravado pela execução
+ * e só volta a mudar com o feedback, que tira o registro da lista.
+ * @param {string} trainerId UID do treinador do plano.
+ * @param {number} limit Quantidade máxima.
+ * @return {Promise<PendingFeedbackRecord[]>} Execuções sem feedback.
+ */
+export async function findPendingFeedbackRecords(
+  trainerId: string,
+  limit: number
+): Promise<PendingFeedbackRecord[]> {
+  const db = await getDatabase();
+  return db
+    .collection<TrainingRecordDocument>(COLLECTIONS.RegistrosTreino)
+    .find({
+      "treinador._id": trainerId,
+      "feedback": {$exists: false},
+      ...ATHLETE_REPORT,
+    })
+    .project<PendingFeedbackRecord>({
+      "status": 1,
+      "dataExecucao": 1,
+      "duracaoEfetivaMinutos": 1,
+      "cavalo.nome": 1,
+      "treinamento.titulo": 1,
+      "responsavel.nome": 1,
+    })
+    .sort({dataExecucao: -1, atualizadoEm: -1, _id: -1})
+    .limit(limit)
+    .toArray();
 }

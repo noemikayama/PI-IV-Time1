@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação dos tipos da execução e do feedback.
+//
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação dos tipos da consulta de detalhes do treinamento.
@@ -40,11 +44,17 @@ export type {
 } from "./training";
 export type {
   ExecutionCount,
+  ExecutionReport,
+  ExerciseCompletion,
   FeedbackCount,
   HorseExecutionCounts,
   NewTrainingRecord,
+  PendingFeedbackRecord,
   PerformedExercise,
   RecentExecutionRecord,
+  RecordAccountRef,
+  ReportedRecordStatus,
+  TrainingFeedback,
   TrainingRecordDocument,
   TrainingRecordStatus,
   TrainingRecordSummary,

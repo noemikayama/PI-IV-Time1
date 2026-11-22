@@ -141,8 +141,8 @@ proprietário da Estrela do Sul.
 | `treinamentos[].status` | `PLANEJADO`, `REALIZADO`, `PARCIAL` ou `NAO_REALIZADO`. Um treino de dia passado que continua `PLANEJADO` no banco sai como `NAO_REALIZADO`. |
 | `treinosDoDia` | Treinos de hoje, na mesma ordem de `treinamentos`, e o `total`. Vêm mesmo quando a semana pedida não é a atual. `nomeTreinador` só vem para o responsável. |
 | `treinosDoDia.treinos[].role` | Cargo do usuário naquele treino: `TREINADOR`, `ATLETA` ou `PROPRIETARIO`. Define o botão: `ATLETA` = "Iniciar treino"; `TREINADOR` e `PROPRIETARIO` = "Ver treino". |
-| `historicoExecucoes` | Até 10 execuções (`REALIZADO` ou `PARCIAL`), da mais recente para a mais antiga, de qualquer data. `data` é a data de execução. Enquanto a execução não for implementada, vem vazio. |
-| `id` (em todas as listas) | `_id` do registro de treino, para as telas futuras ("Ver treino", "Iniciar treino", detalhes da execução). O mesmo treino tem o mesmo `id` em `treinamentos`, `treinosDoDia` e `historicoExecucoes`. |
+| `historicoExecucoes` | Até 10 execuções (`REALIZADO` ou `PARCIAL`), da mais recente para a mais antiga, de qualquer data. `data` é a data de execução. Um `NAO_REALIZADO` registrado pelo atleta não entra. |
+| `id` (em todas as listas) | `_id` do registro de treino. Abre `getTrainingRecord` ("Ver treino", "Iniciar treino", detalhes da execução e feedback; ver [contrato_execucao_feedback.md](contrato_execucao_feedback.md)). O mesmo treino tem o mesmo `id` em `treinamentos`, `treinosDoDia` e `historicoExecucoes`. |
 
 ### Resposta do treinador
 
