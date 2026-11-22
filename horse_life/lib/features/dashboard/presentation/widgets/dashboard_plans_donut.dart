@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ajuste do raio e espessura do donut para ocupar melhor a largura
+// do card sem provocar transbordamento, mantendo rótulos legíveis e centralizados.
+//
 // Data: 30/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Donut reutilizável para status de planos profissionais.
@@ -53,14 +58,19 @@ class DashboardPlansDonut extends StatelessWidget {
           }
 
           final side = constraints.biggest.shortestSide;
-          final outerRadius = side * 0.49;
-          final labelSize = (side * 0.115).clamp(10.0, 22.0).toDouble();
+          // No fl_chart, raio externo total = centerSpaceRadius + section.radius.
+          // Com centerSpaceRadius = side * 0.22 e ringRadius = side * 0.25,
+          // o raio total fica em 0.47 * side (diâmetro 0.94 * side), preenchendo
+          // confortavelmente a largura do widget sem transbordar.
+          final centerSpaceRadius = side * 0.22;
+          final ringRadius = side * 0.25;
+          final labelSize = (side * 0.11).clamp(10.0, 14.0).toDouble();
 
           return PieChart(
             PieChartData(
               startDegreeOffset: -90,
               sectionsSpace: 0,
-              centerSpaceRadius: side * 0.26,
+              centerSpaceRadius: centerSpaceRadius,
               centerSpaceColor: AppColors.whiteSmoke,
               pieTouchData: PieTouchData(enabled: false),
               // A sequência reproduz o Figma: cancelados, concluídos, ativos.
@@ -70,7 +80,7 @@ class DashboardPlansDonut extends StatelessWidget {
                     value: validCancelled,
                     total: total,
                     color: AppColors.inferno,
-                    outerRadius: outerRadius,
+                    ringRadius: ringRadius,
                     labelSize: labelSize,
                   ),
                 if (validCompleted > 0)
@@ -78,7 +88,7 @@ class DashboardPlansDonut extends StatelessWidget {
                     value: validCompleted,
                     total: total,
                     color: AppColors.blueSpruce,
-                    outerRadius: outerRadius,
+                    ringRadius: ringRadius,
                     labelSize: labelSize,
                   ),
                 if (validActive > 0)
@@ -86,7 +96,7 @@ class DashboardPlansDonut extends StatelessWidget {
                     value: validActive,
                     total: total,
                     color: AppColors.pearlAqua,
-                    outerRadius: outerRadius,
+                    ringRadius: ringRadius,
                     labelSize: labelSize,
                   ),
               ],
@@ -102,7 +112,7 @@ class DashboardPlansDonut extends StatelessWidget {
     required int value,
     required int total,
     required Color color,
-    required double outerRadius,
+    required double ringRadius,
     required double labelSize,
   }) {
     // Apenas a representação visual: as quantidades continuam sendo do backend.
@@ -110,9 +120,9 @@ class DashboardPlansDonut extends StatelessWidget {
     return PieChartSectionData(
       value: value.toDouble(),
       color: color,
-      radius: outerRadius,
+      radius: ringRadius,
       title: '${percent.round()}%',
-      titlePositionPercentageOffset: 0.76,
+      titlePositionPercentageOffset: 0.52,
       titleStyle: TextStyle(
         color: Colors.white,
         fontFamily: 'Urbanist',
