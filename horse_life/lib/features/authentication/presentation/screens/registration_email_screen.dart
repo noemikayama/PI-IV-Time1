@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 16/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Substituição de ValueChanged<RegistrationDraft> pelo typedef
@@ -22,7 +18,6 @@
 // Alteração: Criação da etapa de e-mail do cadastro de responsável.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/authentication/data/repositories/firebase_training_sport_repository.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/app_text_form_field.dart';
@@ -42,7 +37,7 @@ typedef RegistrationEmailCallback =
 class RegistrationEmailScreen extends StatefulWidget {
   const RegistrationEmailScreen({
     required this.registration,
-    this.sportRepository = const FirebaseTrainingSportRepository(),
+    this.sportRepository = const LocalTrainingSportRepository(),
     this.registrationController,
     this.onContinue,
     this.onBack,

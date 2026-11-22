@@ -13,7 +13,7 @@
 // para seleção nos dias da semana durante testes locais e de widget.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
+import '../models/training_plan_gallery_item.dart';
 
 /// Catálogo local utilizado para testes isolados da galeria de treinamentos no
 /// cadastro de planos.

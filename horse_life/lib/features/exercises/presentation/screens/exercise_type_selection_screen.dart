@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Propagação de repositório e controller pela árvore de navegação
@@ -18,7 +14,6 @@
 // específico e direcionamento para a trilha de 8 ou 7 etapas.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/exercises/data/repositories/firebase_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -45,7 +40,7 @@ class ExerciseTypeSelectionScreen extends StatefulWidget {
     this.onContinue,
     this.onBack,
     this.registrationController,
-    this.horseRepository = const FirebaseTrainerLinkedHorseRepository(),
+    this.horseRepository = const LocalTrainerLinkedHorseRepository(),
     super.key,
   });
 

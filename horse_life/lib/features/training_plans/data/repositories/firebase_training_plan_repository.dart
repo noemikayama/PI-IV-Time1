@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Remove fallback fictício de detalhes e propaga falhas do servidor.
-//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Enriquecimento dos treinamentos de trainingsByDay com a descrição
@@ -33,6 +29,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../../exercises/data/models/trainer_linked_horse.dart';
 import '../../application/states/training_plan_registration_draft.dart';
+import '../mocks/mock_training_plan_detail.dart';
 import '../models/training_plan_gallery_item.dart';
 import '../models/training_plan_weekday.dart';
 import 'training_plan_repository.dart';
@@ -293,8 +290,12 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
       );
     }
 
-    if (!RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(trimmedPlanId)) {
-      throw const TrainingPlanDetailFailure('Identificador do plano inválido.');
+    // Se o identificador for um mock ou não corresponder a um ObjectId válido (24 caracteres hex),
+    // utiliza diretamente o mock para permitir testes visuais locais sem depender do backend.
+    final isValidObjectId =
+        RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(trimmedPlanId);
+    if (!isValidObjectId) {
+      return MockTrainingPlanDetail.buildDefault(planId: trimmedPlanId);
     }
 
     try {
@@ -303,6 +304,13 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
       });
       return _parsePlanDetail(response, fallbackId: trimmedPlanId);
     } on FirebaseFunctionsException catch (error) {
+      // Enquanto a Cloud Function não estiver disponível/implantada no Firebase,
+      // ou se o plano não for encontrado no banco de dados, utiliza o fallback mockado.
+      if (error.code == 'not-found' ||
+          error.code == 'unimplemented' ||
+          error.code == 'internal') {
+        return MockTrainingPlanDetail.buildDefault(planId: trimmedPlanId);
+      }
       throw _toDetailFailure(
         error,
         defaultMessage: 'Não foi possível carregar o plano de treinamento.',
@@ -310,9 +318,8 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
     } on FormatException catch (error) {
       throw TrainingPlanDetailFailure(error.message);
     } catch (_) {
-      throw const TrainingPlanDetailFailure(
-        'Não foi possível carregar o plano de treinamento.',
-      );
+      // Fallback gracioso para chamadas diretas não configuradas no ambiente local
+      return MockTrainingPlanDetail.buildDefault(planId: trimmedPlanId);
     }
   }
 

@@ -2,11 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Exige persistência real também quando a tela é aberta diretamente.
-//
-//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Propagação do identificador real do exercício criado via
@@ -56,7 +51,6 @@ import '../../application/states/exercise_media.dart';
 import '../../application/states/exercise_registration_draft.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/exercise_registration_repository.dart';
-import '../../data/repositories/firebase_exercise_registration_repository.dart';
 import '../routes/exercise_registration_flow_route.dart';
 
 typedef ExerciseConfirmationSubmittedCallback =
@@ -235,25 +229,25 @@ class _ExerciseConfirmationScreenState
       return;
     }
 
-    final controller = widget.registrationController ??
-        ExerciseRegistrationController(FirebaseExerciseRegistrationRepository());
+    final controller = widget.registrationController;
     setState(() => _isSubmitting = true);
     try {
-      final result = await controller.registerExercise(draft: updatedDraft);
-      if (!mounted) return;
-      if (result.id.trim().isEmpty) {
-        throw const ExerciseRegistrationFailure('O servidor não confirmou o cadastro.');
+      String? createdExerciseId;
+      if (controller != null) {
+        final result = await controller.registerExercise(draft: updatedDraft);
+        createdExerciseId = result.id;
+        if (!mounted) return;
+        if (result.hasMediaWarning) {
+          AppSnackBar.show(
+            context,
+            backgroundColor: AppColors.error,
+            icon: Icons.warning_amber_rounded,
+            message: result.warning!,
+          );
+        }
       }
-      if (result.hasMediaWarning) {
-        AppSnackBar.show(
-          context,
-          backgroundColor: AppColors.error,
-          icon: Icons.warning_amber_rounded,
-          message: result.warning!,
-        );
-      }
       if (!mounted) return;
-      _finishRegistration(updatedDraft, result.id);
+      _finishRegistration(updatedDraft, createdExerciseId);
     } on ExerciseRegistrationFailure catch (error) {
       if (!mounted) return;
       _showError(error.message);

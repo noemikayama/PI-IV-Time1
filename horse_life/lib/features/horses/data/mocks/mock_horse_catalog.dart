@@ -1,10 +1,6 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
-//
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Renomeia o catálogo local permanente; modalidades vêm do servidor.
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Catálogos locais permanentes de raças e pelagens, com busca
@@ -14,7 +10,7 @@
 /// Listas locais permanentes para os campos de raça e pelagem.
 /// Não são obtidas, validadas nem substituídas por dados do servidor.
 /// Seleção ilustrativa, não é um catálogo oficial exaustivo.
-abstract final class HorseCatalog {
+abstract final class MockHorseCatalog {
   static const breeds = <String>[
     'Andaluz',
     'Árabe',
@@ -64,6 +60,17 @@ abstract final class HorseCatalog {
     'Tordilha',
     'Tordilha clara',
     'Tordilha escura',
+  ];
+
+  static const modalityNames = <String>[
+    'Adestramento',
+    'Enduro',
+    'Hipismo completo',
+    'Laço comprido',
+    'Rédeas',
+    'Salto',
+    'Três tambores',
+    'Vaquejada',
   ];
 
   static String normalized(String source) {

@@ -9,10 +9,6 @@
 // busca, remoção, estado vazio, retorno da criação e navegação para revisão.
 // -----------------------------------------------------------------------------
 
-import '../../../support/features/training_plans/data/repositories/local_training_plan_repository.dart';
-import '../../../support/features/trainings/data/repositories/local_training_registration_repository.dart';
-import '../../../support/features/trainings/data/repositories/local_training_exercise_gallery_repository.dart';
-import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
@@ -20,6 +16,7 @@ import 'package:horse_life/features/exercises/data/models/exercise_type.dart';
 import 'package:horse_life/features/exercises/data/models/trainer_linked_horse.dart';
 import 'package:horse_life/features/training_plans/application/controllers/training_plan_registration_controller.dart';
 import 'package:horse_life/features/training_plans/application/states/training_plan_registration_draft.dart';
+import 'package:horse_life/features/training_plans/data/repositories/training_plan_repository.dart';
 import 'package:horse_life/features/training_plans/presentation/screens/training_plan_confirmation_screen.dart';
 import 'package:horse_life/features/training_plans/presentation/screens/training_plan_trainings_screen.dart';
 import 'package:horse_life/features/trainings/application/controllers/training_registration_controller.dart';
@@ -55,7 +52,7 @@ void main() {
     'renders 7 weekdays, requires at least one training, selects from gallery, removes and advances to review',
     (tester) async {
       await tester.pumpWidget(
-        buildApp(TrainingPlanTrainingsScreen(controller: TrainingPlanRegistrationController(horseRepository: const LocalTrainerLinkedHorseRepository(), planRepository: const LocalTrainingPlanRepository()), draft: buildSampleDraft())),
+        buildApp(TrainingPlanTrainingsScreen(draft: buildSampleDraft())),
       );
 
       expect(find.text('Seleção de\ntreinamentos'), findsOneWidget);
@@ -139,7 +136,7 @@ void main() {
   testWidgets(
     'shows empty gallery state when no trainings exist and navigates to create training',
     (tester) async {
-      final controller = TrainingPlanRegistrationController(horseRepository: const LocalTrainerLinkedHorseRepository(),
+      final controller = TrainingPlanRegistrationController(
         planRepository: const LocalTrainingPlanRepository(trainings: []),
       );
 
@@ -173,10 +170,10 @@ void main() {
   testWidgets(
     'returns from training creation and assigns created training to weekday',
     (tester) async {
-      final planController = TrainingPlanRegistrationController(horseRepository: const LocalTrainerLinkedHorseRepository(),
+      final planController = TrainingPlanRegistrationController(
         planRepository: const LocalTrainingPlanRepository(trainings: []),
       );
-      final trainingController = TrainingRegistrationController(galleryRepository: const LocalTrainingExerciseGalleryRepository(), horseRepository: const LocalTrainerLinkedHorseRepository(), registrationRepository: const LocalTrainingRegistrationRepository());
+      final trainingController = TrainingRegistrationController();
 
       await tester.pumpWidget(
         buildApp(

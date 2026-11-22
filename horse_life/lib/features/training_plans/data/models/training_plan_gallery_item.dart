@@ -2,11 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Exige identificador confirmado pela persistência, sem ID fictício.
-//
-//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição da descrição opcional no item de treinamento para
@@ -41,14 +36,14 @@ final class TrainingPlanGalleryItem {
   /// na mesma sessão.
   factory TrainingPlanGalleryItem.fromTrainingDraft(
     TrainingRegistrationDraft draft, {
-    required String id,
-    required int code,
+    String? id,
+    int? code,
   }) {
     final trimmedTitle = draft.title.trim();
     final trimmedDescription = draft.description.trim();
     return TrainingPlanGalleryItem(
-      id: id,
-      code: code,
+      id: id ?? 'local-${trimmedTitle.toLowerCase()}',
+      code: code ?? 0,
       title: trimmedTitle,
       estimatedDurationMinutes: draft.estimatedDurationMinutes ?? 0,
       description: trimmedDescription.isEmpty ? null : trimmedDescription,

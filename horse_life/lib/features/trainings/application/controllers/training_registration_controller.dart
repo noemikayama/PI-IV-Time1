@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do callback opcional onTrainingCreated e do método
@@ -23,9 +19,6 @@
 // sincronização de exercícios criados durante a mesma sessão.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/trainings/data/repositories/firebase_training_registration_repository.dart';
-import 'package:horse_life/features/trainings/data/repositories/firebase_training_exercise_gallery_repository.dart';
-import 'package:horse_life/features/exercises/data/repositories/firebase_trainer_linked_horse_repository.dart';
 import '../../../exercises/application/states/exercise_registration_draft.dart';
 import '../../../exercises/data/models/exercise_type.dart';
 import '../../../exercises/data/models/trainer_linked_horse.dart';
@@ -40,11 +33,11 @@ import '../states/training_registration_draft.dart';
 class TrainingRegistrationController {
   TrainingRegistrationController({
     TrainingExerciseGalleryRepository galleryRepository =
-        const FirebaseTrainingExerciseGalleryRepository(),
+        const LocalTrainingExerciseGalleryRepository(),
     TrainerLinkedHorseRepository horseRepository =
-        const FirebaseTrainerLinkedHorseRepository(),
+        const LocalTrainerLinkedHorseRepository(),
     TrainingRegistrationRepository registrationRepository =
-        const FirebaseTrainingRegistrationRepository(),
+        const LocalTrainingRegistrationRepository(),
     this.onTrainingCreated,
   }) : _galleryRepository = galleryRepository,
        _horseRepository = horseRepository,
@@ -96,7 +89,7 @@ class TrainingRegistrationController {
   /// a próxima consulta remota é consolidada.
   TrainingExerciseItem recordCreatedExerciseFromDraft(
     ExerciseRegistrationDraft draft, {
-    required String id,
+    String? id,
   }) {
     final item = TrainingExerciseItem.fromExerciseDraft(draft, id: id);
     final alreadyStored = _sessionCreatedExercises.any(

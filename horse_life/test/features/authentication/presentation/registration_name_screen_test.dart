@@ -12,7 +12,6 @@
 // Alteração: Criação dos testes da primeira etapa do cadastro.
 // -----------------------------------------------------------------------------
 
-import '../../../support/features/authentication/data/repositories/local_training_sport_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
@@ -53,7 +52,7 @@ void main() {
 
   // Configuração fixa do fluxo profissional.
   testWidgets('shows the trainer progress with eight steps', (tester) async {
-    await tester.pumpWidget(buildApp(const RegistrationNameScreen.trainer(sportRepository: const LocalTrainingSportRepository())));
+    await tester.pumpWidget(buildApp(const RegistrationNameScreen.trainer()));
 
     expect(find.bySemanticsLabel('Etapa 1 de 8'), findsOneWidget);
     expect(
@@ -125,7 +124,7 @@ void main() {
   testWidgets('opens the trainer email step with eight progress steps', (
     tester,
   ) async {
-    await tester.pumpWidget(buildApp(const RegistrationNameScreen.trainer(sportRepository: const LocalTrainingSportRepository())));
+    await tester.pumpWidget(buildApp(const RegistrationNameScreen.trainer()));
 
     await tester.enterText(find.byType(TextFormField).first, 'Ana');
     await tester.enterText(find.byType(TextFormField).last, 'Silva');

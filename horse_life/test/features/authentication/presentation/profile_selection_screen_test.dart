@@ -12,7 +12,6 @@
 // Alteração: Criação dos testes da seleção e propagação do tipo de usuário.
 // -----------------------------------------------------------------------------
 
-import '../../../support/features/authentication/data/repositories/local_training_sport_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
@@ -30,7 +29,7 @@ void main() {
   testWidgets('shows both supported profiles and the explanatory content', (
     tester,
   ) async {
-    await tester.pumpWidget(buildApp(const ProfileSelectionScreen(trainerSportRepository: const LocalTrainingSportRepository())));
+    await tester.pumpWidget(buildApp(const ProfileSelectionScreen()));
 
     expect(find.text('Seleção de perfil'), findsOneWidget);
     expect(find.textContaining('Antes dos próximos passos'), findsOneWidget);
@@ -54,7 +53,7 @@ void main() {
 
     await tester.pumpWidget(
       buildApp(
-        ProfileSelectionScreen(trainerSportRepository: const LocalTrainingSportRepository(), onContinue: (type) => receivedType = type),
+        ProfileSelectionScreen(onContinue: (type) => receivedType = type),
       ),
     );
 
@@ -75,7 +74,7 @@ void main() {
 
     await tester.pumpWidget(
       buildApp(
-        ProfileSelectionScreen(trainerSportRepository: const LocalTrainingSportRepository(), onContinue: (type) => receivedType = type),
+        ProfileSelectionScreen(onContinue: (type) => receivedType = type),
       ),
     );
 
@@ -90,7 +89,7 @@ void main() {
   testWidgets('opens the guardian registration when no flow is injected', (
     tester,
   ) async {
-    await tester.pumpWidget(buildApp(const ProfileSelectionScreen(trainerSportRepository: const LocalTrainingSportRepository())));
+    await tester.pumpWidget(buildApp(const ProfileSelectionScreen()));
 
     final continueButton = find.byKey(const Key('continue-profile-selection'));
     await tester.ensureVisible(continueButton);
@@ -106,7 +105,7 @@ void main() {
   testWidgets('opens the trainer registration with eight progress steps', (
     tester,
   ) async {
-    await tester.pumpWidget(buildApp(const ProfileSelectionScreen(trainerSportRepository: const LocalTrainingSportRepository())));
+    await tester.pumpWidget(buildApp(const ProfileSelectionScreen()));
 
     await tester.tap(find.byKey(const Key('profile-dropdown')));
     await tester.pumpAndSettle();

@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Retorno automático para a tela anterior com atualização de estado
@@ -19,7 +15,6 @@
 // edição e cancelamento integradas ao repositório.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/exercises/data/repositories/firebase_trainer_linked_horse_repository.dart';
 import 'dart:async';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -53,7 +48,7 @@ class TrainingPlanDetailScreen extends StatefulWidget {
     this.currentUserId,
     this.isTrainer = false,
     this.repository = const FirebaseTrainingPlanRepository(),
-    this.horseRepository = const FirebaseTrainerLinkedHorseRepository(),
+    this.horseRepository = const LocalTrainerLinkedHorseRepository(),
     this.trainingRegistrationController,
     this.onOpenTrainingAgenda,
     this.onViewTrainingDetails,
@@ -258,162 +253,165 @@ class _TrainingPlanDetailScreenState extends State<TrainingPlanDetailScreen> {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      bottomNavigationBar: HomeBottomNavBar(
-        selectedDestination: HomeNavigationDestination.trainings,
-        onDestinationSelected: _selectNavigationDestination,
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: FutureBuilder<TrainingPlanDetailData>(
-                future: _planFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState != ConnectionState.done) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError || !snapshot.hasData) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
-                          child: AuthHeader(onBack: _goBack),
-                        ),
-                        Expanded(
-                          child: _LoadError(
-                            message: _errorMessage(snapshot.error),
-                            retry: _reload,
+        bottomNavigationBar: HomeBottomNavBar(
+          selectedDestination: HomeNavigationDestination.trainings,
+          onDestinationSelected: _selectNavigationDestination,
+        ),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: FutureBuilder<TrainingPlanDetailData>(
+                  future: _planFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+                            child: AuthHeader(onBack: _goBack),
                           ),
-                        ),
-                      ],
-                    );
-                  }
-
-                  final plan = snapshot.data!;
-                  final canManage = plan.canManage(
-                    currentUserId: widget.currentUserId,
-                    isTrainer: widget.isTrainer,
-                  );
-                  final entries = plan.selectedWeekdayEntries;
-                  final safeIndex = entries.isEmpty
-                      ? 0
-                      : _currentTrainingIndex.clamp(0, entries.length - 1);
-
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 620),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            AuthHeader(onBack: _goBack),
-                            const SizedBox(height: 24),
-                            Text(
-                              plan.title,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.displaySmall
-                                  ?.copyWith(fontWeight: FontWeight.w800),
+                          Expanded(
+                            child: _LoadError(
+                              message: _errorMessage(snapshot.error),
+                              retry: _reload,
                             ),
-                            if (canManage) ...[
-                              const SizedBox(height: 22),
-                              _ManagementActionsRow(
-                                isActive: plan.isActive,
-                                onEdit: () => _editPlan(plan),
-                                onCancel: () => _requestCancelPlan(plan),
+                          ),
+                        ],
+                      );
+                    }
+
+                    final plan = snapshot.data!;
+                    final canManage = plan.canManage(
+                      currentUserId: widget.currentUserId,
+                      isTrainer: widget.isTrainer,
+                    );
+                    final entries = plan.selectedWeekdayEntries;
+                    final safeIndex = entries.isEmpty
+                        ? 0
+                        : _currentTrainingIndex.clamp(0, entries.length - 1);
+
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 620),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              AuthHeader(onBack: _goBack),
+                              const SizedBox(height: 24),
+                              Text(
+                                plan.title,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.displaySmall
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                              if (canManage) ...[
+                                const SizedBox(height: 22),
+                                _ManagementActionsRow(
+                                  isActive: plan.isActive,
+                                  onEdit: () => _editPlan(plan),
+                                  onCancel: () => _requestCancelPlan(plan),
+                                ),
+                              ],
+                              const SizedBox(height: 24),
+                              CollapsibleSectionCard(
+                                key: const Key('training-plan-data-section'),
+                                title: 'Dados do plano',
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _DetailInfoLine('Título', plan.title),
+                                    _DetailInfoLine('Objetivo', plan.objective),
+                                    _DetailInfoLine(
+                                      'Início',
+                                      formatAppDate(plan.startDate),
+                                    ),
+                                    _DetailInfoLine(
+                                      'Fim',
+                                      formatAppDate(plan.endDate),
+                                    ),
+                                    _DetailInfoLine(
+                                      'Cavalo vinculado',
+                                      plan.horse.name,
+                                    ),
+                                    if (!canManage &&
+                                        plan.trainerName.trim().isNotEmpty)
+                                      _DetailInfoLine(
+                                        'Treinador',
+                                        plan.trainerName,
+                                      ),
+                                    _DetailInfoLine(
+                                      'Status',
+                                      plan.status.label,
+                                      bottomPadding: 0,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              CollapsibleSectionCard(
+                                key: const Key(
+                                  'training-plan-weekly-trainings-section',
+                                ),
+                                title: 'Treinos da semana',
+                                child: _WeeklyTrainingsSectionContent(
+                                  entries: entries,
+                                  currentIndex: safeIndex,
+                                  onIndexChanged: (index) => setState(
+                                    () => _currentTrainingIndex = index,
+                                  ),
+                                  onViewAll: _openTrainingAgenda,
+                                  onViewDetails: _handleViewTrainingDetails,
+                                ),
+                              ),
+                              CollapsibleSectionCard(
+                                key: const Key(
+                                  'training-plan-evaluation-section',
+                                ),
+                                title: 'Avaliação vinculada',
+                                margin: EdgeInsets.zero,
+                                child: const _LinkedEvaluationEmptyState(),
                               ),
                             ],
-                            const SizedBox(height: 24),
-                            CollapsibleSectionCard(
-                              key: const Key('training-plan-data-section'),
-                              title: 'Dados do plano',
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _DetailInfoLine('Título', plan.title),
-                                  _DetailInfoLine('Objetivo', plan.objective),
-                                  _DetailInfoLine(
-                                    'Início',
-                                    formatAppDate(plan.startDate),
-                                  ),
-                                  _DetailInfoLine(
-                                    'Fim',
-                                    formatAppDate(plan.endDate),
-                                  ),
-                                  _DetailInfoLine(
-                                    'Cavalo vinculado',
-                                    plan.horse.name,
-                                  ),
-                                  if (!canManage &&
-                                      plan.trainerName.trim().isNotEmpty)
-                                    _DetailInfoLine(
-                                      'Treinador',
-                                      plan.trainerName,
-                                    ),
-                                  _DetailInfoLine(
-                                    'Status',
-                                    plan.status.label,
-                                    bottomPadding: 0,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            CollapsibleSectionCard(
-                              key: const Key(
-                                'training-plan-weekly-trainings-section',
-                              ),
-                              title: 'Treinos da semana',
-                              child: _WeeklyTrainingsSectionContent(
-                                entries: entries,
-                                currentIndex: safeIndex,
-                                onIndexChanged: (index) => setState(
-                                  () => _currentTrainingIndex = index,
-                                ),
-                                onViewAll: _openTrainingAgenda,
-                                onViewDetails: _handleViewTrainingDetails,
-                              ),
-                            ),
-                            CollapsibleSectionCard(
-                              key: const Key(
-                                'training-plan-evaluation-section',
-                              ),
-                              title: 'Avaliação vinculada',
-                              margin: EdgeInsets.zero,
-                              child: const _LinkedEvaluationEmptyState(),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
-            if (_isProcessingAction) ...[
-              const Positioned.fill(
-                child: ModalBarrier(dismissible: false, color: Colors.black26),
-              ),
-              const Center(
-                child: Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: SizedBox(
-                      key: Key('cancel-training-plan-progress'),
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(),
+              if (_isProcessingAction) ...[
+                const Positioned.fill(
+                  child: ModalBarrier(
+                    dismissible: false,
+                    color: Colors.black26,
+                  ),
+                ),
+                const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(24),
+                      child: SizedBox(
+                        key: Key('cancel-training-plan-progress'),
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _ManagementActionsRow extends StatelessWidget {
@@ -583,9 +581,13 @@ class _WeeklyTrainingsSectionContent extends StatelessWidget {
             }
           },
           onHorizontalDragUpdate: (details) {
-            if (details.primaryDelta != null && details.primaryDelta! < -20 && currentIndex < entries.length - 1) {
+            if (details.primaryDelta != null &&
+                details.primaryDelta! < -20 &&
+                currentIndex < entries.length - 1) {
               onIndexChanged(currentIndex + 1);
-            } else if (details.primaryDelta != null && details.primaryDelta! > 20 && currentIndex > 0) {
+            } else if (details.primaryDelta != null &&
+                details.primaryDelta! > 20 &&
+                currentIndex > 0) {
               onIndexChanged(currentIndex - 1);
             }
           },
@@ -656,11 +658,7 @@ class _LinkedEvaluationEmptyState extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(
-                Icons.block_outlined,
-                size: 32,
-                color: AppColors.text,
-              ),
+              const Icon(Icons.block_outlined, size: 32, color: AppColors.text),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(

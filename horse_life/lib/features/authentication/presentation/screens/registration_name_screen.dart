@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Propagação da fonte remota de modalidades no fluxo profissional.
@@ -21,7 +17,6 @@
 // Alteração: Criação da primeira etapa de identificação do cadastro.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/authentication/data/repositories/firebase_training_sport_repository.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/app_text_form_field.dart';
@@ -45,14 +40,14 @@ class RegistrationNameScreen extends StatefulWidget {
     this.registrationController,
     super.key,
   }) : userType = UserType.guardian,
-       sportRepository = const FirebaseTrainingSportRepository(),
+       sportRepository = const LocalTrainingSportRepository(),
        progressConfiguration = RegistrationProgressConfiguration.guardian;
 
   const RegistrationNameScreen.trainer({
     this.onContinue,
     this.onBack,
     this.registrationController,
-    this.sportRepository = const FirebaseTrainingSportRepository(),
+    this.sportRepository = const LocalTrainingSportRepository(),
     super.key,
   }) : userType = UserType.trainer,
        progressConfiguration = RegistrationProgressConfiguration.trainer;

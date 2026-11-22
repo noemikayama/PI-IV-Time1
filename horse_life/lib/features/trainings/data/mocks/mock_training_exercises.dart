@@ -9,8 +9,8 @@
 // -----------------------------------------------------------------------------
 
 import '../../../exercises/data/mocks/mock_trainer_linked_horses.dart';
-import 'package:horse_life/features/exercises/data/models/exercise_type.dart';
-import 'package:horse_life/features/trainings/data/models/training_exercise_item.dart';
+import '../../../exercises/data/models/exercise_type.dart';
+import '../models/training_exercise_item.dart';
 
 /// Catálogo local utilizado para testes isolados da galeria e seleção de
 /// exercícios no formulário de treinamentos.

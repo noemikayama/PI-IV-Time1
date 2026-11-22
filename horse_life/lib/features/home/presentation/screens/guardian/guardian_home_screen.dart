@@ -2,14 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Remove cenários simulados e dados temporários da Home.
-//
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Integração do histórico da agenda conectada à consulta real de feedback.
-//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção e detalhamento da documentação do fluxo conectado da
@@ -154,7 +146,6 @@
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
@@ -191,6 +182,7 @@ import '../../widgets/guardian_home_content.dart';
 class GuardianHomeScreen extends StatefulWidget {
   const GuardianHomeScreen({
     required this.onLogout,
+    this.mockScenario,
     this.loader,
     this.dashboardRepository,
     this.onRegisterHorse,
@@ -205,6 +197,9 @@ class GuardianHomeScreen extends StatefulWidget {
     super.key,
   });
 
+  // Use normal, empty ou completed nos testes. Null usa os dados reais.
+  final String? mockScenario;
+
   /// Carregador da Home. Quando ausente, usa a composição padrão.
   final HomeLoader<GuardianHomeData>? loader;
 
@@ -215,6 +210,7 @@ class GuardianHomeScreen extends StatefulWidget {
   final VoidCallback? onRegisterHorse;
 
   /// Repositório opcional para testes; normalmente, usa Firebase.
+  /// Se mockScenario estiver ativo, utiliza o repositório simulado.
   final HorseRegistrationRepository? horseRegistrationRepository;
 
   /// Fonte injetável do perfil, usada principalmente em testes e composições.
@@ -241,12 +237,15 @@ class GuardianHomeScreen extends StatefulWidget {
 }
 
 class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
+  // A fonte real é usada por padrão; cenários mock ficam restritos aos testes.
 
   // Estado local da navegação inferior.
   HomeNavigationDestination _selectedDestination =
       HomeNavigationDestination.home;
   late Future<GuardianHomeData> _homeFuture;
 
+  // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
+  final List<String> _sessionMockHorses = [];
   late HomeLoader<GuardianHomeData> _loader;
   bool _isOpeningHorseProfile = false;
 
@@ -319,7 +318,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   void _configureLoader() {
     _loader =
         widget.loader ??
-        HomeComposition.guardian();
+        HomeComposition.guardian(mockScenario: widget.mockScenario);
   }
 
   /// Cadastro real pela rota já existente de features/horses.
@@ -364,7 +363,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   @override
   void didUpdateWidget(covariant GuardianHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.loader != widget.loader ||
+    if (oldWidget.mockScenario != widget.mockScenario ||
+        oldWidget.loader != widget.loader ||
         oldWidget.guardianProfileLoader != widget.guardianProfileLoader) {
       _configureLoader();
       _homeFuture = _fetchHome();
@@ -374,16 +374,6 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
   // Usa a agenda completa quando o carregador foi injetado. A adaptação local
   // preserva a API pública da Home para os fluxos de iniciar e consultar treino.
-  Future<void> _openExecutionRecord(TrainingAgendaEntry entry) async {
-    final destination = await Navigator.of(context).push(
-      TrainingFeedbackRoute.fromAgenda(
-        entry: entry,
-        audience: TrainingAgendaAudience.guardian,
-      ),
-    );
-    if (mounted && destination != null) _onNavigationDestination(destination);
-  }
-
   Widget _buildTrainingAgenda() {
     final agendaLoader = widget.agendaLoader;
     if (agendaLoader != null) {
@@ -407,7 +397,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             ? null
             : (entry) => widget.onViewTraining!(toGuardianTraining(entry)),
         onViewHistory: widget.onViewTraining == null
-            ? _openExecutionRecord
+            ? null
             : (entry) => widget.onViewTraining!(toGuardianTraining(entry)),
       );
     }
@@ -632,6 +622,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         _ => GuardianHomeContent(
           homeFuture: _homeFuture,
           onRetry: _retryHome,
+          sessionMockHorses: _sessionMockHorses,
           onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           onSelectHorse: _openHorseProfile,
         ),

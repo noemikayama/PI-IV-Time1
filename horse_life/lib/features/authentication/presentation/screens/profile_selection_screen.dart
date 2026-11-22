@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Resolução do controller correspondente ao perfil escolhido.
@@ -25,7 +21,6 @@
 // Alteração: Criação da seleção de perfil que antecede os fluxos de cadastro.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/authentication/data/repositories/firebase_training_sport_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/features/authentication/presentation/widgets/profile_information_row.dart';
 
@@ -97,7 +92,7 @@ class _ProfileSelectionScreenState extends State<ProfileSelectionScreen> {
         registrationController: registrationController,
         sportRepository:
             widget.trainerSportRepository ??
-            const FirebaseTrainingSportRepository(),
+            const LocalTrainingSportRepository(),
       ),
     };
 

@@ -2,14 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Remove cenários simulados e dados temporários da Home.
-//
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Integração do histórico da agenda conectada à consulta real de feedback.
-//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do carregador conectado da agenda profissional e da
@@ -104,7 +96,6 @@
 // compartilhadas, Sidebar exclusiva, Mock API e três cenários de testes.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
@@ -148,6 +139,7 @@ class TrainerHomeScreen extends StatefulWidget {
   const TrainerHomeScreen({
     super.key,
     required this.onLogout,
+    this.mockScenario,
     this.loader,
     this.dashboardRepository,
     this.repository,
@@ -182,6 +174,8 @@ class TrainerHomeScreen extends StatefulWidget {
   });
 
   // --- Fontes de dados -------------------------------------------------------
+  /// `null` usa o Firebase; os demais cenários habilitam dados simulados.
+  final String? mockScenario;
 
   /// Preferencialmente injetado pela raiz do aplicativo.
   final HomeLoader<TrainerHomeData>? loader;
@@ -341,6 +335,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     _loader =
         widget.loader ??
         HomeComposition.trainer(
+          mockScenario: widget.mockScenario,
           repository: widget.repository,
         );
   }
@@ -371,7 +366,8 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   @override
   void didUpdateWidget(covariant TrainerHomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.repository != oldWidget.repository ||
+    if (widget.mockScenario != oldWidget.mockScenario ||
+        widget.repository != oldWidget.repository ||
         widget.loader != oldWidget.loader) {
       _configureLoader();
       _homeFuture = _fetchHome();
@@ -380,16 +376,6 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
   // Prioriza a resposta completa da agenda quando disponível e converte cada
   // item consultado para o modelo que a Home já expõe aos seus consumidores.
-  Future<void> _openExecutionRecord(TrainingAgendaEntry entry) async {
-    final destination = await Navigator.of(context).push(
-      TrainingFeedbackRoute.fromAgenda(
-        entry: entry,
-        audience: TrainingAgendaAudience.trainer,
-      ),
-    );
-    if (mounted && destination != null) _onNavigationDestination(destination);
-  }
-
   Widget _buildTrainingAgenda() {
     final agendaLoader = widget.agendaLoader;
     if (agendaLoader != null) {
@@ -411,7 +397,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
                 ),
               ),
         onViewHistory: widget.onViewTraining == null
-            ? _openExecutionRecord
+            ? null
             : (entry) => widget.onViewTraining!(
                 TrainerTraining(
                   id: entry.id,

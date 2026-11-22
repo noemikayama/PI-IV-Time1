@@ -13,14 +13,13 @@
 // semanal, empty state de avaliação, cancelamento com modal e edição integrada.
 // -----------------------------------------------------------------------------
 
-import '../../../support/features/training_plans/data/repositories/local_training_plan_repository.dart';
-import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/exercises/data/models/trainer_linked_horse.dart';
-import '../../../support/features/training_plans/data/mocks/mock_training_plan_gallery.dart';
+import 'package:horse_life/features/exercises/data/repositories/trainer_linked_horse_repository.dart';
+import 'package:horse_life/features/training_plans/data/mocks/mock_training_plan_gallery.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_detail_data.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_weekday.dart';
@@ -107,7 +106,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingPlanDetailScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
+          TrainingPlanDetailScreen(
             planId: 'plan-1',
             currentUserId: 'trainer-1',
             isTrainer: true,
@@ -184,7 +183,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingPlanDetailScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
+          TrainingPlanDetailScreen(
             planId: 'plan-1',
             currentUserId: 'trainer-1',
             isTrainer: true,
@@ -213,7 +212,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingPlanDetailScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
+          TrainingPlanDetailScreen(
             planId: 'plan-1',
             currentUserId: 'guardian-1',
             isTrainer: false,
@@ -232,7 +231,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingPlanDetailScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
+          TrainingPlanDetailScreen(
             planId: 'plan-1',
             currentUserId: 'trainer-other',
             isTrainer: true,
@@ -261,7 +260,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingPlanDetailScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
+          TrainingPlanDetailScreen(
             planId: 'plan-1',
             currentUserId: 'trainer-1',
             isTrainer: true,
@@ -377,7 +376,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingPlanDetailScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
+          TrainingPlanDetailScreen(
             planId: 'plan-1',
             currentUserId: 'trainer-1',
             isTrainer: true,
@@ -420,7 +419,7 @@ void main() {
                 onPressed: () async {
                   poppedResult = await Navigator.of(context).push<dynamic>(
                     MaterialPageRoute<dynamic>(
-                      builder: (_) => TrainingPlanDetailScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
+                      builder: (_) => TrainingPlanDetailScreen(
                         planId: 'plan-1',
                         currentUserId: 'trainer-1',
                         isTrainer: true,

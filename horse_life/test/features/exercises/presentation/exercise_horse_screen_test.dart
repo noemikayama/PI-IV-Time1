@@ -8,7 +8,6 @@
 // transição para a definição do nome na segunda etapa do fluxo específico.
 // -----------------------------------------------------------------------------
 
-import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
@@ -23,7 +22,7 @@ void main() {
   testWidgets('displays linked horses in dropdown and advances to step 2 of 8', (
     tester,
   ) async {
-    await tester.pumpWidget(buildApp(const ExerciseHorseScreen(horseRepository: const LocalTrainerLinkedHorseRepository())));
+    await tester.pumpWidget(buildApp(const ExerciseHorseScreen()));
     await tester.pumpAndSettle();
 
     expect(find.text('Cavalo vinculado'), findsOneWidget);

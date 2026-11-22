@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da terceira etapa do cadastro de planos de treinamento
@@ -13,7 +9,6 @@
 // diálogo de bloqueio quando sem vínculos e avançando para data de início.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/exercises/data/repositories/firebase_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_dropdown_field.dart';
@@ -37,7 +32,7 @@ class TrainingPlanHorseScreen extends StatefulWidget {
   const TrainingPlanHorseScreen({
     required this.draft,
     this.controller,
-    this.horseRepository = const FirebaseTrainerLinkedHorseRepository(),
+    this.horseRepository = const LocalTrainerLinkedHorseRepository(),
     this.initialHorses,
     this.initialSelectedHorse,
     this.onContinue,
@@ -78,7 +73,9 @@ class _TrainingPlanHorseScreenState extends State<TrainingPlanHorseScreen> {
     _loadHorses();
   }
 
-  TrainerLinkedHorse? _resolveInitialSelection(List<TrainerLinkedHorse> horses) {
+  TrainerLinkedHorse? _resolveInitialSelection(
+    List<TrainerLinkedHorse> horses,
+  ) {
     final candidate = widget.initialSelectedHorse ?? widget.draft.horse;
     if (candidate == null) return null;
     for (final horse in horses) {

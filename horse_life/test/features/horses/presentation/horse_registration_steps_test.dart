@@ -43,7 +43,7 @@ import 'package:horse_life/core/widgets/form_progress_indicator.dart';
 import 'package:horse_life/core/widgets/information_row.dart';
 import 'package:horse_life/features/horses/data/models/horse_registration_draft.dart';
 import 'package:horse_life/features/horses/data/repositories/horse_microchip_validator.dart';
-import '../../../support/features/horses/data/repositories/mock_horse_registration_repository.dart';
+import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_registration_screen.dart';
 import 'package:horse_life/features/horses/presentation/services/horse_image_selection_service.dart';
 import 'package:horse_life/features/horses/presentation/widgets/horse_injury_dialog.dart';

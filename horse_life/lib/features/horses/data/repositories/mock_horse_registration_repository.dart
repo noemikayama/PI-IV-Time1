@@ -6,21 +6,17 @@
 // Alteração: Repositório de testes sem gravação real, que espelha as validações.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/horses/data/models/horse_registration_draft.dart';
-import 'package:horse_life/features/horses/data/repositories/horse_registration_repository.dart';
+import '../mocks/mock_horse_catalog.dart';
+import '../models/horse_registration_draft.dart';
+import 'horse_registration_repository.dart';
 
 class MockHorseRegistrationRepository implements HorseRegistrationRepository {
   const MockHorseRegistrationRepository();
 
-  static const _modalityNames = <String>[
-    'Adestramento', 'Enduro', 'Hipismo completo', 'Laço comprido',
-    'Rédeas', 'Salto', 'Três tambores', 'Vaquejada',
-  ];
-
   @override
   Future<List<HorseModality>> getModalities() async => [
-    for (var i = 0; i < _modalityNames.length; i++)
-      HorseModality(id: 'mock-$i', name: _modalityNames[i]),
+    for (var i = 0; i < MockHorseCatalog.modalityNames.length; i++)
+      HorseModality(id: 'mock-$i', name: MockHorseCatalog.modalityNames[i]),
   ];
 
   @override

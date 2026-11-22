@@ -51,7 +51,7 @@ import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_relationship_screen.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
-import '../../../support/features/horses/data/repositories/mock_horse_registration_repository.dart';
+import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
 import 'package:horse_life/features/training_plans/presentation/screens/training_plan_title_screen.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_title_screen.dart';

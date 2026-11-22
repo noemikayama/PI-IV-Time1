@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Integração de fetchTrainingGallery, sincronização de treinos criados
@@ -18,8 +14,6 @@
 // infraestrutura às telas.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/training_plans/data/repositories/firebase_training_plan_repository.dart';
-import 'package:horse_life/features/exercises/data/repositories/firebase_trainer_linked_horse_repository.dart';
 import '../../../exercises/data/models/trainer_linked_horse.dart';
 import '../../../exercises/data/repositories/trainer_linked_horse_repository.dart';
 import '../../../trainings/application/states/training_registration_draft.dart';
@@ -33,8 +27,8 @@ import '../states/training_plan_registration_draft.dart';
 class TrainingPlanRegistrationController {
   TrainingPlanRegistrationController({
     TrainerLinkedHorseRepository horseRepository =
-        const FirebaseTrainerLinkedHorseRepository(),
-    TrainingPlanRepository planRepository = const FirebaseTrainingPlanRepository(),
+        const LocalTrainerLinkedHorseRepository(),
+    TrainingPlanRepository planRepository = const LocalTrainingPlanRepository(),
   }) : _horseRepository = horseRepository,
        _planRepository = planRepository;
 
@@ -47,10 +41,8 @@ class TrainingPlanRegistrationController {
     final horses = await _horseRepository.fetchLinkedHorses();
     return horses
         .map(
-          (horse) => TrainerLinkedHorse(
-            id: horse.id.trim(),
-            name: horse.name.trim(),
-          ),
+          (horse) =>
+              TrainerLinkedHorse(id: horse.id.trim(), name: horse.name.trim()),
         )
         .where((horse) => horse.name.isNotEmpty)
         .toList(growable: false);
@@ -60,8 +52,8 @@ class TrainingPlanRegistrationController {
   /// imediatamente na seleção da semana e na galeria.
   TrainingPlanGalleryItem recordCreatedTrainingFromDraft(
     TrainingRegistrationDraft draft, {
-    required String id,
-    required int code,
+    String? id,
+    int? code,
   }) {
     final item = TrainingPlanGalleryItem.fromTrainingDraft(
       draft,

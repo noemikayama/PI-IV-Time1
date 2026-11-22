@@ -9,7 +9,7 @@
 // a Cloud Function e os vínculos no banco de dados não estão disponíveis.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/exercises/data/models/trainer_linked_horse.dart';
+import '../models/trainer_linked_horse.dart';
 
 // Catálogo estático de animais vinculados utilizado para testes locais do
 // fluxo de prescrição de exercícios específicos (8 etapas).

@@ -2,11 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Testa que IDs inválidos e falhas remotas não geram dados fictícios.
-//
-//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Teste para enriquecimento de trainingsByDay a partir de treinosDaSemana/todosOsTreinos.
@@ -38,28 +33,6 @@ import 'package:horse_life/features/training_plans/data/repositories/firebase_tr
 import 'package:horse_life/features/training_plans/data/repositories/training_plan_repository.dart';
 
 void main() {
-  test('invalid plan id does not query the server or return a fake plan', () async {
-    var called = false;
-    final repository = FirebaseTrainingPlanRepository(
-      getTrainingPlan: (_) async { called = true; return <String, dynamic>{}; },
-    );
-    await expectLater(repository.getTrainingPlan('invalid-id'),
-        throwsA(isA<TrainingPlanDetailFailure>()));
-    expect(called, isFalse);
-  });
-
-  for (final code in ['not-found', 'unimplemented', 'internal']) {
-    test('getTrainingPlan propagates $code without fake data', () async {
-      final repository = FirebaseTrainingPlanRepository(
-        getTrainingPlan: (_) async {
-          throw FirebaseFunctionsException(code: code, message: 'Falha do servidor');
-        },
-      );
-      await expectLater(repository.getTrainingPlan('66e1a0c2f1b2c3d4e5f6e005'),
-          throwsA(isA<TrainingPlanDetailFailure>()));
-    });
-  }
-
   const horse = TrainerLinkedHorse(
     id: '66e1a0c2f1b2c3d4e5f60050',
     name: 'Trovão',

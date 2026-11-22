@@ -8,9 +8,9 @@
 // de exercícios sem dependência de emuladores ou Cloud Functions.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/exercises/application/states/exercise_registration_draft.dart';
-import 'package:horse_life/features/exercises/data/models/exercise_registration_result.dart';
-import 'package:horse_life/features/exercises/data/repositories/exercise_registration_repository.dart';
+import '../../application/states/exercise_registration_draft.dart';
+import '../models/exercise_registration_result.dart';
+import 'exercise_registration_repository.dart';
 
 class MockExerciseRegistrationRepository
     implements ExerciseRegistrationRepository {

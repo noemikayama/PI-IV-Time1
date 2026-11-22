@@ -2,11 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Adiciona à seleção somente exercícios com ID retornado pelo cadastro.
-//
-//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Encadeamento para a etapa de orientações do treinamento e
@@ -137,11 +132,10 @@ class _TrainingExercisesScreenState extends State<TrainingExercisesScreen> {
     );
 
     if (!mounted) return;
-    if (createdDraft != null && createdExerciseId != null &&
-        createdExerciseId!.trim().isNotEmpty) {
+    if (createdDraft != null) {
       final createdItem = _controller.recordCreatedExerciseFromDraft(
         createdDraft!,
-        id: createdExerciseId!,
+        id: createdExerciseId,
       );
       setState(() {
         if (!_selectedExercises.any((item) => item.id == createdItem.id)) {

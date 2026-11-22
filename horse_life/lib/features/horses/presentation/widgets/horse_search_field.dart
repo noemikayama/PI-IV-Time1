@@ -2,10 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adequação estética do campo de busca autocomplete aos protótipos
@@ -19,7 +15,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import '../../data/catalogs/horse_catalog.dart';
+import '../../data/mocks/mock_horse_catalog.dart';
 
 /// O campo só é considerado válido após a seleção de um item existente.
 /// A pesquisa não faz requisições remotas; tolera letras acentuadas.
@@ -53,7 +49,7 @@ class _HorseSearchFieldState extends State<HorseSearchField> {
         if (textEditingValue.text.trim().isEmpty) {
           return const Iterable<String>.empty();
         }
-        return HorseCatalog.search(widget.options, textEditingValue.text);
+        return MockHorseCatalog.search(widget.options, textEditingValue.text);
       },
       onSelected: (selected) {
         widget.onSelected(selected);

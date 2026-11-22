@@ -2,15 +2,6 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Adiciona à seleção somente treinamentos confirmados pelo servidor.
-//
-//
-// Data: 22/11/2026
-// Autor: Gabriela Sichiroli Ferrari - RA 25013763
-// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
-//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da tela de edição de planos de treinamento com
@@ -18,7 +9,6 @@
 // e programação semanal com galeria ou criação direta de treinamentos.
 // -----------------------------------------------------------------------------
 
-import 'package:horse_life/features/exercises/data/repositories/firebase_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_date_picker_field.dart';
@@ -47,7 +37,7 @@ class TrainingPlanEditScreen extends StatefulWidget {
   const TrainingPlanEditScreen({
     required this.plan,
     this.controller,
-    this.horseRepository = const FirebaseTrainerLinkedHorseRepository(),
+    this.horseRepository = const LocalTrainerLinkedHorseRepository(),
     this.trainingRegistrationController,
     this.initialHorses,
     this.onCreateTrainingForDay,
@@ -329,12 +319,11 @@ class _TrainingPlanEditScreenState extends State<TrainingPlanEditScreen> {
       ),
     );
 
-    if (!mounted || createdDraft == null || createdResult == null ||
-        createdResult!.id.trim().isEmpty) return;
+    if (!mounted || createdDraft == null) return;
     final item = _controller.recordCreatedTrainingFromDraft(
       createdDraft!,
-      id: createdResult!.id,
-      code: createdResult!.code,
+      id: createdResult?.id,
+      code: createdResult?.code,
     );
     setState(() {
       _trainingsByDay[weekday] = item;
