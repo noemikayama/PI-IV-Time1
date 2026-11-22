@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação do objetivo do plano para o treino agendado.
+//
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação da visualização, do cancelamento e da edição do
@@ -19,6 +23,7 @@
 export {
   findActivePlansByHorses,
   findActivePlansByTrainer,
+  findPlanObjective,
   isActivePlanAuthor,
 } from "./repositories/planRepository";
 export {createTrainingPlan} from "./handlers/createTrainingPlan";

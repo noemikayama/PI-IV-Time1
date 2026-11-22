@@ -22,8 +22,14 @@
 //
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Auditoria dos comentários da agenda profissional e documentação
+// das dependências encaminhadas ao fluxo de execução e finalização do treino.
+//
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do carregador conectado da agenda profissional e da
-// adaptação dos treinos da API para os callbacks da Home.
+// adaptação dos treinos da API para os callbacks da Home. Encaminhamento das
+// dependências de consulta e finalização da execução do treino.
 //
 // Data: 20/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -140,6 +146,8 @@ import 'package:horse_life/features/horses/presentation/screens/horse_profile_sc
 import 'package:horse_life/core/widgets/add_trainer_certifications_dialog.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/widgets/training_agenda_floating_menu.dart';
@@ -195,6 +203,8 @@ class TrainerHomeScreen extends StatefulWidget {
     this.onCreateTraining,
     this.onCreateExercise,
     this.agendaLoader,
+    this.trainingExecutionLoader,
+    this.trainingCompletionSubmitter,
   });
 
   // --- Fontes de dados -------------------------------------------------------
@@ -260,6 +270,12 @@ class TrainerHomeScreen extends StatefulWidget {
   /// Fonte da agenda completa. Quando ausente, mantém a adaptação dos dados da
   /// Home usada pelos cenários legados e pelos testes existentes.
   final TrainingAgendaLoader? agendaLoader;
+
+  /// Carrega os detalhes do treino consultado a partir da agenda.
+  final TrainingExecutionLoader? trainingExecutionLoader;
+
+  /// Envia ao backend os dados preenchidos ao concluir uma execução.
+  final TrainingCompletionSubmitter? trainingCompletionSubmitter;
 
   @override
   State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
@@ -582,6 +598,8 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     if (agendaLoader != null) {
       return ConnectedTrainingAgendaScreen(
         loader: agendaLoader,
+        executionLoader: widget.trainingExecutionLoader,
+        completionSubmitter: widget.trainingCompletionSubmitter,
         onViewPlans: widget.onViewPlans,
         onViewPlan: (plan) {
           if (widget.onViewPlans != null) {
@@ -715,7 +733,10 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       MaterialPageRoute<dynamic>(
         builder: (listContext) => ProfessionalHorseListScreen(
           appBar: const HomeAppBar(),
-          drawer: TrainerSidebar(onLogout: widget.onLogout, homeFuture: _homeFuture),
+          drawer: TrainerSidebar(
+            onLogout: widget.onLogout,
+            homeFuture: _homeFuture,
+          ),
           bottomNavigationBar: HomeBottomNavBar(
             selectedDestination: HomeNavigationDestination.horses,
             onDestinationSelected: (selected) {

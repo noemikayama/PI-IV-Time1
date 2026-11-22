@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ajuste de dimensões dos cards de métricas (altura 155px) para
+// proporções quadradas e alinhamento consistente com os cards de gráficos.
+//
 // Data: 29/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Card modular de indicadores.
@@ -29,15 +34,17 @@ class DashboardMetricCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.gradient,
+    this.height = 155,
   });
   final String title, value;
   final List<Color> gradient;
+  final double height;
 
   @override
   Widget build(BuildContext context) => Container(
-    height: 230,
+    height: height,
     width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(15, 18, 15, 15),
+    padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(24),
       gradient: LinearGradient(
@@ -52,9 +59,9 @@ class DashboardMetricCard extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontSize: 22,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
-            height: 1.0,
+            height: 1.1,
             letterSpacing: 0,
             color: Colors.white,
           ),
@@ -66,7 +73,7 @@ class DashboardMetricCard extends StatelessWidget {
               child: Text(
                 value,
                 style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                  fontSize: 54,
+                  fontSize: 48,
                   fontWeight: FontWeight.w400,
                   height: 1.0,
                   letterSpacing: 0,

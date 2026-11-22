@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação dos tipos de materiais e mídias do treino agendado.
+//
 // Data: 20/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação dos tipos da consulta, da resposta, da edição e do
@@ -26,6 +30,8 @@ export type {
   ExerciseDetailsInput,
   ExerciseDocument,
   ExerciseDurationSumResult,
+  ExerciseExtras,
+  ExerciseExtrasSource,
   ExerciseGalleryInput,
   ExerciseGalleryItem,
   ExerciseGalleryResult,

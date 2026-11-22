@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Readequação da altura dos cards para 326px (métricas em 155px),
+// tornando-os mais quadrados, eliminando overflow e acomodando o donut expandido.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do callback onShowAllTrainings para navegação da lista de
@@ -142,7 +147,7 @@ class _DashboardLiveTrainingContentState
           else ...[
             LayoutBuilder(
               builder: (context, constraints) {
-                const gap = 18.0;
+                const gap = 16.0;
                 final width = (constraints.maxWidth - gap) / 2;
                 final train = data.section('treinosRealizados');
                 final comp = data.section('cumprimentoTreinos');
@@ -152,7 +157,7 @@ class _DashboardLiveTrainingContentState
                   children: [
                     SizedBox(
                       width: width,
-                      height: 478,
+                      height: 326,
                       child: DashboardTrainingCard(
                         completedPercent: DashboardResponse.numeric(
                           train,
@@ -176,16 +181,18 @@ class _DashboardLiveTrainingContentState
                             title: 'Percentual de cumprimento dos treinos',
                             value:
                                 '${DashboardResponse.numeric(comp, 'percentual').round()}%',
+                            height: 155,
                             gradient: const [
                               AppColors.goldenApricot,
                               Color(0xFFFFC488),
                             ],
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 16),
                           DashboardMetricCard(
                             title: 'Frequência de execução dos treinos',
                             value:
                                 '${DashboardResponse.numeric(freq, 'percentual').round()}%',
+                            height: 155,
                             gradient: const [
                               AppColors.tropicalTeal,
                               AppColors.prussianBlue,

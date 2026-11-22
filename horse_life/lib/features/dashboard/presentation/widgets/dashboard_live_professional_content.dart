@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Elevação do seletor de período para DashboardFilters com feedback
+// visual da seleção (marcador e atualização do rótulo) e persistência do estado.
+//
 // Data: 01/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Integração do getDashboard com contrato real e modo mock.
@@ -24,6 +29,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/dashboard_response.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/models/trainer_professional_snapshot.dart';
+import 'dashboard_filters.dart';
 import 'trainer_professional_content.dart';
 
 /// Solicita à Function os indicadores exclusivos do painel profissional.
@@ -67,53 +73,79 @@ class _DashboardLiveProfessionalContentState
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<DashboardResponse>(
-    future: _future,
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting)
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(30),
-            child: CircularProgressIndicator(),
-          ),
-        );
-      if (snapshot.hasError)
-        return Center(
-          child: Column(
-            children: [
-              const Text('Falha ao carregar painel profissional.'),
-              TextButton(
-                onPressed: _reload,
-                child: const Text('Tentar novamente'),
-              ),
-            ],
-          ),
-        );
-      final data = snapshot.data;
-      if (data == null) return const SizedBox.shrink();
-      final plans = data.section('planosCriados');
-      final feedback = data.section('feedbacksDados');
-      final mapped = TrainerProfessionalSnapshot(
-        createdPlans: DashboardResponse.numeric(plans, 'total').toInt(),
-        activePlans: DashboardResponse.numeric(plans, 'ativos').toInt(),
-        completedPlans: DashboardResponse.numeric(plans, 'concluidos').toInt(),
-        cancelledPlans: DashboardResponse.numeric(plans, 'cancelados').toInt(),
-        feedbackPercent: DashboardResponse.numeric(
-          feedback,
-          'percentual',
-        ).toInt(),
-        clients: data.number('clientesVinculados'),
-        linkedHorses: data.number('cavalosVinculados'),
-        evaluations: data.number('avaliacoesFeitas'),
-        exercises: data.number('exerciciosCriados'),
-      );
-      return TrainerProfessionalContent(
-        liveData: mapped,
-        onPeriodChanged: (selection) {
-          _period = _periods[selection] ?? 'SEMPRE';
-          _reload();
-        },
-      );
-    },
-  );
+  Widget build(BuildContext context) {
+    final selectedPeriodLabel = _periods.keys.firstWhere(
+      (k) => _periods[k] == _period,
+      orElse: () => 'Desde sempre',
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DashboardFilters(
+          period: selectedPeriodLabel,
+          periods: _periods.keys.toList(),
+          showHorse: false,
+          onPeriodChanged: (selection) {
+            _period = _periods[selection] ?? 'SEMPRE';
+            _reload();
+          },
+        ),
+        const SizedBox(height: 22),
+        FutureBuilder<DashboardResponse>(
+          future: _future,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(30),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  children: [
+                    const Text('Falha ao carregar painel profissional.'),
+                    TextButton(
+                      onPressed: _reload,
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            final data = snapshot.data;
+            if (data == null) return const SizedBox.shrink();
+            final plans = data.section('planosCriados');
+            final feedback = data.section('feedbacksDados');
+            final mapped = TrainerProfessionalSnapshot(
+              createdPlans: DashboardResponse.numeric(plans, 'total').toInt(),
+              activePlans: DashboardResponse.numeric(plans, 'ativos').toInt(),
+              completedPlans: DashboardResponse.numeric(
+                plans,
+                'concluidos',
+              ).toInt(),
+              cancelledPlans: DashboardResponse.numeric(
+                plans,
+                'cancelados',
+              ).toInt(),
+              feedbackPercent: DashboardResponse.numeric(
+                feedback,
+                'percentual',
+              ).toInt(),
+              clients: data.number('clientesVinculados'),
+              linkedHorses: data.number('cavalosVinculados'),
+              evaluations: data.number('avaliacoesFeitas'),
+              exercises: data.number('exerciciosCriados'),
+            );
+            return TrainerProfessionalContent(
+              liveData: mapped,
+            );
+          },
+        ),
+      ],
+    );
+  }
 }
