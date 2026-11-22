@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Recarga da semana ao retornar dos detalhes da execução para exibir
+// imediatamente o estado persistido após o registro do treinamento.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Revisão dos comentários do carregamento semanal e documentação da
 // resolução do plano e da navegação para os detalhes da execução.
 //
@@ -109,8 +114,9 @@ class _ConnectedTrainingAgendaScreenState
   }
 
   // Completa resumos do histórico com os dados semanais, resolve o plano pelo
-  // nome e cavalo e monta a referência exigida pela tela de detalhes.
-  void _openTraining(TrainingAgendaEntry entry) {
+  // nome e cavalo e monta a referência exigida pela tela de detalhes. Ao voltar
+  // da rota, relê a semana para refletir uma execução registrada no backend.
+  Future<void> _openTraining(TrainingAgendaEntry entry) async {
     final loader = widget.executionLoader;
     final submitter = widget.completionSubmitter;
     if (loader == null || submitter == null) return;
@@ -133,7 +139,7 @@ class _ConnectedTrainingAgendaScreenState
         break;
       }
     }
-    Navigator.of(context).push<void>(
+    await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => TrainingExecutionScreen(
           loader: loader,
@@ -149,6 +155,8 @@ class _ConnectedTrainingAgendaScreenState
         ),
       ),
     );
+    if (!mounted) return;
+    _retry();
   }
 
   @override

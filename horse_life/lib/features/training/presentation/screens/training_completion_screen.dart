@@ -4,8 +4,14 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração do envio com o contrato do backend, validação da nota de
+// desempenho, limites textuais e retorno de sucesso para atualizar a navegação.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do estado do formulário, validação, mensagens de erro
-// e componentes visuais usados na conclusão do treino.
+// e componentes visuais usados na conclusão do treino. Adequação da percepção
+// numérica e dos campos condicionais ao contrato do backend.
 //
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -59,11 +65,14 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
   Future<void> _submit() async {
     if (_submitting || !_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
+    final hasCompletedExercises = widget.initialInput.completedCount > 0;
     final input = TrainingCompletionInput(
       recordId: widget.initialInput.recordId,
       elapsed: widget.initialInput.elapsed,
-      performancePerception: _performanceController.text,
-      difficulty: _difficultyController.text,
+      performancePerception: hasCompletedExercises
+          ? int.parse(_performanceController.text.trim())
+          : null,
+      difficulty: hasCompletedExercises ? _difficultyController.text : '',
       notes: _notesController.text,
       exercises: widget.initialInput.exercises,
     );
@@ -123,92 +132,91 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
                           ? null
                           : () => Navigator.of(context).maybePop(),
                     ),
-                    const SizedBox(height: 46),
-                    const Icon(
-                      Icons.check_circle_outline_rounded,
-                      color: AppColors.seaGreen,
-                      size: 132,
-                    ),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 34),
+                    const Center(child: _CompletionSeal()),
+                    const SizedBox(height: 18),
                     Text(
                       'Treinamento\nconcluído',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        fontSize: 40,
+                        fontSize: 32,
                         fontWeight: FontWeight.w800,
-                        height: 1.05,
+                        height: 1.02,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
                     Text(
                       'Parabéns! Continue assim.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontFamily: 'Urbanist',
+                            fontSize: 20,
                             fontWeight: FontWeight.w400,
                           ),
                     ),
-                    const SizedBox(height: 42),
+                    const SizedBox(height: 30),
                     Container(
-                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+                      padding: const EdgeInsets.fromLTRB(23, 26, 23, 24),
                       decoration: BoxDecoration(
                         color: AppColors.alabasterGray,
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
                             'Registro do treino',
-                            style: Theme.of(context).textTheme.headlineLarge,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleLarge?.copyWith(fontSize: 20),
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 14),
                           _SummaryLine(
                             label: 'Tempo total:',
                             value: _formatElapsed(input.elapsed),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           _SummaryLine(
                             label: 'Exercícios concluídos:',
                             value: '${input.completedCount}',
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           _SummaryLine(
                             label: 'Exercícios incompletos:',
                             value: '${input.incompleteCount}',
                           ),
-                          const SizedBox(height: 22),
-                          _CompletionField(
-                            controller: _performanceController,
-                            label: 'Percepção de desempenho:',
-                            helper:
-                                'Informe como você acha que o animal se saiu nesta sessão.',
-                            hint: 'Ex.: Executado com facilidade',
-                          ),
-                          const SizedBox(height: 22),
-                          _CompletionField(
-                            controller: _difficultyController,
-                            label: 'Dificuldades encontradas:',
-                            helper:
-                                'Informe as dificuldades que você percebeu durante a execução dos exercícios.',
-                            hint:
-                                'Ex.: Complicações quando está na mão esquerda',
-                          ),
-                          const SizedBox(height: 22),
+                          const SizedBox(height: 18),
+                          if (input.completedCount > 0) ...[
+                            _PerformanceField(
+                              controller: _performanceController,
+                            ),
+                            const SizedBox(height: 18),
+                            _CompletionField(
+                              controller: _difficultyController,
+                              label: 'Dificuldades encontradas:',
+                              helper:
+                                  'Informe as dificuldades que você percebeu durante a execução dos exercícios.',
+                              hint:
+                                  'Ex.: Complicações quando está na mão esquerda',
+                              maxLength: 1000,
+                            ),
+                            const SizedBox(height: 18),
+                          ],
                           _CompletionField(
                             controller: _notesController,
                             label: 'Observações:',
                             helper:
                                 'Informe aquilo que você acha útil que seu treinador saiba sobre a execução de hoje.',
                             hint: 'Ex.: Cavalo mais agitado no início',
+                            maxLength: 500,
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 34),
                     SizedBox(
-                      height: 64,
+                      height: 60,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
@@ -235,8 +243,11 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
                                       'Submeter registro',
                                       style: Theme.of(context)
                                           .textTheme
-                                          .headlineLarge
-                                          ?.copyWith(color: Colors.white),
+                                          .titleLarge
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                          ),
                                     ),
                             ),
                           ),
@@ -268,11 +279,27 @@ class _CompletionHeader extends StatelessWidget {
         icon: const Icon(
           Icons.arrow_back_ios_new_rounded,
           color: AppColors.seaGreen,
-          size: 34,
+          size: 28,
         ),
       ),
-      Image.asset('assets/Logo_somente_simbolo.png', width: 70, height: 70),
+      Image.asset('assets/Logo_somente_simbolo.png', width: 52, height: 52),
     ],
+  );
+}
+
+// Selo do protótipo: círculo de traço espesso com confirmação central.
+class _CompletionSeal extends StatelessWidget {
+  const _CompletionSeal();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 84,
+    height: 84,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(color: AppColors.seaGreen, width: 8),
+    ),
+    child: const Icon(Icons.check_rounded, color: AppColors.seaGreen, size: 54),
   );
 }
 
@@ -285,7 +312,7 @@ class _SummaryLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text.rich(
     TextSpan(
-      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 20),
+      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 18),
       children: [
         TextSpan(
           text: '$label ',
@@ -304,41 +331,108 @@ class _CompletionField extends StatelessWidget {
     required this.label,
     required this.helper,
     required this.hint,
+    required this.maxLength,
   });
 
   final TextEditingController controller;
   final String label;
   final String helper;
   final String hint;
+  final int maxLength;
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: Theme.of(context).textTheme.titleLarge),
+      Text(
+        label,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+      ),
       const SizedBox(height: 4),
-      Text(helper, style: Theme.of(context).textTheme.bodyLarge),
-      const SizedBox(height: 12),
+      Text(
+        helper,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16),
+      ),
+      const SizedBox(height: 10),
       TextFormField(
         controller: controller,
-        minLines: 3,
-        maxLines: 5,
-        maxLength: 2000,
+        minLines: 2,
+        maxLines: 4,
+        maxLength: maxLength,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16),
         decoration: InputDecoration(
           counterText: '',
           hintText: hint,
           filled: true,
           fillColor: AppColors.whiteSmoke,
-          contentPadding: const EdgeInsets.all(18),
+          hintStyle: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.grey, fontSize: 16),
+          contentPadding: const EdgeInsets.all(16),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide.none,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(14),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: const BorderSide(color: AppColors.seaGreen, width: 2),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
+      ),
+    ],
+  );
+}
+
+// Campo numérico obrigatório para execuções totais ou parciais.
+class _PerformanceField extends StatelessWidget {
+  const _PerformanceField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Percepção de desempenho:',
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'Avalie o desempenho do animal nesta sessão de 1 a 10.',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16),
+      ),
+      const SizedBox(height: 10),
+      TextFormField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        maxLength: 2,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 16),
+        decoration: InputDecoration(
+          counterText: '',
+          hintText: 'Informe uma nota de 1 a 10',
+          filled: true,
+          fillColor: AppColors.whiteSmoke,
+          hintStyle: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.grey, fontSize: 16),
+          contentPadding: const EdgeInsets.all(16),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: const BorderSide(color: AppColors.seaGreen, width: 2),
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        validator: (value) {
+          final score = int.tryParse(value?.trim() ?? '');
+          if (score == null || score < 1 || score > 10) {
+            return 'Informe uma nota inteira de 1 a 10.';
+          }
+          return null;
+        },
       ),
     ],
   );

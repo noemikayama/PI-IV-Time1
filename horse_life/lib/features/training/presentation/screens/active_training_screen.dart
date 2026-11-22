@@ -4,8 +4,14 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Propagação do resultado da conclusão para a tela de detalhes e
+// adequação do estado inicial ao campo numérico de percepção do desempenho.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos estados, cronômetro, diálogos, mídias e transição
-// entre a execução ativa e o formulário final.
+// entre a execução ativa e o formulário final. Inicialização da percepção como
+// valor numérico opcional para o contrato de registro da execução.
 //
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -77,7 +83,8 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
   }
 
   // Pausa o tempo enquanto o diálogo está aberto. Cancelar retoma a medição;
-  // confirmar substitui a rota pela tela de conclusão com um snapshot do estado.
+  // confirmar abre a conclusão com um snapshot e devolve à tela anterior se o
+  // registro foi persistido, permitindo que ela atualize o estado do treino.
   Future<void> _requestFinishTraining() async {
     if (_finishDialogOpen) return;
     _finishDialogOpen = true;
@@ -109,14 +116,14 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
             completed: _completedExercises.contains(index),
           ),
       ];
-      Navigator.of(context).pushReplacement<void, void>(
-        MaterialPageRoute<void>(
+      final completed = await Navigator.of(context).push<bool>(
+        MaterialPageRoute<bool>(
           builder: (context) => TrainingCompletionScreen(
             submitter: widget.completionSubmitter,
             initialInput: TrainingCompletionInput(
               recordId: widget.training.recordId,
               elapsed: elapsed,
-              performancePerception: '',
+              performancePerception: null,
               difficulty: '',
               notes: '',
               exercises: exercises,
@@ -124,6 +131,8 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
           ),
         ),
       );
+      if (!mounted) return;
+      Navigator.of(context).pop(completed == true);
       return;
     }
     _stopwatch.start();

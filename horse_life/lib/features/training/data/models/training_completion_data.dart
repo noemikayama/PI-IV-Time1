@@ -4,8 +4,14 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração do formulário com registerTrainingExecution, incluindo
+// percepção numérica e omissão dos campos incompatíveis com treino não feito.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação completa dos contratos, contadores e regras de
-// serialização do formulário de conclusão do treinamento.
+// serialização do formulário de conclusão do treinamento. Alinhamento do
+// payload ao contrato de registerTrainingExecution.
 //
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -23,7 +29,7 @@ class TrainingCompletionExercise {
     required this.completed,
   });
 
-  /// Código estável esperado pela callable `finishTraining`.
+  /// Código estável esperado pela callable `registerTrainingExecution`.
   final String code;
 
   /// Indica se o atleta marcou o exercício como realizado.
@@ -54,8 +60,10 @@ class TrainingCompletionInput {
   /// Tempo medido desde o início até a confirmação do encerramento.
   final Duration elapsed;
 
-  /// Avaliação livre informada pelo atleta nos campos obrigatórios.
-  final String performancePerception;
+  /// Nota de 1 a 10 exigida quando algum exercício foi realizado.
+  final int? performancePerception;
+
+  /// Dificuldades opcionais, omitidas quando nenhum exercício foi realizado.
   final String difficulty;
 
   /// Observação opcional enviada como lista por exigência do contrato remoto.
@@ -71,14 +79,19 @@ class TrainingCompletionInput {
   int get incompleteCount => exercises.length - completedCount;
 
   /// Monta o payload remoto, removendo espaços e garantindo ao menos um minuto
-  /// para execuções encerradas antes do primeiro minuto completo.
+  /// para execuções encerradas antes do primeiro minuto completo. Duração,
+  /// percepção e dificuldades são omitidas quando todos os exercícios ficaram
+  /// como não realizados, conforme a validação do backend.
   Map<String, dynamic> toJson() => {
     'registroId': recordId,
-    'duracaoEfetivaMinutos': elapsed.inSeconds == 0
-        ? 1
-        : (elapsed.inSeconds / 60).ceil(),
-    'percepcaoDesempenho': performancePerception.trim(),
-    'dificuldade': difficulty.trim(),
+    if (completedCount > 0) ...{
+      'duracaoEfetiva': elapsed.inSeconds == 0
+          ? 1
+          : (elapsed.inSeconds / 60).ceil(),
+      if (performancePerception != null)
+        'percepcaoDesempenho': performancePerception,
+      if (difficulty.trim().isNotEmpty) 'dificuldades': difficulty.trim(),
+    },
     'observacoes': notes.trim().isEmpty ? <String>[] : [notes.trim()],
     'exercicios': exercises
         .map((item) => item.toJson())

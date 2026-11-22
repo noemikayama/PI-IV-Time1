@@ -4,6 +4,12 @@
 //
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Integração do botão "Ver detalhes" dos cards de exercícios com
+// a tela ExerciseDetailScreen, propagando modificações e redirecionamentos de
+// navegação inferior.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Detalhamento da documentação e comentários explicativos para
 // facilitar a leitura e manutenção da tela de visualização de treinamentos.
 //
@@ -27,6 +33,7 @@ import 'package:horse_life/core/widgets/gradient_button.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 
 import '../../../exercises/application/controllers/exercise_registration_controller.dart';
+import '../../../exercises/presentation/screens/exercise_detail_screen.dart';
 import '../../../training_plans/data/models/training_plan_gallery_item.dart';
 import '../../application/controllers/training_registration_controller.dart';
 import '../../data/models/training_detail_data.dart';
@@ -154,18 +161,39 @@ class _TrainingDetailScreenState extends State<TrainingDetailScreen> {
   }
 
   /// Trata a ação de clique em "Ver detalhes" do card de exercício.
-  void _handleViewExerciseDetails(TrainingDetailExercise exercise) {
+  Future<void> _handleViewExerciseDetails(
+    TrainingDetailExercise exercise,
+  ) async {
     final callback = widget.onViewExerciseDetails;
     if (callback != null) {
       callback(exercise);
       return;
     }
-    AppSnackBar.show(
-      context,
-      backgroundColor: AppColors.blueSpruce,
-      icon: Icons.info_outline_rounded,
-      message: 'Visualização detalhada do exercício ainda não disponível.',
+
+    final result = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (_) => ExerciseDetailScreen(
+          exerciseId: exercise.id,
+          exerciseCode: exercise.code,
+          currentUserId: widget.currentUserId,
+          isTrainer: widget.isTrainer,
+          onNavigationSelected: (destination) {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop(destination);
+            }
+          },
+        ),
+      ),
     );
+    if (!mounted || result == null) return;
+    if (result is HomeNavigationDestination) {
+      _selectNavigationDestination(result);
+      return;
+    }
+    if (result == true) {
+      _wasTrainingModified = true;
+      _reload();
+    }
   }
 
   /// Abre o formulário de edição do treinamento e persiste as alterações no backend.

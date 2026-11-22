@@ -8,6 +8,10 @@
 // leitura, preservando a indicação de registros já finalizados.
 //
 // Data: 22/11/2026
+// Alteração: Atualização dos detalhes após a conclusão do treino e bloqueio
+// imediato de um novo início enquanto a releitura do backend é processada.
+//
+// Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do carregamento, nova tentativa, conteúdo consultivo,
 // estados finais e navegação para a execução ativa.
@@ -57,6 +61,9 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
   // A Future é armazenada para que reconstruções visuais não repitam a consulta.
   late Future<TrainingExecutionData> _future;
 
+  // Preserva localmente a conclusão confirmada durante a releitura do backend.
+  bool _completedLocally = false;
+
   // Controla o carrossel consultivo dos exercícios.
   final _pageController = PageController();
   int _page = 0;
@@ -78,21 +85,27 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
     _future = widget.loader.fetchTraining(widget.reference);
   });
 
-  // Prioriza a ação injetada; sem ela, abre a execução ativa padrão.
-  void _startTraining(TrainingExecutionData training) {
+  // Prioriza a ação injetada; sem ela, abre a execução ativa padrão e, quando
+  // ela termina, relê o registro para refletir o status persistido no backend.
+  Future<void> _startTraining(TrainingExecutionData training) async {
     final callback = widget.onStart;
     if (callback != null) {
       callback(training);
       return;
     }
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
+    final completed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
         builder: (context) => ActiveTrainingScreen(
           training: training,
           completionSubmitter: widget.completionSubmitter,
         ),
       ),
     );
+    if (!mounted || completed != true) return;
+    setState(() {
+      _completedLocally = true;
+      _future = widget.loader.fetchTraining(widget.reference);
+    });
   }
 
   @override
@@ -119,6 +132,7 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
   // registros concluídos continuam visíveis com ação final desabilitada.
   Widget _buildContent(TrainingExecutionData training) {
     final canStart = training.canStart && !training.isFinished;
+    final isFinished = training.isFinished || _completedLocally;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
