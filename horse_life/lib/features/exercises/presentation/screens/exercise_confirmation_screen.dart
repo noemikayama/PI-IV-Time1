@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Propagação de ExerciseRegistrationResult completo via
+// onExerciseCreatedWithResult após conclusão do cadastro.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Propagação do identificador real do exercício criado via
@@ -49,6 +54,7 @@ import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_material.dart';
 import '../../application/states/exercise_media.dart';
 import '../../application/states/exercise_registration_draft.dart';
+import '../../data/models/exercise_registration_result.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/exercise_registration_repository.dart';
 import '../routes/exercise_registration_flow_route.dart';
@@ -232,10 +238,10 @@ class _ExerciseConfirmationScreenState
     final controller = widget.registrationController;
     setState(() => _isSubmitting = true);
     try {
-      String? createdExerciseId;
+      ExerciseRegistrationResult? createdResult;
       if (controller != null) {
         final result = await controller.registerExercise(draft: updatedDraft);
-        createdExerciseId = result.id;
+        createdResult = result;
         if (!mounted) return;
         if (result.hasMediaWarning) {
           AppSnackBar.show(
@@ -247,7 +253,7 @@ class _ExerciseConfirmationScreenState
         }
       }
       if (!mounted) return;
-      _finishRegistration(updatedDraft, createdExerciseId);
+      _finishRegistration(updatedDraft, createdResult);
     } on ExerciseRegistrationFailure catch (error) {
       if (!mounted) return;
       _showError(error.message);
@@ -272,13 +278,17 @@ class _ExerciseConfirmationScreenState
 
   void _finishRegistration([
     ExerciseRegistrationDraft? createdDraft,
-    String? createdExerciseId,
+    ExerciseRegistrationResult? createdResult,
   ]) {
     if (createdDraft != null) {
       widget.registrationController?.onExerciseCreated?.call(createdDraft);
       widget.registrationController?.onExerciseCreatedWithId?.call(
         createdDraft,
-        createdExerciseId,
+        createdResult?.id,
+      );
+      widget.registrationController?.onExerciseCreatedWithResult?.call(
+        createdDraft,
+        createdResult,
       );
     }
 

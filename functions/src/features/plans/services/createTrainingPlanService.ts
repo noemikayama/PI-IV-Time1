@@ -2,6 +2,13 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: concludePlan substituído por closePlan.
+// Alteração: Planejamento, cópia da avaliação e conclusão do plano vencido
+// compartilhados com a edição.
+// Alteração: Cópia do treinamento montada pela feature de treinamentos.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Cadastro do plano de treinamento já ATIVO, com a geração dos
@@ -27,10 +34,11 @@ import {
   ensureTrainingRecordIndexes,
   findTrainerTrainings,
   insertTrainingRecords,
+  toTrainingSnapshot,
 } from "../../training";
-import type {TrainingDocument, TrainingSnapshot} from "../../training";
+import type {TrainingDocument} from "../../training";
 import {
-  concludePlan,
+  closePlan,
   ensurePlanIndexes,
   findActivePlan,
   insertPlan,
@@ -42,6 +50,7 @@ import type {
   PlanningItem,
   TrainingPlanInput,
   TrainingPlanResult,
+  TrainingsByDay,
 } from "../types";
 import {splitByHorse} from "./listTrainingGalleryService";
 import {
@@ -50,30 +59,19 @@ import {
   listPlannedDates,
 } from "./planSchedule";
 
-const ACTIVE_PLAN_MESSAGE = "Este cavalo já tem um plano ativo.";
+export const ACTIVE_PLAN_MESSAGE = "Este cavalo já tem um plano ativo.";
 
-const toDate = (ymd: string): Date => new Date(`${ymd}T00:00:00.000Z`);
+export const NO_PLANNED_DATES_MESSAGE =
+  "Nenhum dia do período escolhido tem treino. Ajuste as datas ou os " +
+  "dias da semana.";
 
-/** Copia o treinamento no momento da inclusão, com os exercícios (DD 3.6):
- * edições posteriores no treinamento não alteram o plano.
- * @param {TrainingDocument} training Treinamento de origem.
- * @return {TrainingSnapshot} Cópia guardada no item.
- */
-const toSnapshot = (training: TrainingDocument): TrainingSnapshot => ({
-  _id: training._id,
-  codigo: training.codigo,
-  titulo: training.titulo,
-  ...(training.descricao && {descricao: training.descricao}),
-  orientacoes: training.orientacoes,
-  duracaoEstimadaMinutos: training.duracaoEstimadaMinutos,
-  exercicios: training.exercicios,
-});
+export const toDate = (ymd: string): Date => new Date(`${ymd}T00:00:00.000Z`);
 
 /** Copia a avaliação que originou o plano (DD 2.7), com o _id da original.
  * @param {EvaluationDocument} evaluation Avaliação de origem.
  * @return {PlanEvaluationCopy} Cópia guardada no plano.
  */
-const toEvaluationCopy = (
+export const toEvaluationCopy = (
   evaluation: EvaluationDocument
 ): PlanEvaluationCopy => ({
   _id: evaluation._id,
@@ -86,22 +84,36 @@ const toEvaluationCopy = (
   observacoes: evaluation.observacoes,
 });
 
-/** Monta o planejamento: um item por treinamento, com códigos 1, 2, 3...
- * Todos os treinamentos precisam ser do treinador e nenhum pode usar
- * exercício específico de outro cavalo.
+/** Monta o planejamento a partir do treino de cada dia: um item por
+ * treinamento. No cadastro ('current' vazio), os códigos são 1, 2, 3... Na
+ * edição, o treinamento que continua no plano mantém o item e a cópia (só os
+ * dias mudam), os novos recebem os códigos seguintes e os que saíram ficam
+ * com o item desativado. Os treinamentos novos precisam ser do treinador, e
+ * nenhum treinamento do plano pode usar exercício específico de outro cavalo.
  * @param {string} uid UID do treinador.
- * @param {TrainingPlanInput} input Dados validados.
+ * @param {TrainingsByDay} byDay Treino escolhido em cada dia.
+ * @param {ObjectId} horseId _id do cavalo do plano.
+ * @param {PlanningItem[]} current Planejamento atual (edição).
  * @return {Promise<PlanningItem[]>} Itens do planejamento.
  */
-async function buildPlanning(
+export async function buildPlanning(
   uid: string,
-  input: TrainingPlanInput
+  byDay: TrainingsByDay,
+  horseId: ObjectId,
+  current: PlanningItem[] = []
 ): Promise<PlanningItem[]> {
-  const groups = groupDaysByTraining(input.treinosPorDia);
-  const trainings = await findTrainerTrainings(
-    uid,
-    groups.map((group) => group.treinamentoId)
+  const groups = groupDaysByTraining(byDay);
+  const kept = new Map(
+    current
+      .filter((item) => item.ativo)
+      .map((item) => [item.treinamento._id.toHexString(), item])
   );
+  const newIds = groups
+    .map((group) => group.treinamentoId)
+    .filter((id) => !kept.has(id.toHexString()));
+  const trainings = newIds.length === 0 ?
+    [] :
+    await findTrainerTrainings(uid, newIds);
   const byId = new Map(trainings.map((training) => [
     training._id.toHexString(),
     training,
@@ -109,14 +121,19 @@ async function buildPlanning(
 
   // Não diferencia treinamento inexistente de treinamento de outro
   // treinador, para não revelar o acervo alheio.
-  if (byId.size !== groups.length) {
+  if (byId.size !== newIds.length) {
     throw new AppError(
       "not-found",
       "Treinamento não encontrado entre os seus."
     );
   }
 
-  const {blocked} = await splitByHorse(trainings, input.cavaloId);
+  const snapshots = groups.map((group) => {
+    const hex = group.treinamentoId.toHexString();
+    return kept.get(hex)?.treinamento ??
+      toTrainingSnapshot(byId.get(hex) as TrainingDocument);
+  });
+  const {blocked} = await splitByHorse(snapshots, horseId);
   if (blocked.length > 0) {
     const titles = blocked.map((training) => `"${training.titulo}"`);
     throw new AppError(
@@ -126,14 +143,23 @@ async function buildPlanning(
     );
   }
 
-  return groups.map((group, index) => ({
-    codigo: index + 1,
-    ativo: true,
-    diasSemana: group.diasSemana,
-    treinamento: toSnapshot(
-      byId.get(group.treinamentoId.toHexString()) as TrainingDocument
-    ),
-  }));
+  let nextCode = Math.max(0, ...current.map((item) => item.codigo)) + 1;
+  const active = groups.map((group, index): PlanningItem => {
+    const item = kept.get(group.treinamentoId.toHexString());
+    return item ?
+      {...item, diasSemana: group.diasSemana} :
+      {
+        codigo: nextCode++,
+        ativo: true,
+        diasSemana: group.diasSemana,
+        treinamento: snapshots[index],
+      };
+  });
+  const used = new Set(active.map((item) => item.codigo));
+  const inactive = current
+    .filter((item) => !used.has(item.codigo))
+    .map((item) => ({...item, ativo: false}));
+  return [...active, ...inactive];
 }
 
 /** Conclui o plano ATIVO do cavalo que já venceu (dataFim antes de hoje):
@@ -144,7 +170,7 @@ async function buildPlanning(
  * @param {ClientSession} session Sessão da transação.
  * @return {Promise<void>} Resolvida quando não houver plano ATIVO.
  */
-async function closeExpiredPlan(
+export async function closeExpiredPlan(
   horseId: ObjectId,
   session: ClientSession
 ): Promise<void> {
@@ -159,7 +185,7 @@ async function closeExpiredPlan(
       `${ACTIVE_PLAN_MESSAGE} Ele termina em ${day}/${month}/${year}.`
     );
   }
-  await concludePlan(active._id, session);
+  await closePlan(active._id, "CONCLUIDO", session);
   await closePlannedRecords(active._id, session);
 }
 
@@ -211,7 +237,7 @@ export async function createTrainingPlanService(
 ): Promise<TrainingPlanResult> {
   const [trainer, planejamento] = await Promise.all([
     assertActiveAccount(uid, ROLES.trainer),
-    buildPlanning(uid, input),
+    buildPlanning(uid, input.treinosPorDia, input.cavaloId),
     ensurePlanIndexes(),
     ensureTrainingRecordIndexes(),
   ]);
@@ -219,11 +245,7 @@ export async function createTrainingPlanService(
   const dataInicio = toDate(input.dataInicio);
   const dataFim = toDate(input.dataFim);
   if (listPlannedDates({dataInicio, dataFim, planejamento}).length === 0) {
-    throw new AppError(
-      "invalid-argument",
-      "Nenhum dia do período escolhido tem treino. Ajuste as datas ou os " +
-        "dias da semana."
-    );
+    throw new AppError("invalid-argument", NO_PLANNED_DATES_MESSAGE);
   }
 
   try {

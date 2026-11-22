@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Aumento proporcional do raio e espessura do donut para preenchimento
+// harmônico da largura do card de treinos realizados.
+//
 // Data: 29/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Modularização do Dashboard Guardian e preparação para dados da Cloud Function.
@@ -49,14 +54,15 @@ class DashboardDonutChart extends StatelessWidget {
             return const SizedBox.expand();
           }
 
-          final labelSize = (side * 0.115).clamp(10.0, 22.0).toDouble();
-          final outerRadius = side * 0.49;
+          final labelSize = (side * 0.11).clamp(10.0, 14.0).toDouble();
+          final centerSpaceRadius = side * 0.22;
+          final ringRadius = side * 0.25;
 
           return PieChart(
             PieChartData(
               startDegreeOffset: -90,
               sectionsSpace: 0,
-              centerSpaceRadius: side * 0.26,
+              centerSpaceRadius: centerSpaceRadius,
               centerSpaceColor: AppColors.whiteSmoke,
               pieTouchData: PieTouchData(enabled: false),
               // A fatia parcial começa no topo, conforme o protótipo.
@@ -65,14 +71,14 @@ class DashboardDonutChart extends StatelessWidget {
                   _section(
                     value: partial,
                     color: AppColors.blueSpruce,
-                    outerRadius: outerRadius,
+                    ringRadius: ringRadius,
                     labelSize: labelSize,
                   ),
                 if (completed > 0)
                   _section(
                     value: completed,
                     color: AppColors.pearlAqua,
-                    outerRadius: outerRadius,
+                    ringRadius: ringRadius,
                     labelSize: labelSize,
                   ),
               ],
@@ -93,16 +99,16 @@ class DashboardDonutChart extends StatelessWidget {
   static PieChartSectionData _section({
     required double value,
     required Color color,
-    required double outerRadius,
+    required double ringRadius,
     required double labelSize,
   }) {
     return PieChartSectionData(
       value: value,
       color: color,
-      radius: outerRadius,
+      radius: ringRadius,
       title: '${value.round()}%',
       // Os rótulos permanecem horizontais e centralizados no anel.
-      titlePositionPercentageOffset: 0.76,
+      titlePositionPercentageOffset: 0.52,
       titleStyle: TextStyle(
         color: Colors.white,
         fontFamily: 'Urbanist',

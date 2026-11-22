@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Validação do plano pedido na visualização e no cancelamento.
+// Alteração: Validação da edição do plano, com os campos do cadastro.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Validação do cadastro de plano, do seletor de avaliações e da
@@ -19,8 +24,10 @@ import {asRecord, assertAllowedFields} from "../../authentication/shared";
 import {parseBusca, parseObjectId} from "../../exercises";
 import {DIAS_SEMANA} from "../types";
 import type {
+  PlanIdInput,
   TrainingGalleryInput,
   TrainingPlanInput,
+  TrainingPlanUpdateInput,
   TrainingsByDay,
 } from "../types";
 
@@ -89,21 +96,28 @@ function parseYmd(value: unknown, label: string): string {
   return value;
 }
 
-/** Valida o período: início hoje ou no futuro (fuso de São Paulo), fim a
- * partir do início e duração de no máximo MAX_PLAN_MONTHS meses.
+export const START_IN_PAST_MESSAGE =
+  "A data de início deve ser hoje ou uma data futura.";
+
+/** Valida o período: fim a partir do início e duração de no máximo
+ * MAX_PLAN_MONTHS meses. No cadastro, o início também precisa ser hoje ou
+ * no futuro (fuso de São Paulo); na edição, isso depende de o plano já ter
+ * começado e é conferido no service.
  * @param {unknown} inicio dataInicio recebida.
  * @param {unknown} fim dataFim recebida.
+ * @param {boolean} futureStart Se o início precisa ser hoje ou depois.
  * @return {Object} Datas validadas.
  */
 function parsePeriod(
   inicio: unknown,
-  fim: unknown
+  fim: unknown,
+  futureStart: boolean
 ): {dataInicio: string; dataFim: string} {
   const dataInicio = parseYmd(inicio, "Data de início");
   const dataFim = parseYmd(fim, "Data de fim");
   // Datas AAAA-MM-DD são comparáveis como texto.
-  if (dataInicio < getTodayYmd()) {
-    throw invalid("A data de início deve ser hoje ou uma data futura.");
+  if (futureStart && dataInicio < getTodayYmd()) {
+    throw invalid(START_IN_PAST_MESSAGE);
   }
   if (dataFim < dataInicio) {
     throw invalid("A data de fim não pode ser anterior à data de início.");
@@ -138,6 +152,25 @@ function parseTrainingsByDay(value: unknown): TrainingsByDay {
   return byDay;
 }
 
+/** Campos do plano, iguais no cadastro e na edição.
+ * @param {Record<string, unknown>} record Dados recebidos.
+ * @param {boolean} futureStart Se o início precisa ser hoje ou depois.
+ * @return {TrainingPlanInput} Dados validados e normalizados.
+ */
+function parsePlanFields(
+  record: Record<string, unknown>,
+  futureStart: boolean
+): TrainingPlanInput {
+  return {
+    titulo: parseText(record.titulo, "O título", 3, MAX_TITLE_LENGTH),
+    objetivo: parseText(record.objetivo, "O objetivo", 1, MAX_GOAL_LENGTH),
+    cavaloId: parseObjectId(record.cavaloId, "Cavalo inválido."),
+    avaliacaoId: parseOptionalId(record.avaliacaoId, "Avaliação inválida."),
+    ...parsePeriod(record.dataInicio, record.dataFim, futureStart),
+    treinosPorDia: parseTrainingsByDay(record.treinosPorDia),
+  };
+}
+
 /** Valida e normaliza os dados do cadastro de plano.
  * @param {unknown} data Dados recebidos pelo endpoint.
  * @return {TrainingPlanInput} Dados validados e normalizados.
@@ -145,13 +178,22 @@ function parseTrainingsByDay(value: unknown): TrainingsByDay {
 export function validateTrainingPlan(data: unknown): TrainingPlanInput {
   const record = asRecord(data);
   assertAllowedFields(record, PLAN_FIELDS);
+  return parsePlanFields(record, true);
+}
+
+/** Valida a edição: o estado final da tela, com os mesmos campos e regras
+ * do cadastro, mais o plano editado.
+ * @param {unknown} data Dados recebidos pelo endpoint.
+ * @return {TrainingPlanUpdateInput} Dados validados e normalizados.
+ */
+export function validateTrainingPlanUpdate(
+  data: unknown
+): TrainingPlanUpdateInput {
+  const record = asRecord(data);
+  assertAllowedFields(record, [...PLAN_FIELDS, "planoId"]);
   return {
-    titulo: parseText(record.titulo, "O título", 3, MAX_TITLE_LENGTH),
-    objetivo: parseText(record.objetivo, "O objetivo", 1, MAX_GOAL_LENGTH),
-    cavaloId: parseObjectId(record.cavaloId, "Cavalo inválido."),
-    avaliacaoId: parseOptionalId(record.avaliacaoId, "Avaliação inválida."),
-    ...parsePeriod(record.dataInicio, record.dataFim),
-    treinosPorDia: parseTrainingsByDay(record.treinosPorDia),
+    planoId: parseObjectId(record.planoId, "Plano inválido."),
+    ...parsePlanFields(record, false),
   };
 }
 
@@ -177,4 +219,14 @@ export function validateTrainingGallery(data: unknown): TrainingGalleryInput {
     cavaloId: parseObjectId(record.cavaloId, "Cavalo inválido."),
     ...(busca && {busca}),
   };
+}
+
+/** Valida o plano pedido (visualização e cancelamento).
+ * @param {unknown} data Dados recebidos pelo endpoint.
+ * @return {PlanIdInput} _id do plano.
+ */
+export function validatePlanId(data: unknown): PlanIdInput {
+  const record = asRecord(data ?? {}, "Dados da consulta inválidos.");
+  assertAllowedFields(record, ["planoId"]);
+  return {planoId: parseObjectId(record.planoId, "Plano inválido.")};
 }

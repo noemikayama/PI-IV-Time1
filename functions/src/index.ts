@@ -2,9 +2,29 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação da consulta do treino agendado, do registro da
+// execução e do feedback e das execuções que esperam feedback.
+//
+// Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação dos detalhes e da edição do exercício.
+//
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos detalhes e da edição do treinamento.
+// Alteração: Exportação da visualização, do cancelamento e da edição do
+// plano.
+//
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da agenda de treinos.
+//
 // Data: 19/11/2026
 // Autor: Davi Alves Froza - 25016900
 // Alteração: Exportação da conferência do microchip no servidor Java.
+//
 // Data: 18/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Exportação do cadastro de planos, das avaliações do cavalo e
@@ -113,12 +133,28 @@ export {
   removeExerciseMedia,
   listExerciseGallery,
   sumExerciseDurations,
+  getExercise,
+  updateExercise,
 } from "./features/exercises";
 export {
   registerTraining,
+  getTrainingDetails,
+  updateTraining,
 } from "./features/training";
 export {
   createTrainingPlan,
   listHorseEvaluations,
   listTrainingGallery,
+  getTrainingPlanDetails,
+  cancelTrainingPlan,
+  updateTrainingPlan,
 } from "./features/plans";
+export {
+  getTrainingAgenda,
+} from "./features/agenda";
+export {
+  getTrainingRecord,
+  registerTrainingExecution,
+  registerTrainingFeedback,
+  listPendingFeedbacks,
+} from "./features/executions";

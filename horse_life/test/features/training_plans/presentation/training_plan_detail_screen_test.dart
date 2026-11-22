@@ -4,6 +4,11 @@
 //
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição de teste de integração navegando de TrainingPlanDetailScreen
+// para TrainingDetailScreen ao tocar em "Ver detalhes".
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Teste do fechamento da rota com resultado true ao cancelar plano.
 //
 // Data: 20/11/2026
@@ -451,6 +456,38 @@ void main() {
       expect(repository.cancelCalls, 1);
       expect(poppedResult, true);
       expect(find.byKey(const Key('open-detail-button')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'navega para TrainingDetailScreen ao tocar em Ver detalhes no card de treino semanal',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final repository = _SpyPlanDetailRepository();
+
+      await tester.pumpWidget(
+        buildApp(
+          TrainingPlanDetailScreen(
+            planId: 'plan-1',
+            currentUserId: 'trainer-1',
+            isTrainer: true,
+            repository: repository,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const Key('training-plan-view-details-button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Dados do treinamento'), findsOneWidget);
+      expect(find.text('Exercícios selecionados'), findsOneWidget);
+      expect(find.text('Orientações'), findsOneWidget);
+      expect(find.byKey(const Key('edit-training-button')), findsOneWidget);
     },
   );
 }
