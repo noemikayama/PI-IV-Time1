@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da atualização e do bloqueio da ação principal depois
+// que o formulário de conclusão confirma o registro do treino.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação da fábrica da tela, dos estados ativo/finalizado e dos
 // dublês usados para carregar e concluir o treino.
 //
@@ -104,6 +109,55 @@ void main() {
     expect(find.text('Treino finalizado'), findsOneWidget);
     expect(find.text('Iniciar treino'), findsNothing);
   });
+
+  // Percorre as três rotas para verificar o retorno do sucesso até os detalhes.
+  testWidgets('refreshes to the finished state after submitting completion', (
+    tester,
+  ) async {
+    final backend = _MutableExecutionBackend();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: TrainingExecutionScreen(
+          loader: backend,
+          completionSubmitter: backend,
+          reference: TrainingExecutionReference(
+            recordId: 'registro-1',
+            planId: 'plano-1',
+            title: 'Trabalho de transições',
+            date: DateTime(2026, 11, 21),
+            durationMinutes: 45,
+            status: TrainingAgendaStatus.planned,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Iniciar treino'));
+    await tester.tap(find.text('Iniciar treino'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('finish-training-button')));
+    await tester.tap(find.byKey(const Key('finish-training-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sim'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('submit-training-completion')),
+    );
+    await tester.tap(find.byKey(const Key('submit-training-completion')));
+    await tester.pumpAndSettle();
+
+    expect(backend.fetchCount, 2);
+    expect(backend.lastFetchedFinished, isFalse);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Treino finalizado'), findsOneWidget);
+    expect(find.text('Iniciar treino'), findsNothing);
+    final action = tester.widget<InkWell>(
+      find.byKey(const Key('training-execution-primary-action')),
+    );
+    expect(action.onTap, isNull);
+  });
 }
 
 TextSpan _spanStartingWith(InlineSpan span, String prefix) {
@@ -154,4 +208,43 @@ class _FakeCompletionSubmitter implements TrainingCompletionSubmitter {
   Future<TrainingCompletionResult> submit(
     TrainingCompletionInput input,
   ) async => const TrainingCompletionResult(status: 'REALIZADO');
+}
+
+// Simula a mesma fronteira usada para consultar e registrar uma execução.
+class _MutableExecutionBackend
+    implements TrainingExecutionLoader, TrainingCompletionSubmitter {
+  int fetchCount = 0;
+
+  // Mantém a resposta deliberadamente desatualizada para provar que o bloqueio
+  // local protege a ação até a próxima resposta consistente do backend.
+  bool? lastFetchedFinished;
+
+  @override
+  Future<TrainingExecutionData> fetchTraining(
+    TrainingExecutionReference reference,
+  ) async {
+    fetchCount++;
+    lastFetchedFinished = false;
+    return TrainingExecutionData(
+      recordId: reference.recordId,
+      title: reference.title,
+      durationMinutes: 45,
+      description: 'Sessão focada em equilíbrio nas transições.',
+      guidelines: const ['Encerrar com 5 minutos de passo.'],
+      exercises: const [
+        TrainingExecutionExercise(
+          code: '12',
+          name: 'Aquecimento ao passo',
+          durationMinutes: 10,
+          description: 'Caminhada em pista para aquecimento muscular.',
+        ),
+      ],
+      isFinished: false,
+    );
+  }
+
+  @override
+  Future<TrainingCompletionResult> submit(TrainingCompletionInput input) async {
+    return const TrainingCompletionResult(status: 'NAO_REALIZADO');
+  }
 }

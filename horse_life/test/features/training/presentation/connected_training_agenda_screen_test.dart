@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Verificação da recarga da semana depois do retorno da tela de
+// detalhes, mantendo a agenda sincronizada com o registro da execução.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Revisão dos comentários dos cenários e documentação dos dublês de
 // agenda, carregamento da execução e finalização.
 //
@@ -77,6 +82,11 @@ void main() {
     expect(find.byType(TrainingExecutionScreen), findsOneWidget);
     expect(executionLoader.reference?.recordId, 'registro-1');
     expect(executionLoader.reference?.planId, 'plano-1');
+
+    await tester.tap(find.byKey(const Key('training-execution-back')));
+    await tester.pumpAndSettle();
+
+    expect(loader.requestedDates, [null, DateTime(2026, 11, 16)]);
   });
 }
 
