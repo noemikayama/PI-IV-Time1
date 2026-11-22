@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte ao callback opcional onExerciseCreatedWithResult para
+// propagar também o código sequencial do exercício recém-cadastrado.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do callback onExerciseCreatedWithId para propagar o
@@ -25,6 +30,7 @@
 
 import 'package:flutter/foundation.dart';
 
+import '../../data/models/exercise_registration_result.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/exercise_registration_repository.dart';
 import '../../data/repositories/firebase_trainer_linked_horse_repository.dart';
@@ -40,6 +46,7 @@ class ExerciseRegistrationController {
         const FirebaseTrainerLinkedHorseRepository(),
     this.onExerciseCreated,
     this.onExerciseCreatedWithId,
+    this.onExerciseCreatedWithResult,
   }) : _horseRepository = horseRepository;
 
   final ExerciseRegistrationRepository _registrationRepository;
@@ -52,6 +59,14 @@ class ExerciseRegistrationController {
   /// retornado pelo backend após o envio do exercício.
   final void Function(ExerciseRegistrationDraft draft, String? exerciseId)?
   onExerciseCreatedWithId;
+
+  /// Callback opcional acionado com o rascunho consolidado e o resultado
+  /// completo retornado pelo backend (incluindo identificador e código).
+  final void Function(
+    ExerciseRegistrationDraft draft,
+    ExerciseRegistrationResult? result,
+  )?
+  onExerciseCreatedWithResult;
 
   // Obtém e normaliza a lista de cavalos vinculados ao treinador autenticado.
   Future<List<TrainerLinkedHorse>> fetchLinkedHorses() async {
@@ -80,6 +95,11 @@ class ExerciseRegistrationController {
     ValueChanged<ExerciseRegistrationDraft>? callback, {
     void Function(ExerciseRegistrationDraft draft, String? exerciseId)?
     onExerciseCreatedWithId,
+    void Function(
+      ExerciseRegistrationDraft draft,
+      ExerciseRegistrationResult? result,
+    )?
+    onExerciseCreatedWithResult,
   }) {
     return ExerciseRegistrationController(
       _registrationRepository,
@@ -87,6 +107,8 @@ class ExerciseRegistrationController {
       onExerciseCreated: callback,
       onExerciseCreatedWithId:
           onExerciseCreatedWithId ?? this.onExerciseCreatedWithId,
+      onExerciseCreatedWithResult:
+          onExerciseCreatedWithResult ?? this.onExerciseCreatedWithResult,
     );
   }
 }
