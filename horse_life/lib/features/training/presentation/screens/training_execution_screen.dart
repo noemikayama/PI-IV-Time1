@@ -4,6 +4,10 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Ocultação da ação de execução para perfis com acesso somente de
+// leitura, preservando a indicação de registros já finalizados.
+//
+// Data: 22/11/2026
 // Alteração: Atualização dos detalhes após a conclusão do treino e bloqueio
 // imediato de um novo início enquanto a releitura do backend é processada.
 //
@@ -124,9 +128,10 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
     );
   }
 
-  // Monta o conteúdo carregado e desabilita o início quando o registro já foi
-  // concluído total ou parcialmente.
+  // Monta o conteúdo e só oferece início quando permissão e estado permitem;
+  // registros concluídos continuam visíveis com ação final desabilitada.
   Widget _buildContent(TrainingExecutionData training) {
+    final canStart = training.canStart && !training.isFinished;
     final isFinished = training.isFinished || _completedLocally;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
@@ -244,56 +249,60 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
                     ),
                   ],
                 ],
-                const SizedBox(height: 30),
-                SizedBox(
-                  height: 64,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: isFinished ? AppColors.grey : null,
-                      gradient: isFinished
-                          ? null
-                          : const LinearGradient(
-                              colors: [
-                                AppColors.seaGreen,
-                                AppColors.blueSpruce,
+                if (canStart || training.isFinished) ...[
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    height: 64,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: training.isFinished ? AppColors.grey : null,
+                        gradient: training.isFinished
+                            ? null
+                            : const LinearGradient(
+                                colors: [
+                                  AppColors.seaGreen,
+                                  AppColors.blueSpruce,
+                                ],
+                              ),
+                        borderRadius: BorderRadius.circular(34),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          key: const Key('training-execution-primary-action'),
+                          onTap: canStart
+                              ? () => _startTraining(training)
+                              : null,
+                          borderRadius: BorderRadius.circular(34),
+                          child: Center(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (!training.isFinished) ...[
+                                  const Icon(
+                                    Icons.play_arrow_rounded,
+                                    color: Colors.white,
+                                    size: 34,
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                                Text(
+                                  training.isFinished
+                                      ? 'Treino finalizado'
+                                      : 'Iniciar treino',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineLarge
+                                      ?.copyWith(color: Colors.white),
+                                ),
                               ],
                             ),
-                      borderRadius: BorderRadius.circular(34),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        key: const Key('training-execution-primary-action'),
-                        onTap: isFinished
-                            ? null
-                            : () => _startTraining(training),
-                        borderRadius: BorderRadius.circular(34),
-                        child: Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (!isFinished) ...[
-                                const Icon(
-                                  Icons.play_arrow_rounded,
-                                  color: Colors.white,
-                                  size: 34,
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                              Text(
-                                isFinished
-                                    ? 'Treino finalizado'
-                                    : 'Iniciar treino',
-                                style: Theme.of(context).textTheme.headlineLarge
-                                    ?.copyWith(color: Colors.white),
-                              ),
-                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção do recarregamento síncrono da Home após o perfil e a
+// lista de cavalos; inclusão de conteúdo injetável para testes da navegação.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Auditoria e correção dos comentários da integração da agenda, com
 // documentação das dependências usadas para consultar e finalizar treinos.
 //
@@ -204,6 +209,7 @@ class GuardianHomeScreen extends StatefulWidget {
     this.agendaLoader,
     this.trainingExecutionLoader,
     this.trainingCompletionSubmitter,
+    this.horseListBuilder,
     super.key,
   });
 
@@ -244,6 +250,9 @@ class GuardianHomeScreen extends StatefulWidget {
 
   /// Persiste o formulário preenchido após a execução ativa.
   final TrainingCompletionSubmitter? trainingCompletionSubmitter;
+
+  /// Substitui somente o conteúdo da rota de cavalos em testes de navegação.
+  final WidgetBuilder? horseListBuilder;
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
@@ -291,7 +300,12 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         ),
       );
       if (!mounted) return;
-      setState(() => _homeFuture = _fetchHome());
+      // A nova consulta é criada antes do setState para que o callback apenas
+      // substitua o estado e nunca devolva uma Future ao framework.
+      final refreshedHome = _fetchHome();
+      setState(() {
+        _homeFuture = refreshedHome;
+      });
       if (destination is HomeNavigationDestination) {
         _onNavigationDestination(destination);
       }
@@ -544,30 +558,36 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   Future<void> _openHorseList() async {
     final destination = await Navigator.of(context).push<dynamic>(
       MaterialPageRoute<dynamic>(
-        builder: (listContext) => GuardianHorseListScreen(
-          onRegistrationCompleted: (result) {
-            if (mounted && result.isPersisted) _retryHome();
-          },
-          appBar: const HomeAppBar(),
-          drawer: GuardianSidebar(
-            onLogout: widget.onLogout,
-            homeFuture: _homeFuture,
-            // Reutiliza o cadastro real e atualiza a Home ao retornar.
-            onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
-          ),
-          bottomNavigationBar: HomeBottomNavBar(
-            selectedDestination: HomeNavigationDestination.horses,
-            onDestinationSelected: (selected) {
-              if (selected != HomeNavigationDestination.horses) {
-                Navigator.of(listContext).pop(selected);
-              }
-            },
-          ),
-        ),
+        builder: (listContext) =>
+            widget.horseListBuilder?.call(listContext) ??
+            GuardianHorseListScreen(
+              onRegistrationCompleted: (result) {
+                if (mounted && result.isPersisted) _retryHome();
+              },
+              appBar: const HomeAppBar(),
+              drawer: GuardianSidebar(
+                onLogout: widget.onLogout,
+                homeFuture: _homeFuture,
+                // Reutiliza o cadastro real e atualiza a Home ao retornar.
+                onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
+              ),
+              bottomNavigationBar: HomeBottomNavBar(
+                selectedDestination: HomeNavigationDestination.horses,
+                onDestinationSelected: (selected) {
+                  if (selected != HomeNavigationDestination.horses) {
+                    Navigator.of(listContext).pop(selected);
+                  }
+                },
+              ),
+            ),
       ),
     );
     if (!mounted) return;
-    setState(() => _homeFuture = _fetchHome());
+    // Mantém a criação assíncrona fora do callback síncrono de setState.
+    final refreshedHome = _fetchHome();
+    setState(() {
+      _homeFuture = refreshedHome;
+    });
     if (destination is HomeNavigationDestination) {
       _onNavigationDestination(destination);
     }

@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão da permissão de início nos contratos de referência e de
+// execução para diferenciar consulta de uma sessão executável.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação completa dos contratos de referência, exercícios,
 // materiais, mídias e dados consolidados da execução.
 //
@@ -26,6 +31,7 @@ class TrainingExecutionReference {
     required this.date,
     required this.durationMinutes,
     required this.status,
+    this.canStart = true,
   });
 
   /// Identificador do registro de agenda que será finalizado posteriormente.
@@ -43,6 +49,9 @@ class TrainingExecutionReference {
 
   /// Estado conhecido pela agenda no momento da navegação.
   final TrainingAgendaStatus status;
+
+  /// Indica se o perfil atual pode iniciar o treino referenciado.
+  final bool canStart;
 
   /// Impede iniciar novamente execuções totais ou parciais já registradas.
   bool get isFinished =>
@@ -135,6 +144,7 @@ class TrainingExecutionData {
     required this.guidelines,
     required this.exercises,
     required this.isFinished,
+    this.canStart = true,
   });
 
   /// Registro que conecta a execução ao item original da agenda.
@@ -151,4 +161,7 @@ class TrainingExecutionData {
 
   /// Indica se a tela deve impedir uma nova execução.
   final bool isFinished;
+
+  /// Preserva a permissão de início após o carregamento dos detalhes.
+  final bool canStart;
 }

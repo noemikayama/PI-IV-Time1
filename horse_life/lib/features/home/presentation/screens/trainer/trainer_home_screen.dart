@@ -3,6 +3,12 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção dos callbacks de setState que devolviam Future durante o
+// recarregamento da Home após navegações e novas tentativas; documentação da
+// regra de atualização síncrona da Future armazenada.
+//
+// Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Remoção da correlação com dados mockados em _openTrainingDetails,
 // resolução do treinamento real no backend via galeria do treinador quando
@@ -313,7 +319,9 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         ),
       );
       if (!mounted) return;
-      setState(() => _homeFuture = _fetchHome());
+      setState(() {
+        _homeFuture = _fetchHome();
+      });
       if (destination is HomeNavigationDestination) {
         _onNavigationDestination(destination);
       }
@@ -447,7 +455,9 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         ),
       );
       if (!mounted) return;
-      setState(() => _homeFuture = _fetchHome());
+      setState(() {
+        _homeFuture = _fetchHome();
+      });
       if (destination is HomeNavigationDestination) {
         _onNavigationDestination(destination);
       }
@@ -477,7 +487,9 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         ),
       );
       if (!mounted) return;
-      setState(() => _homeFuture = _fetchHome());
+      setState(() {
+        _homeFuture = _fetchHome();
+      });
       if (destination is HomeNavigationDestination) {
         _onNavigationDestination(destination);
       }
@@ -565,7 +577,11 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   }
 
   /// Substitui a Future armazenada para executar uma nova tentativa.
-  void _retry() => setState(() => _homeFuture = _fetchHome());
+  void _retry() {
+    setState(() {
+      _homeFuture = _fetchHome();
+    });
+  }
 
   void _openExerciseCreation() {
     // Exercícios já possuem fluxo próprio e podem ser abertos diretamente.
@@ -749,7 +765,9 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       ),
     );
     if (!mounted) return;
-    setState(() => _homeFuture = _fetchHome());
+    setState(() {
+      _homeFuture = _fetchHome();
+    });
     if (destination is HomeNavigationDestination) {
       _onNavigationDestination(destination);
     }

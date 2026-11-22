@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Exibição e abertura do treino diário conforme a permissão do
+// perfil, período do plano, correção da quebra de linha do plano ativo e
+// integração de "Adicionar plano" com o fluxo de cadastro.
+//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Recarregamento automático dos dados do perfil do cavalo ao
@@ -58,6 +64,13 @@ import 'package:horse_life/features/horses/presentation/widgets/horse_injury_dia
 import 'package:horse_life/features/horses/presentation/widgets/horse_relationships_dialog.dart';
 import 'package:horse_life/features/horses/presentation/widgets/horse_text_entry_dialog.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_edit_screen.dart';
+import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/training/data/models/training_execution_data.dart';
+import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
+import 'package:horse_life/features/training/presentation/screens/active_training_screen.dart';
+import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
+import 'package:horse_life/features/training_plans/presentation/routes/training_plan_registration_flow_route.dart';
 import 'package:horse_life/features/training_plans/presentation/screens/training_plan_detail_screen.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -68,21 +81,29 @@ typedef HorseRemovalRequested = Future<void> Function(HorseProfileData horse);
 /// Coordena consulta, permissões e ações remotas; os widgets privados abaixo
 /// recebem dados prontos e cuidam somente da apresentação de cada aba.
 class HorseProfileScreen extends StatefulWidget {
-  const HorseProfileScreen({
+  HorseProfileScreen({
     required this.horseId,
     this.currentUserId,
     this.isTrainer = false,
     this.repository = const FirebaseHorseProfileRepository(),
+    TrainingExecutionLoader? trainingLoader,
+    TrainingCompletionSubmitter? completionSubmitter,
     this.onEditRelationships,
     this.onRemoveHorse,
     this.onNavigationSelected,
     super.key,
-  });
+  }) : trainingLoader = trainingLoader ?? FirebaseTrainingExecutionRepository(),
+       completionSubmitter =
+           completionSubmitter ?? FirebaseTrainingCompletionRepository();
 
   final String horseId;
   final String? currentUserId;
   final bool isTrainer;
   final HorseProfileRepository repository;
+
+  /// Dependências da consulta e do registro repassadas ao treino diário.
+  final TrainingExecutionLoader trainingLoader;
+  final TrainingCompletionSubmitter completionSubmitter;
 
   /// Permite conectar uma futura rota de edição quando houver contrato remoto.
   final ValueChanged<HorseProfileData>? onEditRelationships;
@@ -104,6 +125,9 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
   late final TabController _tabs;
   int _imageIndex = 0;
   bool _isDeleting = false;
+
+  // Bloqueia toques repetidos enquanto o treino diário está sendo aberto.
+  bool _isOpeningTraining = false;
 
   // --- Ciclo de vida e recarregamento ---------------------------------------
 
@@ -332,6 +356,72 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
     }
   }
 
+  /// Abre o cadastro de plano e atualiza o perfil quando o treinador retorna.
+  Future<void> _openTrainingPlanCreation() async {
+    await Navigator.of(context).push(TrainingPlanRegistrationFlowRoute.build());
+    if (mounted) _reload();
+  }
+
+  /// Abre diretamente a execução para atletas ou os detalhes para consulta e
+  /// recarrega o perfil ao retornar para refletir mudanças no registro.
+  Future<void> _openTodayTraining(HorseProfileData horse) async {
+    if (_isOpeningTraining) return;
+    final plan = horse.currentPlan;
+    final training = plan?.todayTraining;
+    if (plan == null || training == null) return;
+    final status = switch (training.status) {
+      'REALIZADO' => TrainingAgendaStatus.completed,
+      'PARCIAL' => TrainingAgendaStatus.partial,
+      'NAO_REALIZADO' => TrainingAgendaStatus.notCompleted,
+      _ => TrainingAgendaStatus.planned,
+    };
+    final canStart =
+        horse.effectiveTrainingAction == HorseProfileTrainingAction.start &&
+        !training.isFinished;
+    final reference = TrainingExecutionReference(
+      recordId: training.recordId,
+      planId: plan.id,
+      title: training.name,
+      date: DateTime.now(),
+      durationMinutes: training.durationMinutes,
+      status: status,
+      canStart: canStart,
+    );
+    setState(() => _isOpeningTraining = true);
+    try {
+      if (canStart) {
+        final execution = await widget.trainingLoader.fetchTraining(reference);
+        if (!mounted) return;
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => ActiveTrainingScreen(
+              training: execution,
+              completionSubmitter: widget.completionSubmitter,
+            ),
+          ),
+        );
+      } else {
+        await Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(
+            builder: (_) => TrainingExecutionScreen(
+              loader: widget.trainingLoader,
+              completionSubmitter: widget.completionSubmitter,
+              reference: reference,
+            ),
+          ),
+        );
+      }
+      if (mounted) _reload();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_errorMessage(error))));
+    } finally {
+      if (mounted) setState(() => _isOpeningTraining = false);
+    }
+  }
+
   String _currentUserId(HorseProfileData horse) {
     final injectedId = widget.currentUserId?.trim() ?? '';
     if (injectedId.isNotEmpty) return injectedId;
@@ -440,14 +530,31 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
                         onAddInjury: () => _addInjury(horse),
                         onRemove: () => _requestRemoval(horse),
                         onOpenPlan: horse.currentPlan != null
-                            ? () => _openTrainingPlan(horse, horse.currentPlan!.id)
+                            ? () => _openTrainingPlan(
+                                horse,
+                                horse.currentPlan!.id,
+                              )
                             : null,
                       ),
                       _PlanTab(
                         plan: horse.currentPlan,
+                        trainingAction: horse.effectiveTrainingAction,
+                        isOpeningTraining: _isOpeningTraining,
                         showTrainerAction: widget.isTrainer,
+                        onAddPlan: widget.isTrainer
+                            ? _openTrainingPlanCreation
+                            : null,
+                        onOpenTraining:
+                            horse.currentPlan?.todayTraining != null &&
+                                horse.effectiveTrainingAction !=
+                                    HorseProfileTrainingAction.none
+                            ? () => _openTodayTraining(horse)
+                            : null,
                         onOpenPlan: horse.currentPlan != null
-                            ? () => _openTrainingPlan(horse, horse.currentPlan!.id)
+                            ? () => _openTrainingPlan(
+                                horse,
+                                horse.currentPlan!.id,
+                              )
                             : null,
                       ),
                       _EvaluationsTab(
@@ -661,9 +768,10 @@ class _DataTab extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        _line('Plano ativo', horse.currentPlan!.title),
+                        Expanded(
+                          child: _line('Plano ativo', horse.currentPlan!.title),
+                        ),
                         const SizedBox(width: 6),
                         const Icon(
                           Icons.open_in_new,
@@ -873,12 +981,20 @@ class _RelationshipUser extends StatelessWidget {
 class _PlanTab extends StatelessWidget {
   const _PlanTab({
     required this.plan,
+    required this.trainingAction,
+    required this.isOpeningTraining,
     required this.showTrainerAction,
+    required this.onAddPlan,
     this.onOpenPlan,
+    this.onOpenTraining,
   });
   final HorseProfilePlan? plan;
+  final HorseProfileTrainingAction trainingAction;
+  final bool isOpeningTraining;
   final bool showTrainerAction;
+  final VoidCallback? onAddPlan;
   final VoidCallback? onOpenPlan;
+  final VoidCallback? onOpenTraining;
 
   @override
   Widget build(BuildContext context) => plan == null
@@ -890,9 +1006,10 @@ class _PlanTab extends StatelessWidget {
               'momento. Volte aqui depois que algum treinador prescrever a '
               'rotina ideal para ele.',
           action: showTrainerAction
-              ? const _TrainerTabAction(
+              ? _TrainerTabAction(
                   key: Key('add-horse-plan-button'),
                   label: 'Adicionar plano',
+                  onPressed: onAddPlan,
                 )
               : null,
         )
@@ -900,43 +1017,137 @@ class _PlanTab extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           children: [
             if (showTrainerAction) ...[
-              const _TrainerTabAction(
+              _TrainerTabAction(
                 key: Key('add-horse-plan-button'),
                 label: 'Adicionar plano',
+                onPressed: onAddPlan,
               ),
               const SizedBox(height: 24),
             ],
-            CollapsibleSectionCard(
-              title: 'Plano atual',
-              child: InkWell(
-                key: const Key('horse-plan-tab-item'),
-                onTap: onOpenPlan,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          plan!.title,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      if (onOpenPlan != null)
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: AppColors.seaGreen,
-                        ),
-                    ],
-                  ),
+            InkWell(
+              key: const Key('horse-plan-tab-item'),
+              onTap: onOpenPlan,
+              child: Text(
+                plan!.title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
               ),
+            ),
+            const SizedBox(height: 14),
+            Text('Data de início: ${_profileDate(plan!.startDate)}'),
+            const SizedBox(height: 10),
+            Text('Data de fim: ${_profileDate(plan!.endDate)}'),
+            const SizedBox(height: 22),
+            CollapsibleSectionCard(
+              title: 'Treino do dia',
+              child: plan!.todayTraining == null
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Text('Nenhum treino marcado para hoje.'),
+                    )
+                  : _TodayTrainingCard(
+                      training: plan!.todayTraining!,
+                      action: trainingAction,
+                      isLoading: isOpeningTraining,
+                      onPressed: onOpenTraining,
+                    ),
             ),
           ],
         );
 }
+
+// Resume o treino diário e adapta a ação principal à permissão recebida.
+class _TodayTrainingCard extends StatelessWidget {
+  const _TodayTrainingCard({
+    required this.training,
+    required this.action,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  final HorseProfileDayTraining training;
+  final HorseProfileTrainingAction action;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final canStart =
+        action == HorseProfileTrainingAction.start && !training.isFinished;
+    return Container(
+      key: const Key('horse-today-training-card'),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            training.name,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 18),
+          _TrainingMetaLine(
+            icon: training.personRole == 'ATLETA'
+                ? Icons.person_outline_rounded
+                : Icons.sports_rounded,
+            text: training.personName.isEmpty
+                ? 'Não informado'
+                : training.personName,
+          ),
+          const SizedBox(height: 12),
+          _TrainingMetaLine(
+            icon: Icons.timer_outlined,
+            text: '${training.durationMinutes} min',
+          ),
+          const SizedBox(height: 12),
+          _TrainingMetaLine(
+            icon: Icons.assignment_outlined,
+            text: training.planName,
+          ),
+          const SizedBox(height: 20),
+          GradientButton(
+            key: const Key('horse-today-training-action'),
+            label: canStart ? 'Iniciar treino' : 'Ver treino',
+            icon: canStart
+                ? Icons.play_arrow_rounded
+                : Icons.open_in_new_rounded,
+            onPressed: onPressed,
+            isLoading: isLoading,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Linha responsiva de metadado usada dentro do card do treino diário.
+class _TrainingMetaLine extends StatelessWidget {
+  const _TrainingMetaLine({required this.icon, required this.text});
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 26),
+      const SizedBox(width: 14),
+      Expanded(child: Text(text)),
+    ],
+  );
+}
+
+// Formata datas civis do plano sem inventar valor quando o backend as omite.
+String _profileDate(DateTime? value) => value == null
+    ? 'Não informada'
+    : '${value.day.toString().padLeft(2, '0')}/'
+          '${value.month.toString().padLeft(2, '0')}/'
+          '${value.year}';
 
 class _EvaluationsTab extends StatelessWidget {
   const _EvaluationsTab({
@@ -988,17 +1199,23 @@ class _EvaluationsTab extends StatelessWidget {
         );
 }
 
+// Ação profissional compartilhada pelas abas de plano e avaliação.
 class _TrainerTabAction extends StatelessWidget {
-  const _TrainerTabAction({required this.label, super.key});
+  const _TrainerTabAction({required this.label, this.onPressed, super.key});
 
   final String label;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) => Align(
     alignment: Alignment.centerLeft,
     child: SizedBox(
       width: 400,
-      child: GradientButton(label: label, icon: Icons.add, onPressed: () {}),
+      child: GradientButton(
+        label: label,
+        icon: Icons.add,
+        onPressed: onPressed ?? () {},
+      ),
     ),
   );
 }
