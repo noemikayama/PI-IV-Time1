@@ -4,8 +4,14 @@
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição da callable provisória pela função de registro da
+// execução e adaptação da leitura da resposta retornada pelo backend.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do contrato injetável, da integração Firebase e das
-// validações aplicadas à resposta de finalização.
+// validações aplicadas à resposta de finalização. Integração com a callable
+// registerTrainingExecution e leitura do status em registro.status.
 //
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -22,15 +28,18 @@ abstract interface class TrainingCompletionSubmitter {
 }
 
 /// Assinatura injetável da callable, permitindo testes sem Firebase.
-typedef FinishTrainingCallable =
+typedef RegisterTrainingExecutionCallable =
     Future<dynamic> Function(Map<String, dynamic> payload);
 
-/// Implementação que envia o formulário para `finishTraining`.
+/// Implementação que envia o formulário para `registerTrainingExecution`.
 class FirebaseTrainingCompletionRepository
     implements TrainingCompletionSubmitter {
+  /// Nome exportado pelo backend para registrar o formulário da execução.
+  static const callableName = 'registerTrainingExecution';
+
   FirebaseTrainingCompletionRepository({
     FirebaseFunctions? functions,
-    FinishTrainingCallable? callable,
+    RegisterTrainingExecutionCallable? callable,
   }) : _callable =
            callable ??
            ((payload) async =>
@@ -38,12 +47,12 @@ class FirebaseTrainingCompletionRepository
                            FirebaseFunctions.instanceFor(
                              region: 'southamerica-east1',
                            ))
-                       .httpsCallable('finishTraining')
+                       .httpsCallable(callableName)
                        .call<dynamic>(payload))
                    .data);
 
   // Função efetiva isolada para que a regra de conversão seja testável.
-  final FinishTrainingCallable _callable;
+  final RegisterTrainingExecutionCallable _callable;
 
   /// Serializa [input], valida a forma mínima da resposta e devolve o status
   /// persistido pelo backend.
@@ -56,7 +65,11 @@ class FirebaseTrainingCompletionRepository
       );
     }
     final data = Map<String, dynamic>.from(response);
-    final status = data['status'];
+    final record = data['registro'];
+    if (record is! Map) {
+      throw const FormatException('Registro da execução inválido.');
+    }
+    final status = record['status'];
     if (status is! String || status.isEmpty) {
       throw const FormatException('Status da finalização inválido.');
     }
