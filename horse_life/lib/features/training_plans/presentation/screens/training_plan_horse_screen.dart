@@ -73,9 +73,7 @@ class _TrainingPlanHorseScreenState extends State<TrainingPlanHorseScreen> {
     _loadHorses();
   }
 
-  TrainerLinkedHorse? _resolveInitialSelection(
-    List<TrainerLinkedHorse> horses,
-  ) {
+  TrainerLinkedHorse? _resolveInitialSelection(List<TrainerLinkedHorse> horses) {
     final candidate = widget.initialSelectedHorse ?? widget.draft.horse;
     if (candidate == null) return null;
     for (final horse in horses) {

@@ -2,23 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
-// Data: 22/11/2026
-// Autor: Noemi Kayama - RA 25004140
-// Alteração: Recarga da semana ao retornar dos detalhes da execução para exibir
-// imediatamente o estado persistido após o registro do treinamento.
-//
-// Data: 22/11/2026
-// Autor: Noemi Kayama - RA 25004140
-// Alteração: Revisão dos comentários do carregamento semanal e documentação da
-// resolução do plano e da navegação para os detalhes da execução.
-//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção da troca e da repetição de carga da semana para manter o
 // callback de setState síncrono, sem retornar Future; documentação do estado,
 // da adaptação dos dados e do tratamento dos erros da callable.
-// da adaptação dos dados e do tratamento dos erros da callable. Integração da
-// agenda com a consulta dos detalhes e a abertura da execução do treino.
 //
 // Data: 20/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -31,12 +19,6 @@ import 'package:flutter/material.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
-import 'package:horse_life/features/training/data/models/training_execution_data.dart';
-import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
-import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
-import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
-import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
-import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
 
 /// Contêiner que mantém a agenda sincronizada com o backend por semana.
 ///
@@ -50,8 +32,6 @@ class ConnectedTrainingAgendaScreen extends StatefulWidget {
     this.onStartTraining,
     this.onViewTraining,
     this.onViewHistory,
-    this.executionLoader,
-    this.completionSubmitter,
     super.key,
   });
 
@@ -64,11 +44,6 @@ class ConnectedTrainingAgendaScreen extends StatefulWidget {
   final TrainingAgendaEntryCallback? onStartTraining;
   final TrainingAgendaEntryCallback? onViewTraining;
   final TrainingAgendaEntryCallback? onViewHistory;
-
-  /// Dependências opcionais que habilitam a navegação interna para execução.
-  /// Se ausentes, os callbacks externos continuam responsáveis pelas ações.
-  final TrainingExecutionLoader? executionLoader;
-  final TrainingCompletionSubmitter? completionSubmitter;
 
   @override
   State<ConnectedTrainingAgendaScreen> createState() =>
@@ -114,52 +89,6 @@ class _ConnectedTrainingAgendaScreenState
     setState(() {
       _future = future;
     });
-  }
-
-  // Completa resumos do histórico com os dados semanais, resolve o plano pelo
-  // nome e cavalo e monta a referência exigida pela tela de detalhes. Ao voltar
-  // da rota, relê a semana para refletir uma execução registrada no backend.
-  Future<void> _openTraining(TrainingAgendaEntry entry) async {
-    final loader = widget.executionLoader;
-    final submitter = widget.completionSubmitter;
-    if (loader == null || submitter == null) return;
-    // O histórico possui um resumo menor. Para registros da semana visível,
-    // recupera o nome do plano da entrada semanal correspondente.
-    var source = entry;
-    for (final weeklyTraining
-        in _current?.weekTrainings ?? const <TrainingAgendaEntry>[]) {
-      if (weeklyTraining.id == entry.id) {
-        source = weeklyTraining;
-        break;
-      }
-    }
-    final plans = _current?.plans ?? const <TrainingAgendaPlan>[];
-    String planId = '';
-    for (final plan in plans) {
-      if (plan.planName == source.planName &&
-          plan.horseName == source.horseName) {
-        planId = plan.id;
-        break;
-      }
-    }
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (context) => TrainingExecutionScreen(
-          loader: loader,
-          completionSubmitter: submitter,
-          reference: TrainingExecutionReference(
-            recordId: entry.id,
-            planId: planId,
-            title: source.title,
-            date: source.date,
-            durationMinutes: source.durationMinutes,
-            status: entry.status,
-          ),
-        ),
-      ),
-    );
-    if (!mounted) return;
-    _retry();
   }
 
   @override
@@ -218,15 +147,6 @@ class _ConnectedTrainingAgendaScreenState
                 onStartTraining: widget.onStartTraining,
                 onViewTraining: widget.onViewTraining,
                 onViewHistory: widget.onViewHistory,
-                onStartTraining:
-                    widget.onStartTraining ??
-                    (widget.executionLoader == null ? null : _openTraining),
-                onViewTraining:
-                    widget.onViewTraining ??
-                    (widget.executionLoader == null ? null : _openTraining),
-                onViewHistory:
-                    widget.onViewHistory ??
-                    (widget.executionLoader == null ? null : _openTraining),
                 onWeekChanged: _loadWeek,
               ),
               if (snapshot.connectionState != ConnectionState.done)
