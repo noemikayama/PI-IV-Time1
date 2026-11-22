@@ -4,10 +4,13 @@
 // Técnicas de Teste OO: categorias de métodos (ValidadorMicrochip)
 // e particionamento por atributos (TabelaPaises).
 // Documentação dos testes: Gabriela Sichiroli Ferrari — 20/11/2026.
+// Revisão (22/11/2026): reforço da asserção sobre a duplicidade no CT-06.
 package br.com.horselife.microchip.dominio;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import br.com.horselife.microchip.modelos.CodigoErro;
 import br.com.horselife.microchip.modelos.ResultadoValidacao;
@@ -111,8 +114,17 @@ class TesteOOIntraclasseTest {
         // Simula a leitura de um arquivo usando dados em memória (sem arquivo físico).
         ByteArrayInputStream entrada = new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
 
-        // Act + Assert: duplicidade deve gerar IllegalStateException.
-        // assertThrows aprova o teste quando a exceção esperada é lançada.
-        assertThrows(IllegalStateException.class, () -> TabelaPaises.ler(entrada));
+        // Act + Assert: captura a exceção esperada durante a leitura do CSV.
+        IllegalStateException excecao =
+                assertThrows(IllegalStateException.class, () -> TabelaPaises.ler(entrada));
+
+        // Assert: verifica a causa e a localização do erro, evitando que o teste
+        // passe indevidamente por outro tipo de CSV malformado.
+        String mensagem = excecao.getMessage();
+        assertNotNull(mensagem, "A exceção deve informar a causa do erro.");
+        assertTrue(mensagem.contains("repetido"),
+                "A mensagem deve indicar que o código está repetido.");
+        assertTrue(mensagem.contains("linha 3"),
+                "A mensagem deve indicar a linha em que ocorreu a duplicidade.");
     }
 }
