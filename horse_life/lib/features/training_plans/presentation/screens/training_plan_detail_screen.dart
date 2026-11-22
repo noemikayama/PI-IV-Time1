@@ -4,6 +4,11 @@
 //
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão do botão "Ver detalhes" dos cards de treinamento à nova
+// tela TrainingDetailScreen com recarregamento em caso de edição do treino.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Retorno automático para a tela anterior com atualização de estado
 // e exibição da SnackBar após cancelamento bem-sucedido do plano.
 //
@@ -30,6 +35,7 @@ import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 
 import '../../../exercises/data/repositories/trainer_linked_horse_repository.dart';
 import '../../../trainings/application/controllers/training_registration_controller.dart';
+import '../../../trainings/presentation/screens/training_detail_screen.dart';
 import '../../application/controllers/training_plan_registration_controller.dart';
 import '../../data/models/training_plan_gallery_item.dart';
 import '../../data/models/training_plan_weekday.dart';
@@ -122,18 +128,48 @@ class _TrainingPlanDetailScreenState extends State<TrainingPlanDetailScreen> {
     _selectNavigationDestination(HomeNavigationDestination.trainings);
   }
 
-  void _handleViewTrainingDetails(TrainingPlanGalleryItem training) {
+  Future<void> _handleViewTrainingDetails(
+    TrainingPlanGalleryItem training, {
+    TrainingPlanDetailData? plan,
+  }) async {
     final callback = widget.onViewTrainingDetails;
     if (callback != null) {
       callback(training);
       return;
     }
-    AppSnackBar.show(
-      context,
-      backgroundColor: AppColors.blueSpruce,
-      icon: Icons.info_outline_rounded,
-      message: 'Visualização detalhada do treinamento ainda não disponível.',
+
+    final result = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (_) => TrainingDetailScreen(
+          trainingCode: training.code > 0
+              ? training.code.toString()
+              : training.id,
+          initialTraining: training,
+          currentUserId: widget.currentUserId,
+          trainerId: plan?.trainerId,
+          isTrainer: widget.isTrainer,
+          isOwner: plan?.canManage(
+            currentUserId: widget.currentUserId,
+            isTrainer: widget.isTrainer,
+          ),
+          trainingRegistrationController: widget.trainingRegistrationController,
+          onNavigationSelected: (destination) {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop(destination);
+            }
+          },
+        ),
+      ),
     );
+    if (!mounted || result == null) return;
+    if (result is HomeNavigationDestination) {
+      _selectNavigationDestination(result);
+      return;
+    }
+    if (result == true) {
+      _wasPlanModified = true;
+      _reload();
+    }
   }
 
   Future<void> _editPlan(TrainingPlanDetailData plan) async {
@@ -366,7 +402,11 @@ class _TrainingPlanDetailScreenState extends State<TrainingPlanDetailScreen> {
                                   () => _currentTrainingIndex = index,
                                 ),
                                 onViewAll: _openTrainingAgenda,
-                                onViewDetails: _handleViewTrainingDetails,
+                                onViewDetails: (training) =>
+                                    _handleViewTrainingDetails(
+                                      training,
+                                      plan: plan,
+                                    ),
                               ),
                             ),
                             CollapsibleSectionCard(
