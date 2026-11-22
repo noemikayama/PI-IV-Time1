@@ -41,10 +41,8 @@ class TrainingPlanRegistrationController {
     final horses = await _horseRepository.fetchLinkedHorses();
     return horses
         .map(
-          (horse) => TrainerLinkedHorse(
-            id: horse.id.trim(),
-            name: horse.name.trim(),
-          ),
+          (horse) =>
+              TrainerLinkedHorse(id: horse.id.trim(), name: horse.name.trim()),
         )
         .where((horse) => horse.name.isNotEmpty)
         .toList(growable: false);
