@@ -2,10 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Auditoria e correção dos comentários da integração da agenda, com
+// documentação das dependências usadas para consultar e finalizar treinos.
+//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção e detalhamento da documentação do fluxo conectado da
-// agenda e da adaptação dos callbacks legados do responsável.
+// agenda e da adaptação dos callbacks legados do responsável. Encaminhamento
+// das dependências necessárias para abrir e finalizar a execução do treino.
 //
 // Data: 20/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -167,6 +173,8 @@ import 'package:horse_life/features/profile/presentation/screens/guardian_profil
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 
@@ -194,6 +202,8 @@ class GuardianHomeScreen extends StatefulWidget {
     this.onViewTraining,
     this.onViewPlans,
     this.agendaLoader,
+    this.trainingExecutionLoader,
+    this.trainingCompletionSubmitter,
     super.key,
   });
 
@@ -228,6 +238,12 @@ class GuardianHomeScreen extends StatefulWidget {
 
   /// Fonte da agenda completa. Ausente mantém a adaptação legada para testes.
   final TrainingAgendaLoader? agendaLoader;
+
+  /// Carrega os detalhes do treino selecionado na agenda conectada.
+  final TrainingExecutionLoader? trainingExecutionLoader;
+
+  /// Persiste o formulário preenchido após a execução ativa.
+  final TrainingCompletionSubmitter? trainingCompletionSubmitter;
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
@@ -389,6 +405,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           );
       return ConnectedTrainingAgendaScreen(
         loader: agendaLoader,
+        executionLoader: widget.trainingExecutionLoader,
+        completionSubmitter: widget.trainingCompletionSubmitter,
         onViewPlans: widget.onViewPlans,
         onStartTraining: widget.onStartTraining == null
             ? null
@@ -524,31 +542,30 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
   /// Listagem autenticada exclusivamente pela callable listHorses.
   Future<void> _openHorseList() async {
-    final destination = await Navigator.of(context)
-        .push<dynamic>(
-          MaterialPageRoute<dynamic>(
-            builder: (listContext) => GuardianHorseListScreen(
-              onRegistrationCompleted: (result) {
-                if (mounted && result.isPersisted) _retryHome();
-              },
-              appBar: const HomeAppBar(),
-              drawer: GuardianSidebar(
-                onLogout: widget.onLogout,
-                homeFuture: _homeFuture,
-                // Reutiliza o cadastro real e atualiza a Home ao retornar.
-                onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
-              ),
-              bottomNavigationBar: HomeBottomNavBar(
-                selectedDestination: HomeNavigationDestination.horses,
-                onDestinationSelected: (selected) {
-                  if (selected != HomeNavigationDestination.horses) {
-                    Navigator.of(listContext).pop(selected);
-                  }
-                },
-              ),
-            ),
+    final destination = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (listContext) => GuardianHorseListScreen(
+          onRegistrationCompleted: (result) {
+            if (mounted && result.isPersisted) _retryHome();
+          },
+          appBar: const HomeAppBar(),
+          drawer: GuardianSidebar(
+            onLogout: widget.onLogout,
+            homeFuture: _homeFuture,
+            // Reutiliza o cadastro real e atualiza a Home ao retornar.
+            onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           ),
-        );
+          bottomNavigationBar: HomeBottomNavBar(
+            selectedDestination: HomeNavigationDestination.horses,
+            onDestinationSelected: (selected) {
+              if (selected != HomeNavigationDestination.horses) {
+                Navigator.of(listContext).pop(selected);
+              }
+            },
+          ),
+        ),
+      ),
+    );
     if (!mounted) return;
     setState(() => _homeFuture = _fetchHome());
     if (destination is HomeNavigationDestination) {

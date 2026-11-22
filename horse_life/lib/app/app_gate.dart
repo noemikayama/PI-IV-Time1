@@ -2,10 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Revisão dos comentários do ciclo de inicialização, observação da
+// sessão e composição autenticada das Homes com as dependências de treino.
+//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação da composição das Homes autenticadas e do repasse do
-// carregador conectado da agenda conforme o papel da sessão.
+// carregador conectado da agenda conforme o papel da sessão. Injeção das
+// dependências de consulta e finalização da execução nas duas Homes.
 //
 // Data: 20/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -48,6 +54,7 @@ typedef SessionHomeBuilder =
       Future<void> Function() onLogout,
     );
 
+/// Coordena bootstrap, splash, sessão autenticada e escolha da Home inicial.
 class AppGate extends StatefulWidget {
   const AppGate({
     required this.initializeApp,
@@ -62,8 +69,13 @@ class AppGate extends StatefulWidget {
     super.key,
   });
 
+  /// Inicialização externa, normalmente responsável pelo Firebase.
   final Future<void> Function() initializeApp;
+
+  /// Fluxo público mostrado quando não existe sessão autenticada.
   final Widget home;
+
+  /// Composição preferencial das dependências compartilhadas.
   final AppDependencies? dependencies;
 
   // Compatibilidade com chamadas anteriores do AppGate.
@@ -71,8 +83,11 @@ class AppGate extends StatefulWidget {
   final HomeLoader<GuardianHomeData>? guardianLoader;
   final HomeLoader<TrainerHomeData>? trainerLoader;
 
+  /// Builders opcionais que substituem as Homes reais em testes isolados.
   final SessionHomeBuilder? guardianHomeBuilder;
   final SessionHomeBuilder? trainerHomeBuilder;
+
+  /// Tempo mínimo de exibição do splash, mesmo com bootstrap rápido.
   final Duration minimumSplashDuration;
 
   @override
@@ -143,7 +158,7 @@ class _AppGateState extends State<AppGate> {
 
   Widget _buildSessionGate() {
     final repository = _sessionRepository;
-    if (repository == null) return widget.home; // Compatibilidade legado.
+    if (repository == null) return widget.home; // Compatibilidade legada.
 
     _sessionStream ??= repository.watchSession();
     return StreamBuilder<LoginSession?>(
@@ -211,6 +226,10 @@ class _AppGateState extends State<AppGate> {
               onLogout: onLogout,
               loader: _guardianLoader,
               agendaLoader: widget.dependencies?.trainingAgendaLoader,
+              trainingExecutionLoader:
+                  widget.dependencies?.trainingExecutionLoader,
+              trainingCompletionSubmitter:
+                  widget.dependencies?.trainingCompletionSubmitter,
             );
       case AuthenticationRole.trainer:
         return widget.trainerHomeBuilder?.call(context, session, onLogout) ??
@@ -218,6 +237,10 @@ class _AppGateState extends State<AppGate> {
               onLogout: onLogout,
               loader: _trainerLoader,
               agendaLoader: widget.dependencies?.trainingAgendaLoader,
+              trainingExecutionLoader:
+                  widget.dependencies?.trainingExecutionLoader,
+              trainingCompletionSubmitter:
+                  widget.dependencies?.trainingCompletionSubmitter,
             );
     }
   }
