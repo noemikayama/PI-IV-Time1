@@ -104,6 +104,7 @@ class _TrainingExercisesScreenState extends State<TrainingExercisesScreen> {
 
     ExerciseRegistrationDraft? createdDraft;
     String? createdExerciseId;
+    int? createdExerciseCode;
     final injectedController = widget.exerciseRegistrationController;
     final routeController = injectedController?.withOnExerciseCreated(
       (draft) {
@@ -114,6 +115,12 @@ class _TrainingExercisesScreenState extends State<TrainingExercisesScreen> {
         createdDraft = draft;
         createdExerciseId = id;
         injectedController.onExerciseCreatedWithId?.call(draft, id);
+      },
+      onExerciseCreatedWithResult: (draft, result) {
+        createdDraft = draft;
+        createdExerciseId = result?.id;
+        createdExerciseCode = result?.code;
+        injectedController.onExerciseCreatedWithResult?.call(draft, result);
       },
     );
 
@@ -128,6 +135,11 @@ class _TrainingExercisesScreenState extends State<TrainingExercisesScreen> {
           createdDraft = draft;
           createdExerciseId = id;
         },
+        onExerciseCreatedWithResult: (draft, result) {
+          createdDraft = draft;
+          createdExerciseId = result?.id;
+          createdExerciseCode = result?.code;
+        },
       ),
     );
 
@@ -136,9 +148,10 @@ class _TrainingExercisesScreenState extends State<TrainingExercisesScreen> {
       final createdItem = _controller.recordCreatedExerciseFromDraft(
         createdDraft!,
         id: createdExerciseId,
+        code: createdExerciseCode,
       );
       setState(() {
-        if (!_selectedExercises.any((item) => item.id == createdItem.id)) {
+        if (!_selectedExercises.any((item) => item.matches(createdItem))) {
           _selectedExercises.add(createdItem);
         }
       });

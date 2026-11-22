@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte ao callback opcional onExerciseCreatedWithResult para
+// propagar o identificador e o código sequencial do exercício criado.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Suporte ao callback opcional onExerciseCreatedWithId para
@@ -34,6 +39,7 @@ import 'package:flutter/material.dart';
 
 import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_registration_draft.dart';
+import '../../data/models/exercise_registration_result.dart';
 import '../../data/repositories/firebase_exercise_registration_repository.dart';
 import '../../data/repositories/firebase_trainer_linked_horse_repository.dart';
 import '../../data/repositories/trainer_linked_horse_repository.dart';
@@ -54,6 +60,11 @@ abstract final class ExerciseRegistrationFlowRoute {
     ValueChanged<ExerciseRegistrationDraft>? onExerciseCreated,
     void Function(ExerciseRegistrationDraft draft, String? exerciseId)?
     onExerciseCreatedWithId,
+    void Function(
+      ExerciseRegistrationDraft draft,
+      ExerciseRegistrationResult? result,
+    )?
+    onExerciseCreatedWithResult,
   }) {
     final resolvedHorseRepository =
         horseRepository ?? const FirebaseTrainerLinkedHorseRepository();
@@ -64,6 +75,7 @@ abstract final class ExerciseRegistrationFlowRoute {
           horseRepository: resolvedHorseRepository,
           onExerciseCreated: onExerciseCreated,
           onExerciseCreatedWithId: onExerciseCreatedWithId,
+          onExerciseCreatedWithResult: onExerciseCreatedWithResult,
         );
 
     return MaterialPageRoute<void>(

@@ -2,6 +2,24 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Remoção da correlação com dados mockados em _openTrainingDetails,
+// resolução do treinamento real no backend via galeria do treinador quando
+// identificado apenas por registroId/título e correção do direcionamento de
+// onViewPlan para TrainingPlanDetailScreen.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ajuste na instanciação de TrainingPlanGalleryItem em _openTrainingDetails
+// para fornecer os campos obrigatórios code e estimatedDurationMinutes.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Integração da navegação para a tela de visualização de treinamentos
+// (TrainingDetailScreen) a partir dos botões "Ver detalhes" dos cards da agenda
+// e "Ver treino" da Home do treinador.
+//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação do carregador conectado da agenda profissional e da
@@ -98,6 +116,8 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/trainer/trainer_dashboard_screen.dart';
@@ -123,8 +143,12 @@ import 'package:horse_life/features/training/data/repositories/training_agenda_r
 import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/widgets/training_agenda_floating_menu.dart';
+import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
+import 'package:horse_life/features/training_plans/data/repositories/firebase_training_plan_repository.dart';
 import 'package:horse_life/features/training_plans/presentation/routes/training_plan_registration_flow_route.dart';
+import 'package:horse_life/features/training_plans/presentation/screens/training_plan_detail_screen.dart';
 import 'package:horse_life/features/trainings/presentation/routes/training_registration_flow_route.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/trainer_home_data.dart';
 import '../../../data/repositories/trainer_repository.dart';
@@ -249,6 +273,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
   late HomeLoader<TrainerHomeData> _loader;
   bool _isOpeningHorseProfile = false;
+  bool _isOpeningTrainingDetails = false;
   FirebaseTrainerProfileRepository? _trainerProfileRepository;
   FirebaseTrainerRegistrationRepository? _trainerAttachmentRepository;
   FirebasePasswordResetRepository? _passwordResetRepository;
@@ -278,6 +303,182 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       }
     } finally {
       _isOpeningHorseProfile = false;
+    }
+  }
+
+  /// Resolve os dados reais do treinamento no backend via galeria quando a
+  /// navegação fornece apenas o ID do registro da agenda/home.
+  Future<TrainingPlanGalleryItem?> _resolveRealTrainingFromBackend({
+    required String title,
+    String? horseName,
+  }) async {
+    final home = await _homeFuture;
+    if (home.horses.isEmpty) return null;
+
+    final normalizedHorse = horseName?.trim().toLowerCase() ?? '';
+    String horseId = home.horses.first.id;
+    if (normalizedHorse.isNotEmpty) {
+      for (final horse in home.horses) {
+        if (horse.name.trim().toLowerCase() == normalizedHorse) {
+          horseId = horse.id;
+          break;
+        }
+      }
+    }
+
+    final items = await const FirebaseTrainingPlanRepository()
+        .fetchTrainingGallery(horseId: horseId, searchQuery: title);
+    if (items.isEmpty) return null;
+
+    final normalizedTitle = title.trim().toLowerCase();
+    for (final item in items) {
+      if (item.title.trim().toLowerCase() == normalizedTitle) {
+        return item;
+      }
+    }
+    return items.length == 1 ? items.first : null;
+  }
+
+  /// Abre a visualização completa do treinamento selecionado na Home ou Agenda.
+  Future<void> _openTrainingDetails(
+    String id, {
+    String? title,
+    String? horseName,
+    int? code,
+    int? estimatedDurationMinutes,
+  }) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final parsedIdCode = int.tryParse(id);
+      String effectiveCode;
+      TrainingPlanGalleryItem? initialTraining;
+
+      if (code != null && code > 0) {
+        effectiveCode = code.toString();
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: code,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (parsedIdCode != null && parsedIdCode > 0) {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: parsedIdCode,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (widget.mockScenario == null &&
+          title != null &&
+          title.trim().isNotEmpty) {
+        TrainingPlanGalleryItem? resolved;
+        try {
+          resolved = await _resolveRealTrainingFromBackend(
+            title: title,
+            horseName: horseName,
+          );
+        } catch (_) {
+          resolved = null;
+        }
+
+        if (!mounted) return;
+        if (resolved == null || resolved.code <= 0) {
+          AppSnackBar.show(
+            context,
+            backgroundColor: AppColors.error,
+            icon: Icons.error_outline_rounded,
+            message:
+                'Não foi possível localizar o treinamento no banco de dados.',
+          );
+          return;
+        }
+        effectiveCode = resolved.code.toString();
+        initialTraining = resolved;
+      } else {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: 0,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      }
+
+      if (!mounted) return;
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingDetailScreen(
+            trainingCode: effectiveCode,
+            initialTraining: initialTraining,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: true,
+            isOwner: true,
+            onNavigationSelected: (dest) {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop(dest);
+              }
+            },
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  /// Abre a visualização completa de um plano de treinamento a partir da Agenda.
+  Future<void> _openTrainingPlanDetails(String planId) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingPlanDetailScreen(
+            planId: planId,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: true,
+            onNavigationSelected: (dest) {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop(dest);
+              }
+            },
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  void _handleViewTraining(TrainerTraining training) {
+    if (widget.onViewTraining != null) {
+      widget.onViewTraining!(training);
+    } else {
+      _openTrainingDetails(
+        training.id,
+        title: training.title,
+        horseName: training.horseName,
+      );
     }
   }
 
@@ -382,31 +583,31 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
       return ConnectedTrainingAgendaScreen(
         loader: agendaLoader,
         onViewPlans: widget.onViewPlans,
-        onViewPlan: widget.onViewPlans == null
-            ? null
-            : (_) => widget.onViewPlans!(),
-        onViewTraining: widget.onViewTraining == null
-            ? null
-            : (entry) => widget.onViewTraining!(
-                TrainerTraining(
-                  id: entry.id,
-                  title: entry.title,
-                  horseName: entry.horseName,
-                  planName: entry.planName,
-                  status: trainingAgendaStatusToApi(entry.status),
-                ),
-              ),
-        onViewHistory: widget.onViewTraining == null
-            ? null
-            : (entry) => widget.onViewTraining!(
-                TrainerTraining(
-                  id: entry.id,
-                  title: entry.title,
-                  horseName: entry.horseName,
-                  planName: entry.planName,
-                  status: trainingAgendaStatusToApi(entry.status),
-                ),
-              ),
+        onViewPlan: (plan) {
+          if (widget.onViewPlans != null) {
+            widget.onViewPlans!();
+          } else {
+            _openTrainingPlanDetails(plan.id);
+          }
+        },
+        onViewTraining: (entry) => _handleViewTraining(
+          TrainerTraining(
+            id: entry.id,
+            title: entry.title,
+            horseName: entry.horseName,
+            planName: entry.planName,
+            status: trainingAgendaStatusToApi(entry.status),
+          ),
+        ),
+        onViewHistory: (entry) => _handleViewTraining(
+          TrainerTraining(
+            id: entry.id,
+            title: entry.title,
+            horseName: entry.horseName,
+            planName: entry.planName,
+            status: trainingAgendaStatusToApi(entry.status),
+          ),
+        ),
       );
     }
     // Converte o resumo retornado pela Home nos contratos reutilizáveis da
@@ -452,7 +653,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         // Agrupa treinos por plano e cavalo, pois a Home não retorna os planos
         // como uma lista independente.
         for (final training in activeTodayTrainings) {
-          final key = '${training.planName}:${training.horseName}';
+          final key = training.id;
           plansByKey.putIfAbsent(
             key,
             () => TrainingAgendaPlan(
@@ -477,7 +678,15 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
         void viewEntry(TrainingAgendaEntry entry) {
           final training = sourceFor(entry);
-          if (training != null) widget.onViewTraining?.call(training);
+          if (training != null) {
+            _handleViewTraining(training);
+          } else {
+            _openTrainingDetails(
+              entry.id,
+              title: entry.title,
+              horseName: entry.horseName,
+            );
+          }
         }
 
         return TrainingAgendaScreen(
@@ -486,11 +695,15 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           plans: plansByKey.values.toList(growable: false),
           trainings: entries,
           onViewPlans: widget.onViewPlans,
-          onViewPlan: widget.onViewPlans == null
-              ? null
-              : (_) => widget.onViewPlans!(),
-          onViewTraining: widget.onViewTraining == null ? null : viewEntry,
-          onViewHistory: widget.onViewTraining == null ? null : viewEntry,
+          onViewPlan: (plan) {
+            if (widget.onViewPlans != null) {
+              widget.onViewPlans!();
+            } else {
+              _openTrainingPlanDetails(plan.id);
+            }
+          },
+          onViewTraining: viewEntry,
+          onViewHistory: viewEntry,
         );
       },
     );
@@ -592,7 +805,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         _ => TrainerHomeContent(
           homeFuture: _homeFuture,
           onRetry: _retry,
-          onViewTraining: widget.onViewTraining,
+          onViewTraining: _handleViewTraining,
           onSelectHorse:
               widget.onSelectHorse ?? (horse) => _openHorseProfile(horse.id),
           onSelectClient: widget.onSelectClient,
