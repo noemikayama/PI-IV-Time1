@@ -18,6 +18,7 @@ import 'package:horse_life/features/feedback/data/models/training_execution_reco
 
 import 'feedback_display_fields.dart';
 
+// Agrupa os dados do treino usando o card expansível compartilhado pelo projeto.
 class TrainingExecutionDetailsCard extends StatelessWidget {
   const TrainingExecutionDetailsCard({
     required this.record,
@@ -37,12 +38,21 @@ class TrainingExecutionDetailsCard extends StatelessWidget {
         FeedbackDetailLine(label: 'Título', value: record.title),
         FeedbackDetailLine(label: 'Objetivo', value: record.objective),
         FeedbackDetailLine(
+          // Apresenta a duração efetiva quando disponível, sem substituir uma ausência por zero.
           label: 'Tempo total',
-          value: record.durationMinutes == null ? 'Não informado' : '${record.durationMinutes} minutos',
+          value: record.durationMinutes == null
+              ? 'Não informado'
+              : '${record.durationMinutes} minutos',
         ),
-        FeedbackDetailLine(label: 'Data', value: record.executedAt == null ? 'Não informada' : formatFeedbackDate(record.executedAt!)),
+        FeedbackDetailLine(
+          label: 'Data',
+          value: record.executedAt == null
+              ? 'Não informada'
+              : formatFeedbackDate(record.executedAt!),
+        ),
         FeedbackDetailLine(label: 'Cavalo', value: record.horseName),
         FeedbackDetailLine(
+          // Mostra a outra parte da execução conforme o perfil que consulta o registro.
           label: isTrainer ? 'Atleta' : 'Treinador',
           value: isTrainer ? record.athleteName : record.trainerName,
         ),
@@ -64,6 +74,7 @@ class TrainingExecutionDetailsCard extends StatelessWidget {
   );
 }
 
+// Exibe os reportes da execução em campos de leitura, separados dos metadados do treino.
 class TrainingExecutionReportsCard extends StatelessWidget {
   const TrainingExecutionReportsCard({required this.record, super.key});
 

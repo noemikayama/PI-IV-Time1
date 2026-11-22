@@ -58,8 +58,11 @@ class _TrainingExecutionRecordScreenState
   TrainingExecutionRecord? _record;
   Object? _error;
   bool _loading = true;
-  bool get _isTrainer => _record?.viewerIsTrainer ??
+  // Prioriza o perfil retornado pela API e usa o perfil de entrada quando ele não foi informado.
+  bool get _isTrainer =>
+      _record?.viewerIsTrainer ??
       (widget.audience == TrainingAgendaAudience.trainer);
+  // A ação de cadastro depende também da permissão de escrita do registro.
   bool get _canWrite => _isTrainer && (_record?.canRegisterFeedback ?? false);
 
   @override
@@ -68,15 +71,26 @@ class _TrainingExecutionRecordScreenState
     _load();
   }
 
+  // Consulta o registro e mantém estados de carregamento e erro para permitir nova tentativa.
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final record = await widget.repository.findById(widget.recordId);
+      // Evita atualizar o estado caso a tela tenha sido fechada durante a consulta.
       if (!mounted) return;
-      setState(() { _record = record; _loading = false; });
+      setState(() {
+        _record = record;
+        _loading = false;
+      });
     } catch (error) {
       if (!mounted) return;
-      setState(() { _error = error; _loading = false; });
+      setState(() {
+        _error = error;
+        _loading = false;
+      });
     }
   }
 
@@ -84,6 +98,7 @@ class _TrainingExecutionRecordScreenState
     final record = _record;
     if (record == null) return;
 
+    // Sem feedback e sem permissão de cadastro, apresenta o aviso em vez de abrir o formulário.
     if (record.feedback == null && !_canWrite) {
       await showAppInfoDialog(
         context,
@@ -97,6 +112,7 @@ class _TrainingExecutionRecordScreenState
       return;
     }
 
+    // Abre o cadastro para o registro ainda não avaliado quando a escrita está permitida.
     if (record.feedback == null) {
       final saved = await Navigator.of(context).push<TrainingExecutionRecord>(
         MaterialPageRoute<TrainingExecutionRecord>(
@@ -107,8 +123,11 @@ class _TrainingExecutionRecordScreenState
         ),
       );
       if (!mounted) return;
+      // Atualiza a tela usando o registro devolvido após a gravação, sem recriar o feedback localmente.
       if (saved != null) {
-        setState(() { _record = saved; });
+        setState(() {
+          _record = saved;
+        });
         AppSnackBar.show(
           context,
           backgroundColor: AppColors.seaGreen,
@@ -119,11 +138,13 @@ class _TrainingExecutionRecordScreenState
       return;
     }
 
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
-        builder: (_) => FeedbackReadScreen(feedback: record.feedback!),
-      ),
-    );
+    // Se já existir feedback, abre a consulta e propaga a escolha de navegação inferior.
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (_) => FeedbackReadScreen(feedback: record.feedback!),
+          ),
+        );
     if (mounted && destination != null) {
       Navigator.of(context).pop(destination);
     }
@@ -132,17 +153,32 @@ class _TrainingExecutionRecordScreenState
   @override
   Widget build(BuildContext context) {
     final record = _record;
+    // Renderiza os estados de carregamento, falha ou conteúdo de forma separada.
     if (_loading) {
-      return Scaffold(appBar: AppBar(title: const Text('Registro de execução')),
-          body: const Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        appBar: AppBar(title: const Text('Registro de execução')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
     if (_error != null || record == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Registro não encontrado')),
-        body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(_error == null ? 'Registro de treino não encontrado.' : feedbackErrorMessage(_error!)),
-          TextButton(onPressed: _load, child: const Text('Tentar novamente')),
-        ])),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _error == null
+                    ? 'Registro de treino não encontrado.'
+                    : feedbackErrorMessage(_error!),
+              ),
+              TextButton(
+                onPressed: _load,
+                child: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -165,9 +201,17 @@ class _TrainingExecutionRecordScreenState
                     style: theme.displayMedium?.copyWith(fontSize: 34),
                   ),
                   const SizedBox(height: 32),
-                  TrainingExecutionDetailsCard(record: record, isTrainer: _isTrainer),
-                  if (record.hasExecution) TrainingExecutionReportsCard(record: record)
-                  else const Text('Ainda não há relato de execução para este treino.'),
+                  TrainingExecutionDetailsCard(
+                    record: record,
+                    isTrainer: _isTrainer,
+                  ),
+                  // Os reportes são exibidos somente quando o registro possui relato de execução.
+                  if (record.hasExecution)
+                    TrainingExecutionReportsCard(record: record)
+                  else
+                    const Text(
+                      'Ainda não há relato de execução para este treino.',
+                    ),
                   const SizedBox(height: 3),
                   if (_canWrite && record.feedback == null)
                     GradientButton(
@@ -184,7 +228,6 @@ class _TrainingExecutionRecordScreenState
                       showArrow: false,
                       onPressed: _accessFeedback,
                     ),
-
                 ],
               ),
             ),
@@ -193,7 +236,8 @@ class _TrainingExecutionRecordScreenState
       ),
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: HomeNavigationDestination.trainings,
-        onDestinationSelected: (destination) => Navigator.of(context).pop(destination),
+        onDestinationSelected: (destination) =>
+            Navigator.of(context).pop(destination),
       ),
     );
   }

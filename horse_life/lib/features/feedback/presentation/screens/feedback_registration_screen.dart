@@ -44,7 +44,9 @@ class FeedbackRegistrationScreen extends StatefulWidget {
       _FeedbackRegistrationScreenState();
 }
 
-class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen> {
+class _FeedbackRegistrationScreenState
+    extends State<FeedbackRegistrationScreen> {
+  // A chave valida o campo atual; o controlador mantém as respostas das etapas.
   final _formKey = GlobalKey<FormState>();
   final _flow = FeedbackRegistrationController();
 
@@ -54,12 +56,14 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
     super.dispose();
   }
 
+  // Impede saída durante a gravação e retorna à etapa anterior antes de fechar a tela.
   void _back() {
     if (_flow.isSaving) return;
     FocusScope.of(context).unfocus();
     if (!_flow.previous()) Navigator.of(context).pop();
   }
 
+  // Avança somente com a etapa válida; na revisão, inicia o envio final.
   void _next() {
     FocusScope.of(context).unfocus();
     if (_flow.isReview) {
@@ -72,6 +76,7 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
   void _edit(int index) {
     if (_flow.isSaving) return;
     _flow.edit(index);
+    // Solicita foco depois que o campo voltará a ser montado na interface.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _flow.focusNodes[index].requestFocus();
     });
@@ -84,13 +89,18 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
     message: message,
   );
 
+  // Valida todas as respostas e evita disparar dois cadastros ao mesmo tempo.
   Future<void> _save() async {
     if (_flow.isSaving) return;
     final error = _flow.validateAll();
     if (error != null) {
       _showError(error);
       // A revisão pode apontar diretamente para o campo que precisa de ajuste.
-      for (var index = 0; index < FeedbackRegistrationController.definitions.length; index++) {
+      for (
+        var index = 0;
+        index < FeedbackRegistrationController.definitions.length;
+        index++
+      ) {
         if (_flow.validate(index, _flow.textControllers[index].text) != null) {
           _edit(index);
           break;
@@ -99,14 +109,17 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
       return;
     }
 
+    // Bloqueia novas ações enquanto o repositório processa a solicitação.
     _flow.setSaving(true);
     try {
       final updated = await widget.repository.registerFeedback(
         recordId: widget.recordId,
         feedback: _flow.buildFeedback(),
       );
+      // Retorna o registro confirmado pelo repositório se a tela ainda estiver ativa.
       if (!mounted) return;
       Navigator.of(context).pop(updated);
+      // Em caso de falha, mantém as respostas e libera outra tentativa.
     } catch (error) {
       if (!mounted) return;
       _showError(feedbackErrorMessage(error));
@@ -114,6 +127,7 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
     }
   }
 
+  // Reconstrói a interface quando o controlador notifica mudanças de etapa ou gravação.
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: _flow,
@@ -146,14 +160,23 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
                           segmentKeyPrefix: 'feedback-progress-segment',
                         ),
                         const SizedBox(height: 50),
+                        // Alterna entre os componentes de preenchimento e de revisão sem duplicar o formulário.
                         if (_flow.isReview)
-                          FeedbackReviewSection(controller: _flow, onEdit: _edit)
+                          FeedbackReviewSection(
+                            controller: _flow,
+                            onEdit: _edit,
+                          )
                         else
-                          FeedbackInputSection(formKey: _formKey, controller: _flow),
+                          FeedbackInputSection(
+                            formKey: _formKey,
+                            controller: _flow,
+                          ),
                         const SizedBox(height: 48),
                         AuthNextButton(
                           buttonKey: Key('feedback-continue-${_flow.step + 1}'),
-                          label: _flow.isReview ? 'Registrar feedback' : 'Seguinte',
+                          label: _flow.isReview
+                              ? 'Registrar feedback'
+                              : 'Seguinte',
                           showArrow: !_flow.isReview,
                           isLoading: _flow.isSaving,
                           onPressed: _flow.isSaving ? null : _next,

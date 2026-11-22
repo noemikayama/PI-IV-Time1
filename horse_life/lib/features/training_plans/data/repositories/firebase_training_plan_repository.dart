@@ -93,8 +93,9 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
     };
 
     try {
-      final response =
-          await (_listTrainingGallery ?? _callGalleryFromFirebase)(payload);
+      final response = await (_listTrainingGallery ?? _callGalleryFromFirebase)(
+        payload,
+      );
       if (response is! Map) {
         throw const FormatException(
           'Resposta da galeria de treinamentos inválida.',
@@ -111,8 +112,7 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
       return rawList.map(_parseGalleryItem).toList(growable: false);
     } on FirebaseFunctionsException catch (error) {
       throw TrainingPlanGalleryFailure(
-        error.message ??
-            'Não foi possível carregar a galeria de treinamentos.',
+        error.message ?? 'Não foi possível carregar a galeria de treinamentos.',
       );
     } on FormatException catch (error) {
       throw TrainingPlanGalleryFailure(error.message);
@@ -121,9 +121,7 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
 
   TrainingPlanGalleryItem _parseGalleryItem(Object? item) {
     if (item is! Map) {
-      throw const FormatException(
-        'Item de treinamento na galeria inválido.',
-      );
+      throw const FormatException('Item de treinamento na galeria inválido.');
     }
 
     final id = _extractId(item['id'] ?? item['_id']);
@@ -140,7 +138,8 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
 
     final code = _parseInt(rawCode);
     final durationMinutes = _parseInt(rawDuration);
-    final description = item['descricao'] is String &&
+    final description =
+        item['descricao'] is String &&
             (item['descricao'] as String).trim().isNotEmpty
         ? (item['descricao'] as String).trim()
         : null;
@@ -213,9 +212,7 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
 
     final trainingsByDay = <String, String?>{
       for (final weekday in TrainingPlanWeekday.values)
-        weekday.apiKey: _normalizeOptionalId(
-          draft.trainingsByDay[weekday]?.id,
-        ),
+        weekday.apiKey: _normalizeOptionalId(draft.trainingsByDay[weekday]?.id),
     };
     if (!trainingsByDay.values.any((id) => id != null)) {
       throw const TrainingPlanRegistrationFailure(
@@ -235,12 +232,11 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
     };
 
     try {
-      final response =
-          await (_createTrainingPlan ?? _callCreateFromFirebase)(payload);
+      final response = await (_createTrainingPlan ?? _callCreateFromFirebase)(
+        payload,
+      );
       if (response is! Map) {
-        throw const FormatException(
-          'Resposta do cadastro de plano inválida.',
-        );
+        throw const FormatException('Resposta do cadastro de plano inválida.');
       }
 
       final planMap = response['plano'];
@@ -285,15 +281,14 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
   Future<TrainingPlanDetailData> getTrainingPlan(String planId) async {
     final trimmedPlanId = planId.trim();
     if (trimmedPlanId.isEmpty) {
-      throw const TrainingPlanDetailFailure(
-        'Identificador do plano inválido.',
-      );
+      throw const TrainingPlanDetailFailure('Identificador do plano inválido.');
     }
 
     // Se o identificador for um mock ou não corresponder a um ObjectId válido (24 caracteres hex),
     // utiliza diretamente o mock para permitir testes visuais locais sem depender do backend.
-    final isValidObjectId =
-        RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(trimmedPlanId);
+    final isValidObjectId = RegExp(
+      r'^[0-9a-fA-F]{24}$',
+    ).hasMatch(trimmedPlanId);
     if (!isValidObjectId) {
       return MockTrainingPlanDetail.buildDefault(planId: trimmedPlanId);
     }
@@ -330,9 +325,7 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
   ) async {
     final trimmedPlanId = planId.trim();
     if (trimmedPlanId.isEmpty) {
-      throw const TrainingPlanDetailFailure(
-        'Identificador do plano inválido.',
-      );
+      throw const TrainingPlanDetailFailure('Identificador do plano inválido.');
     }
 
     final trimmedTitle = update.title.trim();
@@ -401,9 +394,7 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
   Future<TrainingPlanDetailData> cancelTrainingPlan(String planId) async {
     final trimmedPlanId = planId.trim();
     if (trimmedPlanId.isEmpty) {
-      throw const TrainingPlanDetailFailure(
-        'Identificador do plano inválido.',
-      );
+      throw const TrainingPlanDetailFailure('Identificador do plano inválido.');
     }
 
     try {
@@ -500,38 +491,53 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
       throw const FormatException('Datas do plano ausentes ou inválidas.');
     }
 
-    final horseMap = planMap['cavalo'] ?? (response is Map ? response['cavalo'] : null);
+    final horseMap =
+        planMap['cavalo'] ?? (response is Map ? response['cavalo'] : null);
     final horseId = horseMap is Map
         ? _extractId(horseMap['id'] ?? horseMap['_id'])
-        : _extractId(planMap['cavaloId'] ?? (response is Map ? response['cavaloId'] : null));
+        : _extractId(
+            planMap['cavaloId'] ??
+                (response is Map ? response['cavaloId'] : null),
+          );
     final rawHorseName = horseMap is Map
         ? horseMap['nome'] ?? horseMap['name']
-        : (planMap['nomeCavalo'] ?? (response is Map ? response['nomeCavalo'] : null));
+        : (planMap['nomeCavalo'] ??
+              (response is Map ? response['nomeCavalo'] : null));
     final horseName = rawHorseName is String ? rawHorseName.trim() : '';
 
-    final trainerMap = planMap['treinador'] ?? (response is Map ? response['treinador'] : null);
+    final trainerMap =
+        planMap['treinador'] ??
+        (response is Map ? response['treinador'] : null);
     final trainerId = trainerMap is Map
         ? _extractId(trainerMap['id'] ?? trainerMap['_id'])
-        : _extractId(planMap['treinadorId'] ?? (response is Map ? response['treinadorId'] : null));
+        : _extractId(
+            planMap['treinadorId'] ??
+                (response is Map ? response['treinadorId'] : null),
+          );
     final rawTrainerName = trainerMap is Map
         ? trainerMap['nome'] ?? trainerMap['name']
-        : (planMap['nomeTreinador'] ?? (response is Map ? response['nomeTreinador'] : null));
+        : (planMap['nomeTreinador'] ??
+              (response is Map ? response['nomeTreinador'] : null));
     final trainerName = rawTrainerName is String ? rawTrainerName.trim() : '';
 
     final permissoes = response is Map && response['permissoes'] is Map
         ? response['permissoes'] as Map
         : null;
-    final rawIsOwner = planMap['ehProprietario'] ??
+    final rawIsOwner =
+        planMap['ehProprietario'] ??
         planMap['isOwner'] ??
         (permissoes != null
-            ? (permissoes['podeEditar'] == true || permissoes['podeCancelar'] == true)
+            ? (permissoes['podeEditar'] == true ||
+                  permissoes['podeCancelar'] == true)
             : null);
     final isOwner = rawIsOwner is bool ? rawIsOwner : null;
 
     final trainingsByDay = <TrainingPlanWeekday, TrainingPlanGalleryItem>{};
-    final rawByDay = planMap['treinosPorDia'] ??
+    final rawByDay =
+        planMap['treinosPorDia'] ??
         (response is Map ? response['treinosPorDia'] : null);
-    final rawPlanning = planMap['planejamento'] ??
+    final rawPlanning =
+        planMap['planejamento'] ??
         (response is Map ? response['planejamento'] : null);
     if (rawByDay is Map) {
       for (final entry in rawByDay.entries) {
@@ -699,8 +705,10 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
 
         final code = _parseInt(rawTraining['codigo'] ?? rawTraining['code']);
         final title =
-            (rawTraining['titulo'] ?? rawTraining['title'])?.toString().trim() ??
-                '';
+            (rawTraining['titulo'] ?? rawTraining['title'])
+                ?.toString()
+                .trim() ??
+            '';
         final rawDesc = rawTraining['descricao'] ?? rawTraining['description'];
         final description = rawDesc is String && rawDesc.trim().isNotEmpty
             ? rawDesc.trim()
@@ -749,7 +757,8 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
       final weekday = entry.key;
       final existing = entry.value;
 
-      final details = detailsByWeekday[weekday] ??
+      final details =
+          detailsByWeekday[weekday] ??
           (existing.code > 0 ? detailsByCode[existing.code] : null) ??
           detailsByTitle[existing.title.toLowerCase()];
 

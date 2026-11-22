@@ -29,6 +29,7 @@ class TrainingExecutionFeedback {
   final List<String> difficulties;
   final List<String> guidelines;
 
+  // Prepara as listas para leitura e informa a ausência de conteúdo opcional.
   String get difficultiesText => difficulties.isEmpty
       ? 'Nenhuma dificuldade identificada.'
       : difficulties.join('\n');
@@ -65,6 +66,7 @@ class TrainingExecutionRecord {
   final String id;
   final String title;
   final String objective;
+  // Duração e data podem estar ausentes quando ainda não há relato registrado.
   final int? durationMinutes;
   final DateTime? executedAt;
   final String horseName;
@@ -76,11 +78,13 @@ class TrainingExecutionRecord {
   final String performancePerception;
   final String difficultiesReport;
   final String observations;
+  // A ausência de feedback é representada por null; as permissões são mantidas separadamente.
   final TrainingExecutionFeedback? feedback;
   final bool canRegisterFeedback;
   final bool hasExecution;
   final bool? viewerIsTrainer;
 
+  // Cria outro registro com o feedback informado, preservando os demais dados e desabilitando novo cadastro.
   TrainingExecutionRecord withFeedback(TrainingExecutionFeedback value) =>
       TrainingExecutionRecord(
         id: id,

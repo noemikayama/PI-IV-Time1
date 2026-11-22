@@ -26,6 +26,7 @@ class FeedbackInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Obtém os textos e o campo correspondentes à etapa ativa.
     final definition = controller.currentDefinition;
     final step = controller.step;
     final textTheme = Theme.of(context).textTheme;
@@ -44,6 +45,7 @@ class FeedbackInputSection extends StatelessWidget {
           style: textTheme.headlineSmall?.copyWith(fontSize: 22, height: 1.18),
         ),
         const SizedBox(height: 38),
+        // Usa a chave do formulário e a validação centralizada no controlador.
         Form(
           key: formKey,
           child: AppMultilineTextFormField(
@@ -90,7 +92,12 @@ class FeedbackReviewSection extends StatelessWidget {
           style: textTheme.headlineSmall?.copyWith(fontSize: 22, height: 1.2),
         ),
         const SizedBox(height: 34),
-        for (var index = 0; index < FeedbackRegistrationController.definitions.length; index++) ...[
+        // Gera um campo de revisão para cada resposta usando os mesmos controladores de texto.
+        for (
+          var index = 0;
+          index < FeedbackRegistrationController.definitions.length;
+          index++
+        ) ...[
           EditableReviewField(
             fieldKey: Key('feedback-review-${index + 1}'),
             label: FeedbackRegistrationController.definitions[index].title
@@ -98,6 +105,7 @@ class FeedbackReviewSection extends StatelessWidget {
             controller: controller.textControllers[index],
             focusNode: controller.focusNodes[index],
             isEditing: false,
+            // Delega o pedido de edição à tela, que volta à etapa correspondente.
             externalEdit: true,
             onToggleEditing: () => onEdit(index),
             validator: (_) => null,

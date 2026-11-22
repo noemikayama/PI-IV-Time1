@@ -18,6 +18,7 @@ import '../models/training_execution_record.dart';
 
 /// Contrato utilizado pelas telas, sem conhecimento sobre Firebase ou mocks.
 abstract class TrainingFeedbackRepository {
+  // Permite consultar tanto uma fonte assíncrona quanto uma implementação síncrona de teste.
   FutureOr<TrainingExecutionRecord?> findById(String recordId);
 
   /// Registra um feedback para uma execução que ainda não foi avaliada.

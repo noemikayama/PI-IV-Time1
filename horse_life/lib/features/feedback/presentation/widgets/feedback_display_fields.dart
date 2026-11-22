@@ -27,6 +27,7 @@ class FeedbackDetailLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: EdgeInsets.only(bottom: bottomPadding),
+    // Diferencia o rótulo em negrito do valor, mantendo ambos na mesma linha de texto.
     child: Text.rich(
       TextSpan(
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 19),
@@ -62,6 +63,7 @@ class FeedbackReadOnlyField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(label, style: textTheme.titleLarge?.copyWith(fontSize: 20)),
+        // A descrição adicional é opcional e só ocupa espaço quando fornecida.
         if (description != null) ...[
           const SizedBox(height: 5),
           Text(description!, style: textTheme.bodyLarge),
@@ -73,17 +75,22 @@ class FeedbackReadOnlyField extends StatelessWidget {
             color: AppColors.whiteSmoke,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(value, style: textTheme.bodyLarge?.copyWith(fontSize: 19)),
+          child: Text(
+            value,
+            style: textTheme.bodyLarge?.copyWith(fontSize: 19),
+          ),
         ),
       ],
     );
   }
 }
 
+// Formata a data no padrão brasileiro, com dia e mês preenchidos por zeros.
 String formatFeedbackDate(DateTime value) =>
     '${value.day.toString().padLeft(2, '0')}/'
     '${value.month.toString().padLeft(2, '0')}/${value.year}';
 
+// Traduz os códigos de status para os rótulos apresentados ao usuário.
 String trainingExecutionStatusLabel(String value) => switch (value) {
   'REALIZADO' => 'Realizado',
   'PARCIAL' => 'Parcial',

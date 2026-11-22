@@ -18,6 +18,7 @@ typedef TrainingFeedbackCallable = Future<Object?> Function(
   String name, Map<String, dynamic> payload,
 );
 
+// Implementação remota do contrato: utiliza a callable injetada ou a instância regional do Firebase.
 class FirebaseTrainingFeedbackRepository implements TrainingFeedbackRepository {
   FirebaseTrainingFeedbackRepository({
     FirebaseFunctions? functions,
@@ -28,12 +29,14 @@ class FirebaseTrainingFeedbackRepository implements TrainingFeedbackRepository {
 
   final TrainingFeedbackCallable _callable;
 
+  // Consulta somente pelo identificador do registro e converte o retorno para o modelo local.
   @override
   Future<TrainingExecutionRecord> findById(String recordId) async =>
       TrainingRecordMapper.fromResponse(await _callable(
         'getTrainingRecord', {'registroId': recordId},
       ));
 
+  // Envia os campos aceitos pela função. A data não é enviada: o registro atualizado vem do servidor.
   @override
   Future<TrainingExecutionRecord> registerFeedback({
     required String recordId,

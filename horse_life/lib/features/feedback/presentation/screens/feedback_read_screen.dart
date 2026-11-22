@@ -15,6 +15,7 @@ import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/feedback/data/models/training_execution_record.dart';
 import 'package:horse_life/features/feedback/presentation/widgets/feedback_display_fields.dart';
 
+// Tela de consulta que recebe um feedback já carregado, sem permitir alteração.
 class FeedbackReadScreen extends StatelessWidget {
   const FeedbackReadScreen({required this.feedback, super.key});
 
@@ -41,6 +42,7 @@ class FeedbackReadScreen extends StatelessWidget {
                     style: theme.displayMedium?.copyWith(fontSize: 36),
                   ),
                   const SizedBox(height: 34),
+                  // Agrupa a data e as três respostas em um card de leitura.
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -58,19 +60,22 @@ class FeedbackReadScreen extends StatelessWidget {
                         FeedbackReadOnlyField(
                           label: 'Comentários sobre a execução',
                           value: feedback.comment,
-                          description: 'O que o treinador observou sobre a execução dos exercícios.',
+                          description:
+                              'O que o treinador observou sobre a execução dos exercícios.',
                         ),
                         const SizedBox(height: 24),
                         FeedbackReadOnlyField(
                           label: 'Dificuldades identificadas',
                           value: feedback.difficultiesText,
-                          description: 'As dificuldades/pontos fracos percebidos nos relatos.',
+                          description:
+                              'As dificuldades/pontos fracos percebidos nos relatos.',
                         ),
                         const SizedBox(height: 24),
                         FeedbackReadOnlyField(
                           label: 'Correções e orientações',
                           value: feedback.guidelinesText,
-                          description: 'Correções e ajustes para as próximas execuções.',
+                          description:
+                              'Correções e ajustes para as próximas execuções.',
                         ),
                       ],
                     ),
@@ -81,9 +86,11 @@ class FeedbackReadScreen extends StatelessWidget {
           ),
         ),
       ),
+      // Devolve a opção escolhida à rota anterior para preservar o fluxo de navegação.
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: HomeNavigationDestination.trainings,
-        onDestinationSelected: (destination) => Navigator.of(context).pop(destination),
+        onDestinationSelected: (destination) =>
+            Navigator.of(context).pop(destination),
       ),
     );
   }

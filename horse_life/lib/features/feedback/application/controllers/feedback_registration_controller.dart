@@ -36,29 +36,34 @@ class FeedbackRegistrationController extends ChangeNotifier {
   static const definitions = <FeedbackFormStepDefinition>[
     FeedbackFormStepDefinition(
       title: 'Comentários sobre a\nexecução',
-      description: 'Escreva uma avaliação geral do desempenho observado '
+      description:
+          'Escreva uma avaliação geral do desempenho observado '
           'na execução dos exercícios.',
       hint: 'Comentários',
       isRequired: true,
     ),
     FeedbackFormStepDefinition(
       title: 'Dificuldades\nidentificadas',
-      description: 'Descreva as dificuldades/pontos fracos percebidos '
+      description:
+          'Descreva as dificuldades/pontos fracos percebidos '
           'nos relatos da execução.',
       hint: 'Dificuldades',
     ),
     FeedbackFormStepDefinition(
       title: 'Correções e\norientações',
-      description: 'Sugira correções e ajustes para que os próximos treinos '
+      description:
+          'Sugira correções e ajustes para que os próximos treinos '
           'tenham um resultado melhor.',
       hint: 'Correções',
     ),
   ];
 
+  // Mantém um controlador por resposta para preservar o texto ao mudar de etapa.
   final List<TextEditingController> textControllers = List.generate(
     definitions.length,
     (_) => TextEditingController(),
   );
+  // Cada campo possui seu próprio foco, inclusive quando a revisão retorna à edição.
   final List<FocusNode> focusNodes = List.generate(
     definitions.length,
     (_) => FocusNode(),
@@ -68,6 +73,7 @@ class FeedbackRegistrationController extends ChangeNotifier {
   bool _isSaving = false;
 
   int get step => _step;
+  // As três etapas de preenchimento são seguidas por uma etapa adicional de revisão.
   int get totalSteps => definitions.length + 1;
   bool get isReview => _step == definitions.length;
   bool get isSaving => _isSaving;
@@ -98,6 +104,7 @@ class FeedbackRegistrationController extends ChangeNotifier {
 
   /// Uma regra única é aplicada tanto no campo quanto na revisão final.
   String? validate(int index, String? value) {
+    // Desconsidera espaços nas extremidades antes de verificar a obrigatoriedade.
     final text = value?.trim() ?? '';
     if (definitions[index].isRequired && text.isEmpty) {
       return 'Escreva um comentário sobre a execução.';
@@ -105,6 +112,7 @@ class FeedbackRegistrationController extends ChangeNotifier {
     if (index == 0 && text.length > 1000) {
       return 'Use no máximo 1000 caracteres.';
     }
+    // Dificuldades e orientações são listas na API; cada linha preenchida representa um item.
     if (index != 0) {
       final lines = _paragraphs(text);
       if (lines.length > 30) return 'Informe no máximo 30 itens.';
@@ -115,6 +123,7 @@ class FeedbackRegistrationController extends ChangeNotifier {
     return null;
   }
 
+  // Revalida todas as respostas antes do envio, inclusive as que não estão visíveis.
   String? validateAll() {
     for (var index = 0; index < definitions.length; index++) {
       final error = validate(index, textControllers[index].text);
@@ -123,12 +132,14 @@ class FeedbackRegistrationController extends ChangeNotifier {
     return null;
   }
 
+  // Notifica a interface apenas quando o estado de gravação realmente muda.
   void setSaving(bool value) {
     if (_isSaving == value) return;
     _isSaving = value;
     notifyListeners();
   }
 
+  // Reúne as respostas em um modelo; a data definitiva é retornada pelo servidor.
   TrainingExecutionFeedback buildFeedback({DateTime? createdAt}) =>
       TrainingExecutionFeedback(
         createdAt: createdAt ?? DateTime.now(),
@@ -137,12 +148,14 @@ class FeedbackRegistrationController extends ChangeNotifier {
         guidelines: _paragraphs(textControllers[2].text),
       );
 
+  // Remove linhas vazias e espaços extras ao converter os textos em listas.
   static List<String> _paragraphs(String text) => text
       .split('\n')
       .map((line) => line.trim())
       .where((line) => line.isNotEmpty)
       .toList(growable: false);
 
+  // Libera os controladores de texto e foco para evitar recursos retidos após sair da tela.
   @override
   void dispose() {
     for (final controller in textControllers) {

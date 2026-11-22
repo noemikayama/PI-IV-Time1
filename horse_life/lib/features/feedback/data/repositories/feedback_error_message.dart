@@ -9,8 +9,10 @@
 
 import 'package:cloud_functions/cloud_functions.dart';
 
+// Centraliza as mensagens exibidas nas telas de consulta e cadastro.
 String feedbackErrorMessage(Object error) {
   if (error is StateError) return error.message;
+  // Traduz códigos conhecidos das Cloud Functions e aproveita a mensagem remota quando disponível.
   if (error is FirebaseFunctionsException) {
     switch (error.code) {
       case 'unauthenticated': return 'Sua sessão expirou. Entre novamente.';
@@ -21,5 +23,6 @@ String feedbackErrorMessage(Object error) {
         return error.message ?? 'Não foi possível concluir esta operação.';
     }
   }
+  // Utiliza uma mensagem genérica para falhas sem tratamento específico.
   return 'Não foi possível concluir a operação. Tente novamente.';
 }

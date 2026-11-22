@@ -28,16 +28,15 @@ import 'package:horse_life/features/training/data/models/training_agenda_data.da
 abstract final class TrainingFeedbackRoute {
   static const routeName = '/trainings/execution/feedback';
 
+  // Reaproveita o ID do item da agenda para abrir o registro correspondente, sem recriar dados.
   static Route<HomeNavigationDestination> fromAgenda({
     required TrainingAgendaEntry entry,
     required TrainingAgendaAudience audience,
     TrainingFeedbackRepository? repository,
-  }) => forRecord(
-    recordId: entry.id,
-    audience: audience,
-    repository: repository,
-  );
+  }) =>
+      forRecord(recordId: entry.id, audience: audience, repository: repository);
 
+  // Centraliza a abertura por ID; o repositório real é o padrão quando nenhum outro é injetado.
   static Route<HomeNavigationDestination> forRecord({
     required String recordId,
     required TrainingAgendaAudience audience,
