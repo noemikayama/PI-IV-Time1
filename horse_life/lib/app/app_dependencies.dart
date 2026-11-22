@@ -2,10 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Revisão integral dos comentários e documentação das dependências
+// de agenda, execução e finalização, incluindo seus ciclos de inicialização.
+//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Revisão da documentação das dependências injetáveis e do ciclo de
-// criação tardia dos carregadores da Home e da agenda.
+// criação tardia dos carregadores da Home e da agenda. Inclusão dos repositórios
+// responsáveis por carregar e finalizar a execução de um treino.
 //
 // Data: 20/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -25,6 +31,8 @@ import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/home_composition.dart';
 import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
 
 /// Dependências de longa duração. Não mantém o estado visual do aplicativo.
 /// Pode receber repositories e loaders fake em testes.
@@ -34,9 +42,13 @@ class AppDependencies {
     HomeLoader<GuardianHomeData>? guardianLoader,
     HomeLoader<TrainerHomeData>? trainerLoader,
     TrainingAgendaLoader? trainingAgendaLoader,
+    TrainingExecutionLoader? trainingExecutionLoader,
+    TrainingCompletionSubmitter? trainingCompletionSubmitter,
   }) : _guardianLoader = guardianLoader,
        _trainerLoader = trainerLoader,
-       _trainingAgendaLoader = trainingAgendaLoader;
+       _trainingAgendaLoader = trainingAgendaLoader,
+       _trainingExecutionLoader = trainingExecutionLoader,
+       _trainingCompletionSubmitter = trainingCompletionSubmitter;
 
   /// Não acessa FirebaseAuth.instance durante a criação da composição.
   factory AppDependencies.production() => AppDependencies(
@@ -50,6 +62,8 @@ class AppDependencies {
   HomeLoader<GuardianHomeData>? _guardianLoader;
   HomeLoader<TrainerHomeData>? _trainerLoader;
   TrainingAgendaLoader? _trainingAgendaLoader;
+  TrainingExecutionLoader? _trainingExecutionLoader;
+  TrainingCompletionSubmitter? _trainingCompletionSubmitter;
 
   /// A primeira leitura deve ocorrer após FirebaseBootstrap.initialize.
   HomeLoader<GuardianHomeData> get guardianLoader =>
@@ -62,4 +76,12 @@ class AppDependencies {
   /// Cria a integração da agenda somente após a inicialização do Firebase.
   TrainingAgendaLoader get trainingAgendaLoader =>
       _trainingAgendaLoader ??= FirebaseTrainingAgendaRepository();
+
+  /// Resolve o treino agendado e carrega seus detalhes e exercícios.
+  TrainingExecutionLoader get trainingExecutionLoader =>
+      _trainingExecutionLoader ??= FirebaseTrainingExecutionRepository();
+
+  /// Envia ao backend o resultado preenchido ao final de uma execução.
+  TrainingCompletionSubmitter get trainingCompletionSubmitter =>
+      _trainingCompletionSubmitter ??= FirebaseTrainingCompletionRepository();
 }
