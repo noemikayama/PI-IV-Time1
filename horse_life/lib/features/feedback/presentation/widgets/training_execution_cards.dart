@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Exibição de informações ausentes sem inventar valores de execução.
+//
 // Data: 20/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Extração dos dois cards de execução em componentes da feature,
@@ -34,9 +38,9 @@ class TrainingExecutionDetailsCard extends StatelessWidget {
         FeedbackDetailLine(label: 'Objetivo', value: record.objective),
         FeedbackDetailLine(
           label: 'Tempo total',
-          value: '${record.durationMinutes} minutos',
+          value: record.durationMinutes == null ? 'Não informado' : '${record.durationMinutes} minutos',
         ),
-        FeedbackDetailLine(label: 'Data', value: formatFeedbackDate(record.executedAt)),
+        FeedbackDetailLine(label: 'Data', value: record.executedAt == null ? 'Não informada' : formatFeedbackDate(record.executedAt!)),
         FeedbackDetailLine(label: 'Cavalo', value: record.horseName),
         FeedbackDetailLine(
           label: isTrainer ? 'Atleta' : 'Treinador',
@@ -44,11 +48,11 @@ class TrainingExecutionDetailsCard extends StatelessWidget {
         ),
         FeedbackDetailLine(
           label: 'Exercícios concluídos',
-          value: '${record.completedExercises}',
+          value: record.completedExercises?.toString() ?? 'Não informado',
         ),
         FeedbackDetailLine(
           label: 'Exercícios incompletos',
-          value: '${record.incompleteExercises}',
+          value: record.incompleteExercises?.toString() ?? 'Não informado',
         ),
         FeedbackDetailLine(
           label: 'Status',

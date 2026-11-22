@@ -73,10 +73,7 @@ class FeedbackReadOnlyField extends StatelessWidget {
             color: AppColors.whiteSmoke,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(
-            value,
-            style: textTheme.bodyLarge?.copyWith(fontSize: 19),
-          ),
+          child: Text(value, style: textTheme.bodyLarge?.copyWith(fontSize: 19)),
         ),
       ],
     );

@@ -1,13 +1,17 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
 // Data: 10/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Etapas de raça e pelagem usam o mesmo campo de busca local.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import '../../data/mocks/mock_horse_catalog.dart';
+import '../../data/catalogs/horse_catalog.dart';
 import '../widgets/horse_search_field.dart';
 
 enum HorseCatalogKind { breed, coat }
@@ -31,7 +35,7 @@ class HorseCatalogStep extends StatelessWidget {
     return HorseSearchField(
       key: ValueKey(isBreed ? 'horse-breed-field' : 'horse-coat-field'),
       label: isBreed ? 'Raça' : 'Pelagem',
-      options: isBreed ? MockHorseCatalog.breeds : MockHorseCatalog.coats,
+      options: isBreed ? HorseCatalog.breeds : HorseCatalog.coats,
       value: value,
       onSelected: onSelected,
     );

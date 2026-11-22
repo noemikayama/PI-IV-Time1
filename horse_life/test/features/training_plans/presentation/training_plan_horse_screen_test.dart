@@ -9,10 +9,11 @@
 // para a etapa de data de início.
 // -----------------------------------------------------------------------------
 
+import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
-import 'package:horse_life/features/exercises/data/mocks/mock_trainer_linked_horses.dart';
+import '../../../support/features/exercises/data/mocks/mock_trainer_linked_horses.dart';
 import 'package:horse_life/features/exercises/presentation/widgets/no_linked_horses_dialog.dart';
 import 'package:horse_life/features/training_plans/application/states/training_plan_registration_draft.dart';
 import 'package:horse_life/features/training_plans/presentation/screens/training_plan_horse_screen.dart';
@@ -33,7 +34,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       buildApp(
-        TrainingPlanHorseScreen(
+        TrainingPlanHorseScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
           draft: baseDraft,
           initialHorses: MockTrainerLinkedHorses.linkedHorses,
         ),
@@ -67,7 +68,7 @@ void main() {
   testWidgets('shows dialog when trainer has no linked horses', (tester) async {
     await tester.pumpWidget(
       buildApp(
-        const TrainingPlanHorseScreen(
+        const TrainingPlanHorseScreen(horseRepository: const LocalTrainerLinkedHorseRepository(),
           draft: baseDraft,
           initialHorses: MockTrainerLinkedHorses.empty,
         ),

@@ -9,6 +9,9 @@
 // exercícios, bloqueio ao remover todos os exercícios e submissão com retorno.
 // -----------------------------------------------------------------------------
 
+import '../../../support/features/trainings/data/repositories/local_training_registration_repository.dart';
+import '../../../support/features/trainings/data/repositories/local_training_exercise_gallery_repository.dart';
+import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
@@ -73,7 +76,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingConfirmationScreen(
+          TrainingConfirmationScreen(controller: TrainingRegistrationController(galleryRepository: const LocalTrainingExerciseGalleryRepository(), horseRepository: const LocalTrainerLinkedHorseRepository(), registrationRepository: const LocalTrainingRegistrationRepository()),
             draft: sampleDraft,
             onSubmitted: (draft) => submittedDraft = draft,
           ),
@@ -145,7 +148,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingConfirmationScreen(
+          TrainingConfirmationScreen(controller: TrainingRegistrationController(galleryRepository: const LocalTrainingExerciseGalleryRepository(), horseRepository: const LocalTrainerLinkedHorseRepository(), registrationRepository: const LocalTrainingRegistrationRepository()),
             draft: const TrainingRegistrationDraft(
               title: 'Treino A',
               description: 'Descrição do treino A',
@@ -198,7 +201,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingConfirmationScreen(
+          TrainingConfirmationScreen(controller: TrainingRegistrationController(galleryRepository: const LocalTrainingExerciseGalleryRepository(), horseRepository: const LocalTrainerLinkedHorseRepository(), registrationRepository: const LocalTrainingRegistrationRepository()),
             draft: const TrainingRegistrationDraft(
               title: 'Treino A',
               description: 'Descrição do treino A',
@@ -248,7 +251,7 @@ void main() {
     'submits training through controller and pops registration flow route',
     (tester) async {
       final spyRepository = _SpyTrainingRegistrationRepository();
-      final controller = TrainingRegistrationController(
+      final controller = TrainingRegistrationController(galleryRepository: const LocalTrainingExerciseGalleryRepository(), horseRepository: const LocalTrainerLinkedHorseRepository(),
         registrationRepository: spyRepository,
       );
 

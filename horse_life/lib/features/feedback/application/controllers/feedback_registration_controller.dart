@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Validação alinhada aos limites de comentário e listas do servidor.
+//
 // Data: 20/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Extração da navegação, valores e regras do formulário de feedback
@@ -98,7 +102,16 @@ class FeedbackRegistrationController extends ChangeNotifier {
     if (definitions[index].isRequired && text.isEmpty) {
       return 'Escreva um comentário sobre a execução.';
     }
-    if (text.length > 1000) return 'Use no máximo 1000 caracteres.';
+    if (index == 0 && text.length > 1000) {
+      return 'Use no máximo 1000 caracteres.';
+    }
+    if (index != 0) {
+      final lines = _paragraphs(text);
+      if (lines.length > 30) return 'Informe no máximo 30 itens.';
+      if (lines.any((line) => line.length > 500)) {
+        return 'Cada linha deve ter até 500 caracteres.';
+      }
+    }
     return null;
   }
 

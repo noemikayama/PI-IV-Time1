@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Adiciona à seleção somente treinamentos confirmados pelo servidor.
+//
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação da sexta etapa do cadastro de planos de treinamento
@@ -127,11 +132,12 @@ class _TrainingPlanTrainingsScreenState
       ),
     );
 
-    if (!mounted || createdDraft == null) return;
+    if (!mounted || createdDraft == null || createdResult == null ||
+        createdResult!.id.trim().isEmpty) return;
     final item = _controller.recordCreatedTrainingFromDraft(
       createdDraft!,
-      id: createdResult?.id,
-      code: createdResult?.code,
+      id: createdResult!.id,
+      code: createdResult!.code,
     );
     setState(() {
       _trainingsByDay[weekday] = item;

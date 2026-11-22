@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Envio assíncrono, retorno confirmado pelo servidor e tratamento de falhas.
+//
 // Data: 20/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Extração das regras de formulário para controller e das etapas
@@ -21,6 +25,7 @@ import 'package:horse_life/core/widgets/auth_next_button.dart';
 import 'package:horse_life/core/widgets/form_progress_indicator.dart';
 import 'package:horse_life/features/feedback/application/controllers/feedback_registration_controller.dart';
 import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/data/repositories/feedback_error_message.dart';
 import 'package:horse_life/features/feedback/presentation/widgets/feedback_form_sections.dart';
 
 /// Orquestra o formulário sem conhecer os detalhes de cada campo ou do mock.
@@ -50,8 +55,9 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
   }
 
   void _back() {
+    if (_flow.isSaving) return;
     FocusScope.of(context).unfocus();
-    if (!_flow.previous()) Navigator.of(context).pop(false);
+    if (!_flow.previous()) Navigator.of(context).pop();
   }
 
   void _next() {
@@ -64,6 +70,7 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
   }
 
   void _edit(int index) {
+    if (_flow.isSaving) return;
     _flow.edit(index);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _flow.focusNodes[index].requestFocus();
@@ -77,7 +84,7 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
     message: message,
   );
 
-  void _save() {
+  Future<void> _save() async {
     if (_flow.isSaving) return;
     final error = _flow.validateAll();
     if (error != null) {
@@ -94,13 +101,15 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
 
     _flow.setSaving(true);
     try {
-      widget.repository.registerFeedback(
+      final updated = await widget.repository.registerFeedback(
         recordId: widget.recordId,
         feedback: _flow.buildFeedback(),
       );
-      Navigator.of(context).pop(true);
-    } on StateError catch (error) {
-      _showError(error.message);
+      if (!mounted) return;
+      Navigator.of(context).pop(updated);
+    } catch (error) {
+      if (!mounted) return;
+      _showError(feedbackErrorMessage(error));
       _flow.setSaving(false);
     }
   }
@@ -111,7 +120,7 @@ class _FeedbackRegistrationScreenState extends State<FeedbackRegistrationScreen>
     builder: (context, _) {
       final textTheme = Theme.of(context).textTheme;
       return PopScope(
-        canPop: _flow.step == 0,
+        canPop: !_flow.isSaving && _flow.step == 0,
         onPopInvokedWithResult: (didPop, _) {
           if (!didPop) _back();
         },

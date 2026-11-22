@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Exige identificador confirmado pela persistência, sem ID fictício.
+//
+//
 // Data: 17/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do modelo imutável de exercício disponível na galeria
@@ -27,7 +32,7 @@ final class TrainingExerciseItem {
   /// pelo fluxo de cadastro de exercícios durante a mesma sessão.
   factory TrainingExerciseItem.fromExerciseDraft(
     ExerciseRegistrationDraft draft, {
-    String? id,
+    required String id,
   }) {
     final trimmedName = draft.name.trim();
     final horse = switch (draft) {
@@ -36,7 +41,7 @@ final class TrainingExerciseItem {
     };
 
     return TrainingExerciseItem(
-      id: id ?? 'local-${trimmedName.toLowerCase()}-${horse?.id ?? 'generic'}',
+      id: id,
       name: trimmedName,
       estimatedDurationMinutes: draft.defaultDurationMinutes ?? 0,
       exerciseType: draft.exerciseType,

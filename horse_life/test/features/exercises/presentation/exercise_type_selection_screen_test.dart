@@ -9,11 +9,11 @@
 // para as trilhas de 8 etapas (específico) e 7 etapas (genérico).
 // -----------------------------------------------------------------------------
 
+import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/features/exercises/data/models/exercise_type.dart';
-import 'package:horse_life/features/exercises/data/repositories/trainer_linked_horse_repository.dart';
 import 'package:horse_life/features/exercises/presentation/screens/exercise_horse_screen.dart';
 import 'package:horse_life/features/exercises/presentation/screens/exercise_name_screen.dart';
 import 'package:horse_life/features/exercises/presentation/screens/exercise_type_selection_screen.dart';
@@ -27,7 +27,7 @@ void main() {
   testWidgets('shows exercise privacy options and explanatory rows', (
     tester,
   ) async {
-    await tester.pumpWidget(buildApp(const ExerciseTypeSelectionScreen()));
+    await tester.pumpWidget(buildApp(const ExerciseTypeSelectionScreen(horseRepository: const LocalTrainerLinkedHorseRepository())));
 
     expect(find.text('Tipo de exercício'), findsOneWidget);
     expect(find.textContaining('Antes dos próximos passos'), findsOneWidget);
@@ -83,7 +83,7 @@ void main() {
   testWidgets(
     'opens linked horse selection with 8 progress steps when specific is chosen and horses exist',
     (tester) async {
-      await tester.pumpWidget(buildApp(const ExerciseTypeSelectionScreen()));
+      await tester.pumpWidget(buildApp(const ExerciseTypeSelectionScreen(horseRepository: const LocalTrainerLinkedHorseRepository())));
 
       final continueButton = find.byKey(
         const Key('continue-exercise-type-selection'),
@@ -137,7 +137,7 @@ void main() {
   testWidgets(
     'navigates to generic exercise name screen with 7 steps when no callback is injected',
     (tester) async {
-      await tester.pumpWidget(buildApp(const ExerciseTypeSelectionScreen()));
+      await tester.pumpWidget(buildApp(const ExerciseTypeSelectionScreen(horseRepository: const LocalTrainerLinkedHorseRepository())));
 
       await tester.tap(find.byKey(const Key('exercise-type-dropdown')));
       await tester.pumpAndSettle();

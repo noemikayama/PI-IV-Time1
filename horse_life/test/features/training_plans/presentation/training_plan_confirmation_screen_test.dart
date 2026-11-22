@@ -8,6 +8,8 @@
 // treinamento), cobrindo exibição completa, edição inline e submissão ao backend.
 // -----------------------------------------------------------------------------
 
+import '../../../support/features/training_plans/data/repositories/local_training_plan_repository.dart';
+import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
@@ -75,7 +77,7 @@ void main() {
 
       await tester.pumpWidget(
         buildApp(
-          TrainingPlanConfirmationScreen(
+          TrainingPlanConfirmationScreen(controller: TrainingPlanRegistrationController(horseRepository: const LocalTrainerLinkedHorseRepository(), planRepository: const LocalTrainingPlanRepository()),
             draft: draft,
             onSubmitted: (updated) => submittedDraft = updated,
           ),
@@ -126,7 +128,7 @@ void main() {
     'submits plan through controller and pops training plan flow route',
     (tester) async {
       final spyRepository = _SpyTrainingPlanRepository();
-      final controller = TrainingPlanRegistrationController(
+      final controller = TrainingPlanRegistrationController(horseRepository: const LocalTrainerLinkedHorseRepository(),
         planRepository: spyRepository,
       );
 

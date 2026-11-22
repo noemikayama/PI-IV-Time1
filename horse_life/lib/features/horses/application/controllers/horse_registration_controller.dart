@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Desacoplamento da persistência e consulta das telas, centralizando
@@ -15,7 +19,7 @@
 
 import 'dart:async';
 
-import '../../data/mocks/mock_horse_catalog.dart';
+import '../../data/catalogs/horse_catalog.dart';
 import '../../data/models/horse_registration_draft.dart';
 import '../../data/repositories/horse_microchip_validator.dart';
 import '../../data/repositories/horse_registration_repository.dart';
@@ -90,8 +94,8 @@ class HorseRegistrationController {
         'Selecione uma data de nascimento válida.',
       );
     }
-    if (!MockHorseCatalog.breeds.contains(draft.breed) ||
-        !MockHorseCatalog.coats.contains(draft.coat)) {
+    if (!HorseCatalog.breeds.contains(draft.breed) ||
+        !HorseCatalog.coats.contains(draft.coat)) {
       throw const HorseRegistrationFailure(
         'Selecione uma raça e uma pelagem das sugestões.',
       );

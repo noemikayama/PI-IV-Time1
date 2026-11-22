@@ -22,7 +22,7 @@ import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
 import 'package:horse_life/features/home/presentation/screens/guardian/guardian_home_screen.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_relationship_screen.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
-import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
+import '../../../support/features/horses/data/repositories/mock_horse_registration_repository.dart';
 
 void main() {
   testWidgets(

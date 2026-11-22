@@ -9,6 +9,9 @@
 // filtro numérico, validação entre 1 e 480 minutos e avanço para a revisão.
 // -----------------------------------------------------------------------------
 
+import '../../../support/features/trainings/data/repositories/local_training_registration_repository.dart';
+import '../../../support/features/trainings/data/repositories/local_training_exercise_gallery_repository.dart';
+import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
@@ -16,7 +19,6 @@ import 'package:horse_life/features/exercises/data/models/exercise_type.dart';
 import 'package:horse_life/features/trainings/application/controllers/training_registration_controller.dart';
 import 'package:horse_life/features/trainings/application/states/training_registration_draft.dart';
 import 'package:horse_life/features/trainings/data/models/training_exercise_item.dart';
-import 'package:horse_life/features/trainings/data/repositories/training_registration_repository.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_confirmation_screen.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_duration_screen.dart';
 
@@ -57,7 +59,7 @@ void main() {
   testWidgets(
     'displays total duration of selected exercises, validates range 1..480 and advances to confirmation screen',
     (tester) async {
-      final controller = TrainingRegistrationController(
+      final controller = TrainingRegistrationController(galleryRepository: const LocalTrainingExerciseGalleryRepository(), horseRepository: const LocalTrainerLinkedHorseRepository(),
         registrationRepository: _StubDurationTrainingRegistrationRepository(),
       );
 

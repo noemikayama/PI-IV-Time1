@@ -10,7 +10,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/features/feedback/application/controllers/feedback_registration_controller.dart';
-import 'package:horse_life/features/feedback/data/repositories/mock_training_feedback_repository.dart';
+import '../../support/features/feedback/data/repositories/mock_training_feedback_repository.dart';
 
 void main() {
   test('mantém os valores ao avançar, voltar e editar a revisão', () {

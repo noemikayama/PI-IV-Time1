@@ -13,6 +13,7 @@
 // Alteração: Criação dos testes da etapa de e-mail do responsável.
 // -----------------------------------------------------------------------------
 
+import '../../../support/features/authentication/data/repositories/local_training_sport_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
@@ -44,7 +45,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       buildApp(
-        const RegistrationEmailScreen(registration: initialRegistration),
+        const RegistrationEmailScreen(sportRepository: const LocalTrainingSportRepository(), registration: initialRegistration),
       ),
     );
 
@@ -73,7 +74,7 @@ void main() {
 
     await tester.pumpWidget(
       buildApp(
-        RegistrationEmailScreen(
+        RegistrationEmailScreen(sportRepository: const LocalTrainingSportRepository(),
           registration: initialRegistration,
           onContinue: (registration) {
             receivedRegistration = registration;
@@ -110,7 +111,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       buildApp(
-        const RegistrationEmailScreen(registration: initialRegistration),
+        const RegistrationEmailScreen(sportRepository: const LocalTrainingSportRepository(), registration: initialRegistration),
       ),
     );
 
@@ -137,7 +138,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       buildApp(
-        const RegistrationEmailScreen(registration: trainerRegistration),
+        const RegistrationEmailScreen(sportRepository: const LocalTrainingSportRepository(), registration: trainerRegistration),
       ),
     );
 

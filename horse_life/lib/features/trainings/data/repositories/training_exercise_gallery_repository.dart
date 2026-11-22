@@ -2,14 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Separa implementações de teste do contrato de produção.
+//
 // Data: 17/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do contrato do repositório da galeria de exercícios do
 // treinador e implementação local para testes de apresentação e fluxo.
 // -----------------------------------------------------------------------------
 
-import '../../../exercises/data/models/exercise_type.dart';
-import '../mocks/mock_training_exercises.dart';
 import '../models/training_exercise_item.dart';
 
 /// Contrato de obtenção dos exercícios da galeria do treinador para montagem
@@ -41,47 +43,4 @@ String normalizeSearchText(String value) {
     result = result.replaceAll(diacritics[index], replacements[index]);
   }
   return result.trim().toLowerCase();
-}
-
-/// Implementação local em memória utilizada em testes de widget e estados isolados.
-class LocalTrainingExerciseGalleryRepository
-    implements TrainingExerciseGalleryRepository {
-  const LocalTrainingExerciseGalleryRepository({
-    this.exercises,
-  });
-
-  final List<TrainingExerciseItem>? exercises;
-
-  @override
-  Future<List<TrainingExerciseItem>> fetchGalleryExercises({
-    String? searchQuery,
-    String? horseId,
-  }) async {
-    final source = exercises ?? MockTrainingExercises.exercises;
-    final trimmedHorseId = horseId?.trim() ?? '';
-    final normalizedSearch = normalizeSearchText(searchQuery ?? '');
-
-    final filtered = source.where((exercise) {
-      if (trimmedHorseId.isEmpty) {
-        if (exercise.exerciseType != ExerciseType.generic) return false;
-      } else {
-        if (exercise.exerciseType != ExerciseType.specific ||
-            exercise.horse?.id != trimmedHorseId) {
-          return false;
-        }
-      }
-
-      if (normalizedSearch.isNotEmpty) {
-        final normalizedName = normalizeSearchText(exercise.name);
-        if (!normalizedName.contains(normalizedSearch)) return false;
-      }
-
-      return true;
-    }).toList();
-
-    filtered.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
-    return List.unmodifiable(filtered);
-  }
 }

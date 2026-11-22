@@ -1,6 +1,10 @@
 // RESPONSÁVEL PELA ATUALIZAÇÃO: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Remove cenários simulados e dados temporários da Home.
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos segmentos de carregamento, erro, estado vazio e
@@ -47,7 +51,6 @@ class GuardianHomeContent extends StatefulWidget {
     required this.onRetry,
     this.onRegisterHorse,
     this.onShowAllHorses,
-    this.sessionMockHorses = const [],
     this.onSelectHorse,
   });
 
@@ -56,7 +59,6 @@ class GuardianHomeContent extends StatefulWidget {
   final VoidCallback? onRegisterHorse;
   /// Abre a listagem autenticada de cavalos.
   final VoidCallback? onShowAllHorses;
-  final List<String> sessionMockHorses;
   final ValueChanged<String>? onSelectHorse;
 
   @override
@@ -186,7 +188,7 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                         useHorseAsset: true,
                         maxVisibleItems: 2,
                         showArrow: true,
-                        items: [...data.horses, ...widget.sessionMockHorses],
+                        items: data.horses,
                         onItemTap: widget.onSelectHorse == null
                             ? null
                             : (index) {

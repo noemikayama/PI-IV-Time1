@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Espera pelo carregamento assíncrono dos registros.
+//
 // Data: 20/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Ampliação da cobertura da navegação de revisão editável e
@@ -16,7 +20,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
-import 'package:horse_life/features/feedback/data/repositories/mock_training_feedback_repository.dart';
+import '../../support/features/feedback/data/repositories/mock_training_feedback_repository.dart';
 import 'package:horse_life/features/feedback/presentation/screens/training_execution_record_screen.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 
@@ -41,6 +45,7 @@ void main() {
         repository: repository,
       ),
     ));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.byKey(const Key('access-feedback-button')));
     await tester.tap(find.byKey(const Key('access-feedback-button')));
@@ -63,6 +68,7 @@ void main() {
         repository: repository,
       ),
     ));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Escrever feedback'));
     await tester.tap(find.text('Escrever feedback'));
@@ -115,6 +121,7 @@ void main() {
         repository: repository,
       ),
     ));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Visualizar feedback'));
     await tester.tap(find.text('Visualizar feedback'));
@@ -136,6 +143,7 @@ void main() {
         repository: repository,
       ),
     ));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Escrever feedback'));
     await tester.tap(find.text('Escrever feedback'));

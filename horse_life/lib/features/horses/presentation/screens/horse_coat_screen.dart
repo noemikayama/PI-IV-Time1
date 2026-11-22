@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Usa dependências reais por padrão e conserva injeção para testes.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Desacoplamento da persistência e estado com HorseRegistrationController,
@@ -20,7 +24,7 @@ import 'package:horse_life/core/widgets/auth_next_button.dart';
 import 'package:horse_life/core/widgets/form_progress_indicator.dart';
 
 import '../../application/controllers/horse_registration_controller.dart';
-import '../../data/mocks/mock_horse_catalog.dart';
+import '../../data/catalogs/horse_catalog.dart';
 import '../../data/models/horse_registration_draft.dart';
 import '../../data/repositories/horse_microchip_validator.dart';
 import '../../data/repositories/horse_registration_repository.dart';
@@ -153,7 +157,7 @@ class _HorseCoatScreenState extends State<HorseCoatScreen> {
                             HorseSearchField(
                               key: const ValueKey('horse-coat-field'),
                               label: 'Pelagem',
-                              options: MockHorseCatalog.coats,
+                              options: HorseCatalog.coats,
                               value: _coat,
                               onSelected: (value) {
                                 setState(() => _coat = value);

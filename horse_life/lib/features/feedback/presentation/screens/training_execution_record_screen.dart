@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Consulta assíncrona, permissões reais e atualização pelo retorno da gravação.
+//
 // Data: 20/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Refatoração para delegar os cards e a consulta a widgets/tela
@@ -24,6 +28,7 @@ import 'package:horse_life/core/widgets/gradient_button.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/feedback/data/models/training_execution_record.dart';
 import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/data/repositories/feedback_error_message.dart';
 import 'package:horse_life/features/feedback/presentation/widgets/training_execution_cards.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 
@@ -50,19 +55,42 @@ class TrainingExecutionRecordScreen extends StatefulWidget {
 
 class _TrainingExecutionRecordScreenState
     extends State<TrainingExecutionRecordScreen> {
-  TrainingExecutionRecord? get _record => widget.repository.findById(widget.recordId);
-  bool get _isTrainer => widget.audience == TrainingAgendaAudience.trainer;
+  TrainingExecutionRecord? _record;
+  Object? _error;
+  bool _loading = true;
+  bool get _isTrainer => _record?.viewerIsTrainer ??
+      (widget.audience == TrainingAgendaAudience.trainer);
+  bool get _canWrite => _isTrainer && (_record?.canRegisterFeedback ?? false);
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final record = await widget.repository.findById(widget.recordId);
+      if (!mounted) return;
+      setState(() { _record = record; _loading = false; });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() { _error = error; _loading = false; });
+    }
+  }
 
   Future<void> _accessFeedback() async {
     final record = _record;
     if (record == null) return;
 
-    if (record.feedback == null && !_isTrainer) {
+    if (record.feedback == null && !_canWrite) {
       await showAppInfoDialog(
         context,
         title: 'Nenhum feedback registrado',
-        message: 'Seu treinador ainda não fez um feedback sobre a execução '
-            'deste treino. Volte aqui quando ele estiver disponível.',
+        message: _isTrainer
+            ? 'O feedback ainda não está disponível para este registro.'
+            : 'Seu treinador ainda não fez um feedback sobre a execução deste treino. Volte aqui quando ele estiver disponível.',
         dialogKey: const Key('feedback-empty-dialog'),
         confirmButtonKey: const Key('feedback-empty-confirm'),
       );
@@ -70,8 +98,8 @@ class _TrainingExecutionRecordScreenState
     }
 
     if (record.feedback == null) {
-      final saved = await Navigator.of(context).push<bool>(
-        MaterialPageRoute<bool>(
+      final saved = await Navigator.of(context).push<TrainingExecutionRecord>(
+        MaterialPageRoute<TrainingExecutionRecord>(
           builder: (_) => FeedbackRegistrationScreen(
             recordId: record.id,
             repository: widget.repository,
@@ -79,13 +107,13 @@ class _TrainingExecutionRecordScreenState
         ),
       );
       if (!mounted) return;
-      if (saved == true) {
-        setState(() {});
+      if (saved != null) {
+        setState(() { _record = saved; });
         AppSnackBar.show(
           context,
           backgroundColor: AppColors.seaGreen,
           icon: Icons.check_circle_outline_rounded,
-          message: 'Feedback registrado nesta sessão de demonstração.',
+          message: 'Feedback registrado com sucesso.',
         );
       }
       return;
@@ -104,10 +132,17 @@ class _TrainingExecutionRecordScreenState
   @override
   Widget build(BuildContext context) {
     final record = _record;
-    if (record == null) {
+    if (_loading) {
+      return Scaffold(appBar: AppBar(title: const Text('Registro de execução')),
+          body: const Center(child: CircularProgressIndicator()));
+    }
+    if (_error != null || record == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Registro não encontrado')),
-        body: const Center(child: Text('Não foi possível carregar esta execução.')),
+        body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(_error == null ? 'Registro de treino não encontrado.' : feedbackErrorMessage(_error!)),
+          TextButton(onPressed: _load, child: const Text('Tentar novamente')),
+        ])),
       );
     }
 
@@ -131,9 +166,10 @@ class _TrainingExecutionRecordScreenState
                   ),
                   const SizedBox(height: 32),
                   TrainingExecutionDetailsCard(record: record, isTrainer: _isTrainer),
-                  TrainingExecutionReportsCard(record: record),
+                  if (record.hasExecution) TrainingExecutionReportsCard(record: record)
+                  else const Text('Ainda não há relato de execução para este treino.'),
                   const SizedBox(height: 3),
-                  if (_isTrainer && record.feedback == null)
+                  if (_canWrite && record.feedback == null)
                     GradientButton(
                       label: 'Escrever feedback',
                       icon: Icons.rate_review_outlined,
@@ -148,12 +184,7 @@ class _TrainingExecutionRecordScreenState
                       showArrow: false,
                       onPressed: _accessFeedback,
                     ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Prévia de demonstração: os reportes e feedbacks usam dados mockados.',
-                    textAlign: TextAlign.center,
-                    style: theme.bodySmall?.copyWith(color: AppColors.grey),
-                  ),
+
                 ],
               ),
             ),

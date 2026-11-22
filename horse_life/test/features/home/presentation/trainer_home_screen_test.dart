@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura da filtragem defensiva de treinos CANCELADO na agenda e na Home.
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Cobertura do link "Cadastrar plano de treino" na barra lateral
@@ -47,7 +51,7 @@ import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_relationship_screen.dart';
 import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
-import 'package:horse_life/features/horses/data/repositories/mock_horse_registration_repository.dart';
+import '../../../support/features/horses/data/repositories/mock_horse_registration_repository.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
 import 'package:horse_life/features/training_plans/presentation/screens/training_plan_title_screen.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_title_screen.dart';
@@ -219,6 +223,68 @@ void main() {
       expect(find.byType(TrainingPlanTitleScreen), findsOneWidget);
       expect(find.text('Título do plano'), findsOneWidget);
     },
+  );
+
+  testWidgets(
+    'ignora treinos com status CANCELADO tanto na Home quanto na aba de treinos da agenda',
+    (tester) async {
+      final loader = _TrainerHomeWithCanceledTrainingLoader();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainerHomeScreen(
+            loader: loader,
+            onLogout: () async {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Na Home, não deve exibir o treino cancelado
+      expect(find.text('Treino Cancelado Indevido'), findsNothing);
+      expect(find.text('Treino Ativo Válido'), findsOneWidget);
+
+      // Na aba de Treinos (Agenda), também não deve exibir o cancelado
+      await tester.tap(find.text('Treinos'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Treino Cancelado Indevido'), findsNothing);
+      expect(find.text('Treino Ativo Válido'), findsWidgets);
+    },
+  );
+}
+
+class _TrainerHomeWithCanceledTrainingLoader
+    implements HomeLoader<TrainerHomeData> {
+  @override
+  Future<TrainerHomeData> fetchHome() async => const TrainerHomeData(
+    trainerName: 'Ana Souza',
+    specialty: 'Adestramento',
+    todayTrainings: [
+      TrainerTraining(
+        id: 'rec-valid',
+        title: 'Treino Ativo Válido',
+        horseName: 'Valente',
+        planName: 'Plano Regular',
+        status: 'PLANEJADO',
+      ),
+      TrainerTraining(
+        id: 'rec-canceled',
+        title: 'Treino Cancelado Indevido',
+        horseName: 'Valente',
+        planName: 'Plano Cancelado',
+        status: 'CANCELADO',
+      ),
+    ],
+    weeklyFeedbacksDone: 0,
+    weeklyFeedbacksTotal: 0,
+    activePlans: 1,
+    weeklyTrainingsCompleted: 0,
+    weeklyTrainingsPlanned: 1,
+    createdExercises: 0,
+    horses: [],
+    clients: [],
   );
 }
 

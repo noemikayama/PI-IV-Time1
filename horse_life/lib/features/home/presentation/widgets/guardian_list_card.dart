@@ -76,7 +76,7 @@ class GuardianListCard extends StatelessWidget {
     );
 
     // O CTA de cadastro é exclusivo do estado vazio. Com um ou mais
-    // cavalos (inclusive os mockados da sessão), exibe somente a lista.
+    // cavalos retornados pelo servidor, exibe somente a lista.
     return GuardianSectionCard(
       title: title,
       onShowAll: onShowAll,

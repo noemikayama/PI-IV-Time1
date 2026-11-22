@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Inclusão das permissões remotas e dos campos nulos de execução.
+//
 // Data: 20/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Criação dos contratos imutáveis de execução e feedback para
@@ -35,7 +39,7 @@ class TrainingExecutionFeedback {
 }
 
 /// Projeção de leitura das informações necessárias nas telas do protótipo.
-/// Os dados complementares ainda não são obtidos pela Home atual.
+/// Dados do registro retornado pela API ou pelos cenários de demonstração.
 class TrainingExecutionRecord {
   const TrainingExecutionRecord({
     required this.id,
@@ -53,23 +57,29 @@ class TrainingExecutionRecord {
     required this.difficultiesReport,
     required this.observations,
     this.feedback,
+    this.canRegisterFeedback = true,
+    this.hasExecution = true,
+    this.viewerIsTrainer,
   });
 
   final String id;
   final String title;
   final String objective;
-  final int durationMinutes;
-  final DateTime executedAt;
+  final int? durationMinutes;
+  final DateTime? executedAt;
   final String horseName;
   final String trainerName;
   final String athleteName;
-  final int completedExercises;
-  final int incompleteExercises;
+  final int? completedExercises;
+  final int? incompleteExercises;
   final String status;
   final String performancePerception;
   final String difficultiesReport;
   final String observations;
   final TrainingExecutionFeedback? feedback;
+  final bool canRegisterFeedback;
+  final bool hasExecution;
+  final bool? viewerIsTrainer;
 
   TrainingExecutionRecord withFeedback(TrainingExecutionFeedback value) =>
       TrainingExecutionRecord(
@@ -88,5 +98,8 @@ class TrainingExecutionRecord {
         difficultiesReport: difficultiesReport,
         observations: observations,
         feedback: value,
+        canRegisterFeedback: false,
+        hasExecution: hasExecution,
+        viewerIsTrainer: viewerIsTrainer,
       );
 }

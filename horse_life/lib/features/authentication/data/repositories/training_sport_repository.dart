@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Separa implementações de teste do contrato de produção.
+//
 // Data: 20/10/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Manutenção da fonte local como fallback para usos isolados após a
@@ -21,14 +25,4 @@
 // implementação da Firebase Function.
 abstract interface class TrainingSportRepository {
   Future<List<String>> fetchSports();
-}
-
-// Fonte local usada como fallback em usos isolados e testes de apresentação.
-class LocalTrainingSportRepository implements TrainingSportRepository {
-  const LocalTrainingSportRepository();
-
-  @override
-  Future<List<String>> fetchSports() async {
-    return const ['Adestramento', 'Salto', 'Enduro'];
-  }
 }

@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Exige identificador confirmado pela persistência, sem ID fictício.
+//
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição da descrição opcional no item de treinamento para
+// exibição nos cards da visualização do plano de treinamento.
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do construtor fromTrainingDraft para conversão de
@@ -23,6 +33,7 @@ final class TrainingPlanGalleryItem {
     required this.code,
     required this.title,
     required this.estimatedDurationMinutes,
+    this.description,
     this.exerciseNames = const [],
   });
 
@@ -30,15 +41,17 @@ final class TrainingPlanGalleryItem {
   /// na mesma sessão.
   factory TrainingPlanGalleryItem.fromTrainingDraft(
     TrainingRegistrationDraft draft, {
-    String? id,
-    int? code,
+    required String id,
+    required int code,
   }) {
     final trimmedTitle = draft.title.trim();
+    final trimmedDescription = draft.description.trim();
     return TrainingPlanGalleryItem(
-      id: id ?? 'local-${trimmedTitle.toLowerCase()}',
-      code: code ?? 0,
+      id: id,
+      code: code,
       title: trimmedTitle,
       estimatedDurationMinutes: draft.estimatedDurationMinutes ?? 0,
+      description: trimmedDescription.isEmpty ? null : trimmedDescription,
       exerciseNames: draft.selectedExercises
           .map((exercise) => exercise.name.trim())
           .where((name) => name.isNotEmpty)
@@ -50,6 +63,7 @@ final class TrainingPlanGalleryItem {
   final int code;
   final String title;
   final int estimatedDurationMinutes;
+  final String? description;
   final List<String> exerciseNames;
 
   String get formattedDuration => '$estimatedDurationMinutes min';

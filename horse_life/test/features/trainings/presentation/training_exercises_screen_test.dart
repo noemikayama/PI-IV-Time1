@@ -10,16 +10,17 @@
 // um novo exercício.
 // -----------------------------------------------------------------------------
 
+import '../../../support/features/trainings/data/repositories/local_training_registration_repository.dart';
+import '../../../support/features/trainings/data/repositories/local_training_exercise_gallery_repository.dart';
+import '../../../support/features/exercises/data/repositories/local_trainer_linked_horse_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
 import 'package:horse_life/features/exercises/application/controllers/exercise_registration_controller.dart';
-import 'package:horse_life/features/exercises/data/repositories/mock_exercise_registration_repository.dart';
-import 'package:horse_life/features/exercises/data/repositories/trainer_linked_horse_repository.dart';
+import '../../../support/features/exercises/data/repositories/mock_exercise_registration_repository.dart';
 import 'package:horse_life/features/exercises/presentation/screens/exercise_type_selection_screen.dart';
 import 'package:horse_life/features/trainings/application/controllers/training_registration_controller.dart';
 import 'package:horse_life/features/trainings/application/states/training_registration_draft.dart';
-import 'package:horse_life/features/trainings/data/repositories/training_exercise_gallery_repository.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_exercises_screen.dart';
 
 void main() {
@@ -34,7 +35,7 @@ void main() {
 
     await tester.pumpWidget(
       buildApp(
-        TrainingExercisesScreen(
+        TrainingExercisesScreen(controller: TrainingRegistrationController(galleryRepository: const LocalTrainingExerciseGalleryRepository(), horseRepository: const LocalTrainerLinkedHorseRepository(), registrationRepository: const LocalTrainingRegistrationRepository()),
           draft: const TrainingRegistrationDraft(
             title: 'Treino A',
             description: 'Descrição A',
@@ -64,7 +65,7 @@ void main() {
     'gallery renders generic exercises by default, filters specific by horse, and supports removal',
     (tester) async {
       TrainingRegistrationDraft? submittedDraft;
-      final controller = TrainingRegistrationController(
+      final controller = TrainingRegistrationController(registrationRepository: const LocalTrainingRegistrationRepository(),
         galleryRepository: const LocalTrainingExerciseGalleryRepository(),
         horseRepository: const LocalTrainerLinkedHorseRepository(),
       );
@@ -160,7 +161,7 @@ void main() {
   testWidgets(
     'shows empty gallery state and routes Criar exercício through full flow updating list',
     (tester) async {
-      final trainingController = TrainingRegistrationController(
+      final trainingController = TrainingRegistrationController(registrationRepository: const LocalTrainingRegistrationRepository(),
         galleryRepository: const LocalTrainingExerciseGalleryRepository(
           exercises: [],
         ),
