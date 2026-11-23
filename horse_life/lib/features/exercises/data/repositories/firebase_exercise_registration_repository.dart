@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante do resultado de cadastro e adequação
+// da formatação sem alterar o envio ou o tratamento das mídias.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Integração completa com o serviço remoto de exercícios e upload
@@ -24,7 +29,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../application/states/exercise_media.dart';
 import '../../application/states/exercise_registration_draft.dart';
-import '../models/exercise_registration_result.dart';
 import '../services/exercise_registration_remote_service.dart';
 import '../services/firebase_exercise_registration_service.dart';
 import 'exercise_registration_repository.dart';
@@ -117,15 +121,9 @@ final class FirebaseExerciseRegistrationRepository
         );
 
         final bytes = await _loadMediaBytes(media);
-        await _service.sendMediaBytes(
-          ticket: ticket,
-          bytes: bytes,
-        );
+        await _service.sendMediaBytes(ticket: ticket, bytes: bytes);
 
-        await _service.confirmMedia(
-          exerciseId: id,
-          path: ticket.path,
-        );
+        await _service.confirmMedia(exerciseId: id, path: ticket.path);
       } catch (_) {
         failedMediaCount++;
       }
@@ -134,7 +132,7 @@ final class FirebaseExerciseRegistrationRepository
     final warning = failedMediaCount == 0
         ? null
         : 'Exercício cadastrado, mas $failedMediaCount mídia(s) não foram enviadas. '
-            'Você poderá adicioná-las depois.';
+              'Você poderá adicioná-las depois.';
 
     return ExerciseRegistrationResult(
       id: id,
@@ -163,18 +161,16 @@ final class FirebaseExerciseRegistrationRepository
     if (error is FirebaseFunctionsException) {
       return switch (error.code) {
         'invalid-argument' => ExerciseRegistrationFailure(
-            error.message ?? 'Dados do exercício inválidos.',
-          ),
+          error.message ?? 'Dados do exercício inválidos.',
+        ),
         'permission-denied' => ExerciseRegistrationFailure(
-            error.message ??
-                'Você não tem permissão para cadastrar este exercício.',
-          ),
+          error.message ??
+              'Você não tem permissão para cadastrar este exercício.',
+        ),
         'not-found' => ExerciseRegistrationFailure(
-            error.message ?? 'Cavalo vinculado não encontrado ou inativo.',
-          ),
-        _ => ExerciseRegistrationFailure(
-            error.message ?? defaultMessage,
-          ),
+          error.message ?? 'Cavalo vinculado não encontrado ou inativo.',
+        ),
+        _ => ExerciseRegistrationFailure(error.message ?? defaultMessage),
       };
     }
     return ExerciseRegistrationFailure(defaultMessage);

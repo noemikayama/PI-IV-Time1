@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção do fechamento do cenário somente leitura para registrar
+// separadamente o teste do bloqueio local após a conclusão do treino.
+//
+// Data: 23/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Atualização do fluxo completo para validar o redirecionamento à
 // agenda sem retorno às telas de execução e submissão após concluir o treino.
@@ -11,7 +16,7 @@
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura do modo somente leitura, que exibe os detalhes sem a
 // ação de iniciar a execução do treinamento.
-// 
+//
 // Data: 22/11/2026
 // Alteração: Cobertura da atualização e do bloqueio da ação principal depois
 // que o formulário de conclusão confirma o registro do treino.

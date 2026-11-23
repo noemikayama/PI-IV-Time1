@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Unificação do estado final retornado pelo backend com a conclusão
+// local para atualizar e bloquear imediatamente a ação de iniciar o treino.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ocultação da ação de execução para perfis com acesso somente de
@@ -131,8 +136,8 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
   // Monta o conteúdo e só oferece início quando permissão e estado permitem;
   // registros concluídos continuam visíveis com ação final desabilitada.
   Widget _buildContent(TrainingExecutionData training) {
-    final canStart = training.canStart && !training.isFinished;
     final isFinished = training.isFinished || _completedLocally;
+    final canStart = training.canStart && !isFinished;
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
@@ -249,14 +254,14 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
                     ),
                   ],
                 ],
-                if (canStart || training.isFinished) ...[
+                if (canStart || isFinished) ...[
                   const SizedBox(height: 30),
                   SizedBox(
                     height: 64,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: training.isFinished ? AppColors.grey : null,
-                        gradient: training.isFinished
+                        color: isFinished ? AppColors.grey : null,
+                        gradient: isFinished
                             ? null
                             : const LinearGradient(
                                 colors: [
@@ -278,7 +283,7 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (!training.isFinished) ...[
+                                if (!isFinished) ...[
                                   const Icon(
                                     Icons.play_arrow_rounded,
                                     color: Colors.white,
@@ -287,7 +292,7 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
                                   const SizedBox(width: 6),
                                 ],
                                 Text(
-                                  training.isFinished
+                                  isFinished
                                       ? 'Treino finalizado'
                                       : 'Iniciar treino',
                                   style: Theme.of(context)

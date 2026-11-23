@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção da referência genérica na documentação para evitar sua
+// interpretação como HTML pelo analisador Dart.
+//
 // Data: 27/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Centralização da composição temporária da Home (produção/fakes)
@@ -18,7 +24,7 @@ import 'testing/fakes/mock_guardian_home_service.dart';
 import 'testing/fakes/mock_trainer_home_service.dart';
 
 /// Ponto de composição de transição. No projeto completo, AppDependencies
-/// pode criar/injetar estes loaders na raiz; as telas aceitam HomeLoader<T>.
+/// pode criar/injetar estes loaders na raiz; as telas aceitam `HomeLoader<T>`.
 abstract final class HomeComposition {
   static HomeLoader<GuardianHomeData> guardian({String? mockScenario}) {
     if (mockScenario != null) {
@@ -34,9 +40,7 @@ abstract final class HomeComposition {
     if (mockScenario != null) {
       return _MockTrainerLoader(mockScenario);
     }
-    return TrainerHomeController(
-      repository ?? FirebaseTrainerRepository(),
-    );
+    return TrainerHomeController(repository ?? FirebaseTrainerRepository());
   }
 }
 
@@ -45,11 +49,8 @@ class _MockGuardianLoader implements HomeLoader<GuardianHomeData> {
   final String scenario;
 
   @override
-  Future<GuardianHomeData> fetchHome() =>
-      const MockGuardianHomeService().fetchHome(
-        scenario: scenario,
-        simulateError: scenario == 'error',
-      );
+  Future<GuardianHomeData> fetchHome() => const MockGuardianHomeService()
+      .fetchHome(scenario: scenario, simulateError: scenario == 'error');
 }
 
 class _MockTrainerLoader implements HomeLoader<TrainerHomeData> {

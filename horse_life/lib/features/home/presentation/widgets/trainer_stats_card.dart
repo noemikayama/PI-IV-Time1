@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conversão dos argumentos herdados para super parâmetros e remoção
+// de import não utilizado, preservando o estilo visual do card do treinador.
+// -----------------------------------------------------------------------------
+//
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Criação do card de métricas compacto com gradiente e valores
@@ -25,22 +31,15 @@
 // Alteração: Permite cards com indicador indisponível no backend atual.
 // -----------------------------------------------------------------------------
 
-import 'package:flutter/material.dart';
 import 'home_stats_card.dart';
 
 /// API original de Professional mantida; lógica visual compartilhada.
 class TrainerStatsCard extends HomeStatsCard {
   const TrainerStatsCard({
     super.key,
-    required String title,
-    required int? value,
-    int? total,
-    required List<Color> gradientColors,
-  }) : super(
-         title: title,
-         value: value,
-         total: total,
-         gradientColors: gradientColors,
-         style: HomeStatsCardStyle.trainer,
-       );
+    required super.title,
+    required super.value,
+    super.total,
+    required super.gradientColors,
+  }) : super(style: HomeStatsCardStyle.trainer);
 }

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import e estado de validação não utilizados, preservando
+// o envio do texto normalizado pelo diálogo.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de entrada, validação e devolução de
@@ -26,8 +31,6 @@
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
 
-import 'horse_profile_entry_dialog.dart';
-
 Future<String?> showHorseTextEntryDialog(
   BuildContext context, {
   required String title,
@@ -47,8 +50,6 @@ class HorseTextEntryDialog extends StatefulWidget {
 
 class _HorseTextEntryDialogState extends State<HorseTextEntryDialog> {
   final _controller = TextEditingController();
-  bool _canSave = false;
-
   @override
   void dispose() {
     _controller.dispose();
@@ -112,7 +113,10 @@ class _HorseTextEntryDialogState extends State<HorseTextEntryDialog> {
                   color: const Color(0xFFE9E9E9),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: TextField(
                   key: const Key('horse-text-entry-input'),
                   controller: _controller,

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão de chaves explícitas na liberação da validação assíncrona
+// do microchip, preservando a verificação de montagem da tela.
+//
 // Data: 18/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Restauração da injeção opcional do seletor de imagens para
@@ -153,8 +158,9 @@ class _HorseRegistrationScreenState extends State<HorseRegistrationScreen> {
       try {
         warning = await _stepValidator.validate(_step, _draft);
       } finally {
-        if (mounted && checkingChip)
+        if (mounted && checkingChip) {
           setState(() => _validatingMicrochip = false);
+        }
       }
       if (!mounted) return;
       if (warning != null) {

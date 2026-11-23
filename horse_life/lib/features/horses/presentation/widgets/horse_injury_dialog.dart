@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de getter de validação não utilizado, mantendo as mesmas
+// verificações obrigatórias no momento de salvar a lesão.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos blocos de estado, seleção da data, validação e
@@ -57,9 +62,6 @@ class _HorseInjuryDialogState extends State<HorseInjuryDialog> {
   final _description = TextEditingController();
   final _prescription = TextEditingController();
   DateTime? _injuryDate;
-
-  bool get _canSave =>
-      _injuryDate != null && _description.text.trim().isNotEmpty;
 
   @override
   void dispose() {
@@ -201,7 +203,10 @@ class _HorseInjuryDialogState extends State<HorseInjuryDialog> {
                   color: const Color(0xFFE9E9E9),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: TextField(
                   key: const Key('horse-injury-description'),
                   controller: _description,
@@ -238,7 +243,10 @@ class _HorseInjuryDialogState extends State<HorseInjuryDialog> {
                   color: const Color(0xFFE9E9E9),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: TextField(
                   key: const Key('horse-injury-prescription'),
                   controller: _prescription,
