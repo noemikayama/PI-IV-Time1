@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Leitura do destino solicitado pela navegação autenticada para
+// reconstruir a Home diretamente na seção correta, sem retorno pela pilha, e
+// compatibilidade com chamadas anteriores durante hot reload.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Revisão dos comentários do ciclo de inicialização, observação da
@@ -44,6 +50,7 @@ import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
 import 'package:horse_life/features/home/home_composition.dart';
 import 'package:horse_life/features/home/presentation/screens/guardian/guardian_home_screen.dart';
 import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/splash/presentation/screens/splash_screen.dart';
 
 /// Permite testar o gate sem montar os cards de cada Home.
@@ -175,13 +182,19 @@ class _AppGateState extends State<AppGate> {
         if (session == null) {
           return _buildFlow(
             identity: 'public',
-            pageBuilder: (context) => widget.home,
+            pageBuilder: (context, settings) => widget.home,
           );
         }
         return _buildFlow(
           identity: 'authenticated:${session.uid}:${session.role.value}',
-          pageBuilder: (context) =>
-              _buildAuthenticatedHome(context, session, repository.signOut),
+          pageBuilder: (context, settings) => _buildAuthenticatedHome(
+            context,
+            session,
+            repository.signOut,
+            initialDestination: settings.arguments is HomeNavigationDestination
+                ? settings.arguments! as HomeNavigationDestination
+                : HomeNavigationDestination.home,
+          ),
         );
       },
     );
@@ -191,13 +204,15 @@ class _AppGateState extends State<AppGate> {
   /// do login/registro acessíveis após o logout ou uma troca de perfil.
   Widget _buildFlow({
     required String identity,
-    required WidgetBuilder pageBuilder,
+    required Widget Function(BuildContext, RouteSettings) pageBuilder,
   }) {
     return HeroControllerScope.none(
       child: Navigator(
         key: ValueKey<String>('horse-life-flow:$identity'),
-        onGenerateRoute: (settings) =>
-            MaterialPageRoute<void>(settings: settings, builder: pageBuilder),
+        onGenerateRoute: (settings) => MaterialPageRoute<void>(
+          settings: settings,
+          builder: (context) => pageBuilder(context, settings),
+        ),
       ),
     );
   }
@@ -217,13 +232,16 @@ class _AppGateState extends State<AppGate> {
   Widget _buildAuthenticatedHome(
     BuildContext context,
     LoginSession session,
-    Future<void> Function() onLogout,
-  ) {
+    Future<void> Function() onLogout, {
+    HomeNavigationDestination initialDestination =
+        HomeNavigationDestination.home,
+  }) {
     switch (session.role) {
       case AuthenticationRole.guardian:
         return widget.guardianHomeBuilder?.call(context, session, onLogout) ??
             GuardianHomeScreen(
               onLogout: onLogout,
+              initialDestination: initialDestination,
               loader: _guardianLoader,
               agendaLoader: widget.dependencies?.trainingAgendaLoader,
               trainingExecutionLoader:
@@ -235,6 +253,7 @@ class _AppGateState extends State<AppGate> {
         return widget.trainerHomeBuilder?.call(context, session, onLogout) ??
             TrainerHomeScreen(
               onLogout: onLogout,
+              initialDestination: initialDestination,
               loader: _trainerLoader,
               agendaLoader: widget.dependencies?.trainingAgendaLoader,
               trainingExecutionLoader:

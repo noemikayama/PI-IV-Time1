@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Adequação dos treinos recentes ao padrão HomeSectionCard, com
+// padding uniforme, rolagem horizontal, ícone oficial do cavalo, data e ação
+// por treinamento.
+//
 // Data: 29/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Cards independentes de treinos e feedbacks, com rolagem horizontal.
@@ -26,6 +32,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/features/home/presentation/widgets/home_section_card.dart';
+import 'package:horse_life/features/home/presentation/widgets/horse_asset_icon.dart';
 
 /// Mostra registros reais recentes com rolagem lateral e estado vazio.
 class DashboardRecentList extends StatelessWidget {
@@ -41,7 +49,8 @@ class DashboardRecentList extends StatelessWidget {
   final String title;
   final bool feedback;
   final List<Map<String, dynamic>> liveTrainings, liveFeedbacks;
-  final VoidCallback? onShowAll, onItemTap;
+  final VoidCallback? onShowAll;
+  final ValueChanged<Map<String, dynamic>>? onItemTap;
 
   String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
@@ -49,6 +58,15 @@ class DashboardRecentList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = feedback ? liveFeedbacks.length : liveTrainings.length;
+    if (!feedback) {
+      return HomeSectionCard(
+        title: title,
+        padding: const EdgeInsets.all(18),
+        onShowAll: count > 0 ? onShowAll : null,
+        child: count == 0 ? _emptyList() : _trainingCarousel(),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
       decoration: BoxDecoration(
@@ -122,6 +140,31 @@ class DashboardRecentList extends StatelessWidget {
     );
   }
 
+  /// Mantém cada treino como um item independente e revela parte do próximo
+  /// card para comunicar que o conteúdo aceita gesto lateral.
+  Widget _trainingCarousel() => LayoutBuilder(
+    builder: (context, constraints) {
+      final cardWidth = liveTrainings.length == 1 || constraints.maxWidth <= 250
+          ? constraints.maxWidth
+          : constraints.maxWidth * .9;
+      return SizedBox(
+        height: 235,
+        child: ListView.separated(
+          key: const Key('dashboard-recent-training-list'),
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.hardEdge,
+          itemCount: liveTrainings.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
+          itemBuilder: (context, index) => SizedBox(
+            key: Key('dashboard-recent-training-item-$index'),
+            width: cardWidth,
+            child: _liveTrainingCard(liveTrainings[index]),
+          ),
+        ),
+      );
+    },
+  );
+
   Widget _emptyList() => Container(
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 28),
@@ -160,12 +203,16 @@ class DashboardRecentList extends StatelessWidget {
   Widget _liveTrainingCard(Map<String, dynamic> item) => _card(
     title: item['nomeTreino']?.toString() ?? '',
     details: [
-      _detail(Icons.pets, item['nomeCavalo']?.toString() ?? ''),
+      _detailWidget(
+        const HorseAssetIcon(size: 20),
+        item['nomeCavalo']?.toString() ?? '',
+      ),
       _detail(Icons.assignment_outlined, item['nomePlano']?.toString() ?? ''),
       _detail(Icons.event_available_outlined, _liveDate(item['data'])),
     ],
     buttonLabel: 'Ver treino',
     buttonIcon: Icons.open_in_new,
+    onTap: onItemTap == null ? null : () => onItemTap!(item),
   );
   Widget _liveFeedbackCard(Map<String, dynamic> item) => _card(
     title: item['nomeTreino']?.toString() ?? '',
@@ -176,6 +223,7 @@ class DashboardRecentList extends StatelessWidget {
     ],
     buttonLabel: 'Ver feedback',
     buttonIcon: Icons.open_in_new,
+    onTap: onItemTap == null ? null : () => onItemTap!(item),
   );
   String _liveDate(Object? date) {
     final parsed = DateTime.tryParse(date?.toString() ?? '');
@@ -187,8 +235,9 @@ class DashboardRecentList extends StatelessWidget {
     required List<Widget> details,
     required String buttonLabel,
     required IconData buttonIcon,
+    VoidCallback? onTap,
   }) => Container(
-    padding: const EdgeInsets.fromLTRB(18, 17, 18, 17),
+    padding: const EdgeInsets.all(18),
     decoration: BoxDecoration(
       color: AppColors.whiteSmoke,
       borderRadius: BorderRadius.circular(20),
@@ -221,7 +270,7 @@ class DashboardRecentList extends StatelessWidget {
               ),
             ),
             child: InkWell(
-              onTap: onItemTap,
+              onTap: onTap,
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
                 height: 45,
@@ -252,11 +301,14 @@ class DashboardRecentList extends StatelessWidget {
     ),
   );
 
-  Widget _detail(IconData icon, String value) => Padding(
+  Widget _detail(IconData icon, String value) =>
+      _detailWidget(Icon(icon, size: 20, color: AppColors.text), value);
+
+  Widget _detailWidget(Widget icon, String value) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Row(
       children: [
-        Icon(icon, size: 20, color: AppColors.text),
+        SizedBox(width: 20, height: 20, child: Center(child: icon)),
         const SizedBox(width: 10),
         Expanded(
           child: Text(

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Padronização da confirmação de atualização do cavalo com a cor
+// AppColors.success e redirecionamento direto da barra inferior sem pop.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Exibição e abertura do treino diário conforme a permissão do
@@ -179,7 +184,10 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
       await future;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dados do cavalo atualizados.')),
+        const SnackBar(
+          backgroundColor: AppColors.success,
+          content: Text('Dados do cavalo atualizados.'),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
@@ -324,11 +332,12 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
   // --- Integração com navegação e permissões --------------------------------
 
   void _selectNavigationDestination(HomeNavigationDestination destination) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop(destination);
-    } else {
-      widget.onNavigationSelected?.call(destination);
+    final callback = widget.onNavigationSelected;
+    if (callback != null) {
+      callback(destination);
+      return;
     }
+    navigateToHomeDestination(context, destination);
   }
 
   Future<void> _openTrainingPlan(HorseProfileData horse, String planId) async {
@@ -338,11 +347,8 @@ class _HorseProfileScreenState extends State<HorseProfileScreen>
           planId: planId,
           currentUserId: _currentUserId(horse),
           isTrainer: widget.isTrainer,
-          onNavigationSelected: (dest) {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop(dest);
-            }
-          },
+          onNavigationSelected: (dest) =>
+              navigateToHomeDestination(context, dest),
         ),
       ),
     );

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura do enriquecimento das referências de cavalos com a URL
+// da foto retornada por getHorseProfile.
+//
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos cenários de mapeamento e atualização do perfil.
@@ -60,6 +65,39 @@ void main() {
     expect(guardianProfile.horses, isEmpty);
   });
 
+  test('loads the horse image before mapping the guardian profile', () async {
+    final remote = _GuardianProfileRemote(
+      profile: const {
+        'nome': 'Ana Silva',
+        'email': 'ana@email.com',
+        'cavalos': [
+          {
+            '_id': 'horse-1',
+            'nome': 'Apollo',
+            'responsabilidades': ['PROPRIETARIO'],
+          },
+        ],
+      },
+      horses: const {
+        'horse-1': {
+          'nome': 'Apollo',
+          'responsabilidades': ['PROPRIETARIO'],
+          'imagens': [
+            {'url': 'https://example.com/apollo.jpg'},
+          ],
+        },
+      },
+    );
+
+    final profile = await FirebaseGuardianProfileRepository(
+      remote: remote,
+    ).getGuardianProfile();
+
+    expect(remote.loadedHorseIds, ['horse-1']);
+    expect(profile.horses.single.id, 'horse-1');
+    expect(profile.horses.single.imageUrl, 'https://example.com/apollo.jpg');
+  });
+
   // --- Atualização do perfil -------------------------------------------------
   // Verifica tanto o payload normalizado quanto a conversão da confirmação.
   test('sends editable fields and maps the update response', () async {
@@ -79,10 +117,21 @@ void main() {
 
 /// Fonte remota controlada que registra o payload enviado pelo repositório.
 class _GuardianProfileRemote implements GuardianProfileRemoteDataSource {
+  _GuardianProfileRemote({this.profile = const {}, this.horses = const {}});
+
+  final Object? profile;
+  final Map<String, Object?> horses;
+  final List<String> loadedHorseIds = [];
   Map<String, String>? updateInput;
 
   @override
-  Future<Object?> getGuardianProfile() async => const {};
+  Future<Object?> getGuardianProfile() async => profile;
+
+  @override
+  Future<Object?> getHorse(String id) async {
+    loadedHorseIds.add(id);
+    return horses[id];
+  }
 
   @override
   Future<Object?> updateGuardianProfile(Map<String, String> input) async {

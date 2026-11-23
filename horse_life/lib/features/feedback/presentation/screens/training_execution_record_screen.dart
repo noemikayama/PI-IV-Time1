@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Redirecionamento direto das barras inferiores da execução e do
+// feedback, sem devolver destinos por pop.
+//
 // Data: 22/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Consulta assíncrona, permissões reais e atualização pelo retorno da gravação.
@@ -146,7 +151,7 @@ class _TrainingExecutionRecordScreenState
           ),
         );
     if (mounted && destination != null) {
-      Navigator.of(context).pop(destination);
+      navigateToHomeDestination(context, destination);
     }
   }
 
@@ -237,7 +242,7 @@ class _TrainingExecutionRecordScreenState
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: HomeNavigationDestination.trainings,
         onDestinationSelected: (destination) =>
-            Navigator.of(context).pop(destination),
+            navigateToHomeDestination(context, destination),
       ),
     );
   }
