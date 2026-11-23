@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Redirecionamento padrão de onViewHistory para abertura de
+// TrainingExecutionRecordScreen ao clicar no histórico de execuções.
+//
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Desacoplamento da visualização de treinos da tela de execução,
@@ -40,6 +45,8 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/data/models/training_execution_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
@@ -64,6 +71,7 @@ class ConnectedTrainingAgendaScreen extends StatefulWidget {
     this.onViewHistory,
     this.executionLoader,
     this.completionSubmitter,
+    this.feedbackRepository,
     super.key,
   });
 
@@ -81,6 +89,7 @@ class ConnectedTrainingAgendaScreen extends StatefulWidget {
   /// Se ausentes, os callbacks externos continuam responsáveis pelas ações.
   final TrainingExecutionLoader? executionLoader;
   final TrainingCompletionSubmitter? completionSubmitter;
+  final TrainingFeedbackRepository? feedbackRepository;
 
   @override
   State<ConnectedTrainingAgendaScreen> createState() =>
@@ -174,6 +183,21 @@ class _ConnectedTrainingAgendaScreenState
     _retry();
   }
 
+  Future<void> _openExecutionRecord(
+    TrainingAgendaEntry entry,
+    TrainingAgendaAudience audience,
+  ) async {
+    await Navigator.of(context).push<dynamic>(
+      TrainingFeedbackRoute.fromAgenda(
+        entry: entry,
+        audience: audience,
+        repository: widget.feedbackRepository,
+      ),
+    );
+    if (!mounted) return;
+    _retry();
+  }
+
   // Abre a tela de visualização padrão de treinamentos (TrainingDetailScreen)
   // de forma consultiva, sem permitir execução de treinos ou edição indevida.
   Future<void> _openTrainingDetails(TrainingAgendaEntry entry) async {
@@ -257,8 +281,8 @@ class _ConnectedTrainingAgendaScreenState
                         ? null
                         : _startTrainingExecution),
                 onViewTraining: viewTraining,
-                onViewHistory:
-                    widget.onViewHistory ?? _openTrainingDetails,
+                onViewHistory: widget.onViewHistory ??
+                    (entry) => _openExecutionRecord(entry, data.audience),
                 onWeekChanged: _loadWeek,
               ),
               if (snapshot.connectionState != ConnectionState.done)

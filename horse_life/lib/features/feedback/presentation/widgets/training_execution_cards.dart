@@ -42,7 +42,7 @@ class TrainingExecutionDetailsCard extends StatelessWidget {
           label: 'Tempo total',
           value: record.durationMinutes == null
               ? 'Não informado'
-              : '${record.durationMinutes} minutos',
+              : '${record.durationMinutes} min.',
         ),
         FeedbackDetailLine(
           label: 'Data',

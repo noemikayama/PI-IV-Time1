@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Abertura direta de TrainingExecutionRecordScreen ao tocar no card
+// de histórico de execuções quando onViewHistory não for fornecido.
+//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Ajuste do círculo colorido do calendário para acompanhar somente
@@ -26,6 +31,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/features/home/presentation/widgets/horse_asset_icon.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 
@@ -53,6 +60,7 @@ class TrainingAgendaScreen extends StatefulWidget {
     this.onViewTraining,
     this.onViewHistory,
     this.onWeekChanged,
+    this.feedbackRepository,
     super.key,
   }) : assert(maxDayIndicators > 0);
 
@@ -101,6 +109,9 @@ class TrainingAgendaScreen extends StatefulWidget {
 
   // Solicita ao contêiner uma nova semana após o usuário navegar no calendário.
   final ValueChanged<DateTime>? onWeekChanged;
+
+  /// Fonte de feedback injetável para consulta e gravação do registro.
+  final TrainingFeedbackRepository? feedbackRepository;
 
   @override
   State<TrainingAgendaScreen> createState() => _TrainingAgendaScreenState();
@@ -412,6 +423,16 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
     );
   }
 
+  void _openExecutionRecord(BuildContext context, TrainingAgendaEntry entry) {
+    Navigator.of(context).push<dynamic>(
+      TrainingFeedbackRoute.fromAgenda(
+        entry: entry,
+        audience: widget.audience,
+        repository: widget.feedbackRepository,
+      ),
+    );
+  }
+
   // Monta as execuções do dia ou a orientação adequada ao público atual.
   Widget _buildHistory(BuildContext context) {
     final history = widget.history ?? _selectedHistory;
@@ -434,9 +455,13 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _HistoryCard(
                         training: training,
-                        onTap: widget.onViewHistory == null
-                            ? null
-                            : () => widget.onViewHistory!(training),
+                        onTap: () {
+                          if (widget.onViewHistory != null) {
+                            widget.onViewHistory!(training);
+                          } else {
+                            _openExecutionRecord(context, training);
+                          }
+                        },
                       ),
                     ),
                   )

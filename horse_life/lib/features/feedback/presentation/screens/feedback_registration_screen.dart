@@ -181,16 +181,6 @@ class _FeedbackRegistrationScreenState
                           isLoading: _flow.isSaving,
                           onPressed: _flow.isSaving ? null : _next,
                         ),
-                        if (!_flow.isReview) ...[
-                          const SizedBox(height: 14),
-                          Text(
-                            _flow.currentDefinition.isRequired
-                                ? 'O comentário é obrigatório.'
-                                : 'Este campo é opcional.',
-                            textAlign: TextAlign.center,
-                            style: textTheme.bodySmall,
-                          ),
-                        ],
                       ],
                     ),
                   ),

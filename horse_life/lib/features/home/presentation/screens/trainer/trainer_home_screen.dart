@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão do card do histórico de execuções da agenda para abrir a tela
+// de registro de execução (TrainingExecutionRecordScreen).
+//
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Vinculação do botão "Mostrar tudo" da lista de cavalos para a
@@ -144,6 +149,8 @@ import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/trainer/trainer_dashboard_screen.dart';
+import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
@@ -222,6 +229,7 @@ class TrainerHomeScreen extends StatefulWidget {
     this.agendaLoader,
     this.trainingExecutionLoader,
     this.trainingCompletionSubmitter,
+    this.feedbackRepository,
   });
 
   // --- Fontes de dados -------------------------------------------------------
@@ -293,6 +301,9 @@ class TrainerHomeScreen extends StatefulWidget {
 
   /// Envia ao backend os dados preenchidos ao concluir uma execução.
   final TrainingCompletionSubmitter? trainingCompletionSubmitter;
+
+  /// Repositório opcional para consulta e registro de feedback de execuções.
+  final TrainingFeedbackRepository? feedbackRepository;
 
   @override
   State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
@@ -554,6 +565,19 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     }
   }
 
+  Future<void> _openExecutionRecord(String recordId) async {
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          TrainingFeedbackRoute.forRecord(
+            recordId: recordId,
+            audience: TrainingAgendaAudience.trainer,
+            repository: widget.feedbackRepository,
+          ),
+        );
+    if (!mounted || destination == null) return;
+    _onNavigationDestination(destination);
+  }
+
   Future<TrainerProfileData> _fetchTrainerProfile() {
     final injectedLoader = widget.trainerProfileLoader;
     if (injectedLoader != null) return injectedLoader();
@@ -660,6 +684,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         loader: agendaLoader,
         executionLoader: widget.trainingExecutionLoader,
         completionSubmitter: widget.trainingCompletionSubmitter,
+        feedbackRepository: widget.feedbackRepository,
         onViewPlans: widget.onViewPlans,
         onViewPlan: (plan) {
           if (widget.onViewPlans != null) {
@@ -677,15 +702,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
             status: trainingAgendaStatusToApi(entry.status),
           ),
         ),
-        onViewHistory: (entry) => _handleViewTraining(
-          TrainerTraining(
-            id: entry.id,
-            title: entry.title,
-            horseName: entry.horseName,
-            planName: entry.planName,
-            status: trainingAgendaStatusToApi(entry.status),
-          ),
-        ),
+        onViewHistory: (entry) => _openExecutionRecord(entry.id),
       );
     }
     // Converte o resumo retornado pela Home nos contratos reutilizáveis da
@@ -781,7 +798,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
             }
           },
           onViewTraining: viewEntry,
-          onViewHistory: viewEntry,
+          onViewHistory: (entry) => _openExecutionRecord(entry.id),
         );
       },
     );
