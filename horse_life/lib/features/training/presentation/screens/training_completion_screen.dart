@@ -3,6 +3,12 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição de modal de confirmação ao acionar o retorno na tela de
+// submissão do registro de execução e redirecionamento direto à agenda após o
+// envio, impedindo o retorno às telas anteriores.
+//
+// Data: 23/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Padronização da SnackBar de conclusão do treino com a cor de
 // sucesso definida no tema do aplicativo.
@@ -27,6 +33,8 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/destructive_confirmation_dialog.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/training/data/models/training_completion_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
 
@@ -35,6 +43,7 @@ class TrainingCompletionScreen extends StatefulWidget {
   const TrainingCompletionScreen({
     required this.submitter,
     required this.initialInput,
+    this.onCompleted,
     super.key,
   });
 
@@ -43,6 +52,9 @@ class TrainingCompletionScreen extends StatefulWidget {
 
   /// Snapshot imutável do tempo e dos exercícios produzido pela tela ativa.
   final TrainingCompletionInput initialInput;
+
+  /// Callback opcional para customizar o redirecionamento após o envio.
+  final VoidCallback? onCompleted;
 
   @override
   State<TrainingCompletionScreen> createState() =>
@@ -56,6 +68,7 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
   final _difficultyController = TextEditingController();
   final _notesController = TextEditingController();
   bool _submitting = false;
+  bool _exitDialogOpen = false;
 
   @override
   void dispose() {
@@ -63,6 +76,25 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
     _difficultyController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _requestExitCompletion() async {
+    if (_submitting || _exitDialogOpen) return;
+    _exitDialogOpen = true;
+    final confirmed = await showDestructiveConfirmationDialog(
+      context,
+      title: 'Tem certeza que deseja sair sem enviar?',
+      message:
+          'Se você sair agora, todo o progresso do treino e os dados '
+          'preenchidos neste registro serão perdidos.',
+      cancelLabel: 'Cancelar',
+      confirmLabel: 'Sair',
+    );
+    if (!mounted) return;
+    _exitDialogOpen = false;
+    if (confirmed) {
+      Navigator.of(context).pop(false);
+    }
   }
 
   // Valida uma única vez, bloqueia envios concorrentes e traduz erros remotos em
@@ -90,7 +122,12 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
           content: Text('Registro do treino enviado com sucesso.'),
         ),
       );
-      Navigator.of(context).pop(true);
+      final onCompleted = widget.onCompleted;
+      if (onCompleted != null) {
+        onCompleted();
+        return;
+      }
+      navigateToHomeDestination(context, HomeNavigationDestination.trainings);
     } catch (error) {
       if (!mounted) return;
       final message = switch (error) {
@@ -121,23 +158,27 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
   @override
   Widget build(BuildContext context) {
     final input = widget.initialInput;
-    return Scaffold(
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _CompletionHeader(
-                      onBack: _submitting
-                          ? null
-                          : () => Navigator.of(context).maybePop(),
-                    ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _submitting) return;
+        _requestExitCompletion();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _CompletionHeader(
+                        onBack: _submitting ? null : _requestExitCompletion,
+                      ),
                     const SizedBox(height: 34),
                     const Center(child: _CompletionSeal()),
                     const SizedBox(height: 18),
@@ -267,6 +308,7 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -281,6 +323,8 @@ class _CompletionHeader extends StatelessWidget {
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
       IconButton(
+        key: const Key('training-completion-back-button'),
+        tooltip: 'Voltar',
         onPressed: onBack,
         icon: const Icon(
           Icons.arrow_back_ios_new_rounded,
