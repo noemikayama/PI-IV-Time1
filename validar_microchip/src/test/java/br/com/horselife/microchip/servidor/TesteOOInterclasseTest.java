@@ -1,7 +1,9 @@
 // Projeto HorseLife — PI IV
+// Arquivo: TesteOOInterclasseTest.java
 // Objetivo: verificar a integração real entre TCP, protocolo JSON e domínio.
 // Cenários: operação normal e rejeição por dígito verificador inválido.
 // Documentação dos testes: Gabriela Sichiroli Ferrari — 20/11/2026.
+// Revisão (22/11/2026): ajuste dos limites de tempo do teste e do socket cliente.
 package br.com.horselife.microchip.servidor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,8 +34,9 @@ import org.junit.jupiter.api.Timeout;
  * TratadorConexao -> ProcessadorRequisicao -> ValidadorMicrochip ->
  * TabelaPaises -> resposta JSON -> cliente TCP.
  */
-// Limita cada teste a 10 segundos, evitando execução indefinida.
-@Timeout(10)
+// Limite global de 30 segundos: reserva tempo para a leitura e o encerramento
+// dos recursos do servidor. Não substitui o timeout de leitura do socket.
+@Timeout(30)
 class TesteOOInterclasseTest {
 
     /**
@@ -59,6 +62,11 @@ class TesteOOInterclasseTest {
             // Abre uma conexão TCP no endereço local (loopback) e porta escolhida.
             // O socket do cliente também será fechado automaticamente.
             try (Socket cliente = new Socket(InetAddress.getLoopbackAddress(), servidor.portaLocal())) {
+                // Limita a espera por dados no socket do cliente a 5 segundos.
+                // Se o servidor não responder, a leitura lança SocketTimeoutException,
+                // uma subclasse de IOException, em vez de aguardar indefinidamente.
+                cliente.setSoTimeout(5000);
+
                 // Escritor: envia texto ao servidor, codificado em UTF-8.
                 BufferedWriter escritor = new BufferedWriter(new OutputStreamWriter(
                         cliente.getOutputStream(), StandardCharsets.UTF_8));
@@ -74,7 +82,8 @@ class TesteOOInterclasseTest {
                 // Força a transmissão dos caracteres acumulados no buffer.
                 escritor.flush();
 
-                // Aguarda e retorna a linha JSON de resposta para a asserção do teste.
+                // Aguarda e retorna a linha JSON de resposta, respeitando o timeout
+                // de cada operação de leitura do socket.
                 return leitor.readLine();
             }
         }
