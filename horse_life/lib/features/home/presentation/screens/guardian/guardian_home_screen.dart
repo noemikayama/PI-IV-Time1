@@ -7,6 +7,13 @@
 // Alteração: Conexão do card do histórico de execuções da agenda para abrir a tela
 // de registro de execução (TrainingExecutionRecordScreen).
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Padronização da confirmação do cadastro de cavalo com a cor de
+// sucesso definida em AppColors, remoção de uma dependência não utilizada e
+// conexão do "Mostrar tudo" do perfil à listagem completa de cavalos. Inclusão
+// do destino inicial e redirecionamento direto das rotas filhas sem pop.
+//
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Vinculação de onShowAllHorses na Home do responsável para abrir a
@@ -178,7 +185,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
-import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
 import 'package:horse_life/features/training_plans/data/repositories/firebase_training_plan_repository.dart';
 import 'package:horse_life/features/training_plans/presentation/screens/training_plan_detail_screen.dart';
@@ -221,6 +227,7 @@ import '../../widgets/guardian_home_content.dart';
 class GuardianHomeScreen extends StatefulWidget {
   const GuardianHomeScreen({
     required this.onLogout,
+    this.initialDestination = HomeNavigationDestination.home,
     this.mockScenario,
     this.loader,
     this.dashboardRepository,
@@ -239,6 +246,9 @@ class GuardianHomeScreen extends StatefulWidget {
     this.feedbackRepository,
     super.key,
   });
+
+  /// Seção principal exibida quando a rota autenticada é reconstruída.
+  final HomeNavigationDestination initialDestination;
 
   // Use normal, empty ou completed nos testes. Null usa os dados reais.
   final String? mockScenario;
@@ -295,8 +305,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // A fonte real é usada por padrão; cenários mock ficam restritos aos testes.
 
   // Estado local da navegação inferior.
-  HomeNavigationDestination _selectedDestination =
-      HomeNavigationDestination.home;
+  late HomeNavigationDestination _selectedDestination;
   late Future<GuardianHomeData> _homeFuture;
 
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
@@ -555,11 +564,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: false,
             isOwner: false,
-            onNavigationSelected: (dest) {
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop(dest);
-              }
-            },
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
           ),
         ),
       );
@@ -598,11 +604,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             planId: planId,
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: false,
-            onNavigationSelected: (dest) {
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop(dest);
-              }
-            },
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
           ),
         ),
       );
@@ -653,6 +656,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     _retryHome();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        backgroundColor: AppColors.success,
         content: Text(
           result.warning ?? 'Cadastro de ${result.name} concluído!',
         ),
@@ -673,6 +677,20 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     super.initState();
     _configureLoader();
     _homeFuture = _fetchHome();
+    _selectedDestination = switch (widget.initialDestination) {
+      HomeNavigationDestination.horses ||
+      HomeNavigationDestination.dashboard => HomeNavigationDestination.home,
+      final destination => destination,
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.initialDestination == HomeNavigationDestination.horses) {
+        _openHorseList();
+      } else if (widget.initialDestination ==
+          HomeNavigationDestination.dashboard) {
+        _openDashboard();
+      }
+    });
   }
 
   @override
@@ -869,11 +887,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               ),
               bottomNavigationBar: HomeBottomNavBar(
                 selectedDestination: HomeNavigationDestination.horses,
-                onDestinationSelected: (selected) {
-                  if (selected != HomeNavigationDestination.horses) {
-                    Navigator.of(listContext).pop(selected);
-                  }
-                },
+                onDestinationSelected: (selected) =>
+                    navigateToHomeDestination(listContext, selected),
               ),
             ),
       ),
@@ -909,10 +924,12 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           MaterialPageRoute<HomeNavigationDestination>(
             builder: (dashboardContext) => GuardianDashboardScreen(
               onLogout: widget.onLogout,
-              onHome: () => Navigator.of(dashboardContext).pop(),
-              onNavigationSelected: (selected) {
-                Navigator.of(dashboardContext).pop(selected);
-              },
+              onHome: () => navigateToHomeDestination(
+                dashboardContext,
+                HomeNavigationDestination.home,
+              ),
+              onNavigationSelected: (selected) =>
+                  navigateToHomeDestination(dashboardContext, selected),
               homeFuture: _homeFuture,
               repository:
                   widget.dashboardRepository ??
@@ -946,7 +963,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           onEditGuardianProfileData: widget.onEditGuardianProfile == null
               ? _openGuardianProfileEditor
               : null,
-          onShowAllGuardianHorses: widget.onShowAllGuardianHorses,
+          onShowAllGuardianHorses:
+              widget.onShowAllGuardianHorses ?? _openHorseList,
           // O perfil usa o mesmo fluxo de cadastro aberto pela Home.
           onRegisterGuardianHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           onSelectGuardianHorse: _openHorseProfile,

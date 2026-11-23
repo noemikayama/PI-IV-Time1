@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Redirecionamento direto da barra inferior para a Home autenticada,
+// removendo a propagação do destino por pop.
+//
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Detalhamento da documentação e comentários explicativos para
@@ -181,11 +186,12 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
   /// Direciona a navegação inferior para a tela selecionada.
   void _selectNavigationDestination(HomeNavigationDestination destination) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop(destination);
-    } else {
-      widget.onNavigationSelected?.call(destination);
+    final callback = widget.onNavigationSelected;
+    if (callback != null) {
+      callback(destination);
+      return;
     }
+    navigateToHomeDestination(context, destination);
   }
 
   /// Abre o formulário de edição ([ExerciseEditScreen]) e aplica as alterações.
@@ -296,7 +302,7 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                         exercise.horse != null;
 
                     return SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
+                      padding: const EdgeInsets.fromLTRB(24, 18, 24, 32),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 620),
@@ -319,7 +325,8 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
                                     Expanded(
                                       child: GradientButton(
                                         key: const Key('edit-exercise-button'),
-                                        onPressed: () => _editExercise(exercise),
+                                        onPressed: () =>
+                                            _editExercise(exercise),
                                         icon: Icons.edit_rounded,
                                         label: 'Editar exercício',
                                       ),
@@ -403,7 +410,10 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
               // Bloqueio visual durante persistência assíncrona das alterações
               if (_isSavingEdit) ...[
                 const Positioned.fill(
-                  child: ModalBarrier(dismissible: false, color: Colors.black26),
+                  child: ModalBarrier(
+                    dismissible: false,
+                    color: Colors.black26,
+                  ),
                 ),
                 const Center(
                   child: Card(

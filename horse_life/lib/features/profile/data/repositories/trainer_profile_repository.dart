@@ -1,6 +1,11 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Atualização do enriquecimento dos cavalos para a callable vigente
+// getHorseProfile, garantindo as imagens nos cards do perfil do treinador.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação das callables, enriquecimento dos cavalos e
@@ -155,7 +160,7 @@ class FirebaseTrainerProfileRepository implements TrainerProfileRepository {
       id,
     ) async {
       final horseResponse = await _functions
-          .httpsCallable('getHorse')
+          .httpsCallable('getHorseProfile')
           .call<dynamic>(<String, dynamic>{'id': id});
       if (horseResponse.data is! Map) {
         throw const FormatException('Resposta de cavalo inválida.');
@@ -202,7 +207,7 @@ List<String> _countryRegionStateCodes(String regionName) {
   return stateCodes;
 }
 
-/// Completa as referências do perfil com os dados e URLs que `getHorse`
+/// Completa as referências do perfil com os dados e URLs que `getHorseProfile`
 /// já fornece, sem exigir qualquer alteração no backend.
 Future<Map<String, dynamic>> enrichTrainerProfileHorses(
   Map<String, dynamic> profile,

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Redirecionamento direto da barra inferior sem devolver o destino
+// à tela anterior por pop.
+//
 // Data: 20/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Extração da consulta de feedback para uma tela independente,
@@ -86,11 +91,11 @@ class FeedbackReadScreen extends StatelessWidget {
           ),
         ),
       ),
-      // Devolve a opção escolhida à rota anterior para preservar o fluxo de navegação.
+      // Redireciona diretamente para a seção principal escolhida.
       bottomNavigationBar: HomeBottomNavBar(
         selectedDestination: HomeNavigationDestination.trainings,
         onDestinationSelected: (destination) =>
-            Navigator.of(context).pop(destination),
+            navigateToHomeDestination(context, destination),
       ),
     );
   }

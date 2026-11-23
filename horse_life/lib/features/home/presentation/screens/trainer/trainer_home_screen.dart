@@ -7,6 +7,12 @@
 // Alteração: Conexão do card do histórico de execuções da agenda para abrir a tela
 // de registro de execução (TrainingExecutionRecordScreen).
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conexão do botão "Mostrar tudo" do perfil profissional à
+// listagem completa dos cavalos vinculados, remoção de imports não utilizados,
+// destino inicial e redirecionamento direto das rotas filhas sem pop.
+//
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Vinculação do botão "Mostrar tudo" da lista de cavalos para a
@@ -144,8 +150,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:horse_life/app/theme/app_colors.dart';
-import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/trainer/trainer_dashboard_screen.dart';
@@ -195,6 +199,7 @@ class TrainerHomeScreen extends StatefulWidget {
   const TrainerHomeScreen({
     super.key,
     required this.onLogout,
+    this.initialDestination = HomeNavigationDestination.home,
     this.mockScenario,
     this.loader,
     this.dashboardRepository,
@@ -231,6 +236,9 @@ class TrainerHomeScreen extends StatefulWidget {
     this.trainingCompletionSubmitter,
     this.feedbackRepository,
   });
+
+  /// Seção principal exibida quando a rota autenticada é reconstruída.
+  final HomeNavigationDestination initialDestination;
 
   // --- Fontes de dados -------------------------------------------------------
   /// `null` usa o Firebase; os demais cenários habilitam dados simulados.
@@ -312,8 +320,7 @@ class TrainerHomeScreen extends StatefulWidget {
 class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   // --- Estado compartilhado --------------------------------------------------
   late Future<TrainerHomeData> _homeFuture;
-  HomeNavigationDestination _selectedDestination =
-      HomeNavigationDestination.home;
+  late HomeNavigationDestination _selectedDestination;
 
   late HomeLoader<TrainerHomeData> _loader;
   bool _isOpeningHorseProfile = false;
@@ -501,11 +508,8 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: true,
             isOwner: true,
-            onNavigationSelected: (dest) {
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop(dest);
-              }
-            },
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
           ),
         ),
       );
@@ -533,11 +537,8 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
             planId: planId,
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: true,
-            onNavigationSelected: (dest) {
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop(dest);
-              }
-            },
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
           ),
         ),
       );
@@ -642,6 +643,20 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     super.initState();
     _configureLoader();
     _homeFuture = _fetchHome();
+    _selectedDestination = switch (widget.initialDestination) {
+      HomeNavigationDestination.horses ||
+      HomeNavigationDestination.dashboard => HomeNavigationDestination.home,
+      final destination => destination,
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.initialDestination == HomeNavigationDestination.horses) {
+        _openHorseList();
+      } else if (widget.initialDestination ==
+          HomeNavigationDestination.dashboard) {
+        _openDashboard();
+      }
+    });
   }
 
   /// Substitui a Future armazenada para executar uma nova tentativa.
@@ -816,11 +831,8 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           ),
           bottomNavigationBar: HomeBottomNavBar(
             selectedDestination: HomeNavigationDestination.horses,
-            onDestinationSelected: (selected) {
-              if (selected != HomeNavigationDestination.horses) {
-                Navigator.of(listContext).pop(selected);
-              }
-            },
+            onDestinationSelected: (selected) =>
+                navigateToHomeDestination(listContext, selected),
           ),
         ),
       ),
@@ -856,10 +868,12 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           MaterialPageRoute<HomeNavigationDestination>(
             builder: (dashboardContext) => TrainerDashboardScreen(
               onLogout: widget.onLogout,
-              onHome: () => Navigator.of(dashboardContext).pop(),
-              onNavigationSelected: (selected) {
-                Navigator.of(dashboardContext).pop(selected);
-              },
+              onHome: () => navigateToHomeDestination(
+                dashboardContext,
+                HomeNavigationDestination.home,
+              ),
+              onNavigationSelected: (selected) =>
+                  navigateToHomeDestination(dashboardContext, selected),
               homeFuture: _homeFuture,
               repository:
                   widget.dashboardRepository ??
@@ -888,7 +902,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           onViewExperience: widget.onViewExperience,
           onViewCertifications: widget.onViewCertifications,
           onViewServiceRegions: widget.onViewServiceRegions,
-          onShowAllHorses: widget.onShowAllHorses,
+          onShowAllHorses: widget.onShowAllHorses ?? _openHorseList,
           experienceDocumentBuilder: widget.experienceDocumentBuilder,
           experienceFilePicker: widget.experienceFilePicker,
           uploadTrainerExperience: _uploadTrainerExperience,

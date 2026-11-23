@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Redirecionamento direto da barra inferior para a Home autenticada,
+// removendo a propagação do destino por pop.
+//
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Integração do botão "Ver detalhes" dos cards de exercícios com
@@ -153,11 +158,12 @@ class _TrainingDetailScreenState extends State<TrainingDetailScreen> {
 
   /// Redireciona para o destino escolhido na barra de navegação inferior.
   void _selectNavigationDestination(HomeNavigationDestination destination) {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop(destination);
-    } else {
-      widget.onNavigationSelected?.call(destination);
+    final callback = widget.onNavigationSelected;
+    if (callback != null) {
+      callback(destination);
+      return;
     }
+    navigateToHomeDestination(context, destination);
   }
 
   /// Trata a ação de clique em "Ver detalhes" do card de exercício.
@@ -177,11 +183,8 @@ class _TrainingDetailScreenState extends State<TrainingDetailScreen> {
           exerciseCode: exercise.code,
           currentUserId: widget.currentUserId,
           isTrainer: widget.isTrainer,
-          onNavigationSelected: (destination) {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop(destination);
-            }
-          },
+          onNavigationSelected: (destination) =>
+              navigateToHomeDestination(context, destination),
         ),
       ),
     );
@@ -216,7 +219,10 @@ class _TrainingDetailScreenState extends State<TrainingDetailScreen> {
       final targetCode = training.code.trim().isNotEmpty
           ? training.code
           : widget.trainingCode;
-      final updated = await widget.repository.updateTraining(targetCode, update);
+      final updated = await widget.repository.updateTraining(
+        targetCode,
+        update,
+      );
       if (!mounted) return;
       _wasTrainingModified = true;
       setState(() {
@@ -391,7 +397,10 @@ class _TrainingDetailScreenState extends State<TrainingDetailScreen> {
               ),
               if (_isSavingEdit) ...[
                 const Positioned.fill(
-                  child: ModalBarrier(dismissible: false, color: Colors.black26),
+                  child: ModalBarrier(
+                    dismissible: false,
+                    color: Colors.black26,
+                  ),
                 ),
                 const Center(
                   child: Card(
@@ -621,7 +630,9 @@ class _GuidelinesSectionContent extends StatelessWidget {
           color: AppColors.whiteSmoke,
           borderRadius: BorderRadius.circular(18),
         ),
-        child: const Text('Nenhuma orientação registrada para este treinamento.'),
+        child: const Text(
+          'Nenhuma orientação registrada para este treinamento.',
+        ),
       );
     }
 
