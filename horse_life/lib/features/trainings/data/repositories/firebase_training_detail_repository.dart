@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Resolução automática do código do treinamento a partir do registroId
+// via callable getTrainingRecord caso o identificador fornecido não seja numérico.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Suporte à resolução por código do fallbackTraining caso o
 // identificador primário seja não numérico (ex: ID de registro da agenda).
 //
@@ -31,26 +36,32 @@ typedef TrainingUpdateCall =
     Future<Object?> Function(Map<String, Object?> payload);
 typedef ExerciseDetailByIdCall =
     Future<Object?> Function(Map<String, Object?> payload);
+typedef TrainingRecordCall =
+    Future<Object?> Function(Map<String, Object?> payload);
 
 /// Implementa a visualização e edição de treinamentos via Cloud Functions
-/// `getTrainingDetails`, `updateTraining` e `getExercise` em `southamerica-east1`.
+/// `getTrainingDetails`, `updateTraining`, `getExercise` e `getTrainingRecord` em `southamerica-east1`.
 final class FirebaseTrainingDetailRepository implements TrainingDetailRepository {
   const FirebaseTrainingDetailRepository({
     TrainingDetailCall? getTrainingDetails,
     TrainingUpdateCall? updateTraining,
     ExerciseDetailByIdCall? getExercise,
+    TrainingRecordCall? getTrainingRecord,
   }) : _getTrainingDetails = getTrainingDetails,
        _updateTraining = updateTraining,
-       _getExercise = getExercise;
+       _getExercise = getExercise,
+       _getTrainingRecord = getTrainingRecord;
 
   static const _region = 'southamerica-east1';
   static const _detailFunctionName = 'getTrainingDetails';
   static const _updateFunctionName = 'updateTraining';
   static const _exerciseFunctionName = 'getExercise';
+  static const _recordFunctionName = 'getTrainingRecord';
 
   final TrainingDetailCall? _getTrainingDetails;
   final TrainingUpdateCall? _updateTraining;
   final ExerciseDetailByIdCall? _getExercise;
+  final TrainingRecordCall? _getTrainingRecord;
 
   @override
   Future<TrainingDetailData> getTrainingDetails(
@@ -70,6 +81,27 @@ final class FirebaseTrainingDetailRepository implements TrainingDetailRepository
           fallbackTraining: fallbackTraining,
         );
       }
+      try {
+        final recordResponse =
+            await (_getTrainingRecord ?? _callRecordFromFirebase)({
+          'registroId': trimmedCode,
+        });
+        if (recordResponse is Map) {
+          final training = recordResponse['treinamento'];
+          if (training is Map) {
+            final rawCode = training['codigo']?.toString().trim();
+            if (rawCode != null &&
+                rawCode.isNotEmpty &&
+                RegExp(r'^\d+$').hasMatch(rawCode)) {
+              return await getTrainingDetails(
+                rawCode,
+                fallbackTraining: fallbackTraining,
+              );
+            }
+          }
+        }
+      } catch (_) {}
+
       return MockTrainingDetail.buildDefault(
         trainingCode: trimmedCode,
         initialTraining: fallbackTraining,
@@ -452,6 +484,15 @@ final class FirebaseTrainingDetailRepository implements TrainingDetailRepository
     final result = await FirebaseFunctions.instanceFor(
       region: _region,
     ).httpsCallable(_exerciseFunctionName).call<dynamic>(payload);
+    return result.data;
+  }
+
+  Future<Object?> _callRecordFromFirebase(
+    Map<String, Object?> payload,
+  ) async {
+    final result = await FirebaseFunctions.instanceFor(
+      region: _region,
+    ).httpsCallable(_recordFunctionName).call<dynamic>(payload);
     return result.data;
   }
 }

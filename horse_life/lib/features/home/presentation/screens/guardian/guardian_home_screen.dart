@@ -3,6 +3,13 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Implementação do fluxo de visualização de detalhes de treinamentos
+// (TrainingDetailScreen) e planos (TrainingPlanDetailScreen) para o perfil de
+// responsável, garantindo que usuários proprietários não acessem a tela de
+// execução de treinos a partir da agenda ou do calendário semanal.
+//
+// Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção do recarregamento síncrono da Home após o perfil e a
 // lista de cavalos; inclusão de conteúdo injetável para testes da navegação.
@@ -157,8 +164,15 @@
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/app_snack_bar.dart';
+import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
+import 'package:horse_life/features/training_plans/data/repositories/firebase_training_plan_repository.dart';
+import 'package:horse_life/features/training_plans/presentation/screens/training_plan_detail_screen.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/guardian/guardian_dashboard_screen.dart';
@@ -273,6 +287,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   final List<String> _sessionMockHorses = [];
   late HomeLoader<GuardianHomeData> _loader;
   bool _isOpeningHorseProfile = false;
+  bool _isOpeningTrainingDetails = false;
 
   // O repositório é criado sob demanda e reutilizado no carregamento e edição.
   FirebaseGuardianProfileRepository? _guardianProfileRepository;
@@ -342,6 +357,247 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
       ),
     );
     return wasUpdated ?? false;
+  }
+
+  /// Resolve os dados reais do treinamento no backend via galeria quando a
+  /// navegação fornece apenas o ID do registro da agenda/home.
+  Future<TrainingPlanGalleryItem?> _resolveRealTrainingFromBackend({
+    required String title,
+    String? horseName,
+  }) async {
+    final home = await _homeFuture;
+    final normalizedHorse = horseName?.trim().toLowerCase() ?? '';
+    String? horseId;
+
+    if (normalizedHorse.isNotEmpty) {
+      for (var i = 0; i < home.horses.length; i++) {
+        if (home.horses[i].trim().toLowerCase() == normalizedHorse &&
+            i < home.horseIds.length) {
+          horseId = home.horseIds[i];
+          break;
+        }
+      }
+    }
+
+    if (horseId == null || horseId.isEmpty) {
+      if (home.horseIds.isNotEmpty) {
+        horseId = home.horseIds.first;
+      } else {
+        try {
+          final profile = await _fetchAgendaProfile();
+          if (normalizedHorse.isNotEmpty) {
+            for (final horse in profile.horses) {
+              if (horse.name.trim().toLowerCase() == normalizedHorse &&
+                  horse.id.isNotEmpty) {
+                horseId = horse.id;
+                break;
+              }
+            }
+          }
+          if ((horseId == null || horseId.isEmpty) &&
+              profile.horses.isNotEmpty) {
+            final firstWithId = profile.horses.firstWhere(
+              (h) => h.id.isNotEmpty,
+              orElse: () => profile.horses.first,
+            );
+            if (firstWithId.id.isNotEmpty) {
+              horseId = firstWithId.id;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    if (horseId == null || horseId.isEmpty) return null;
+
+    final items = await const FirebaseTrainingPlanRepository()
+        .fetchTrainingGallery(horseId: horseId, searchQuery: title);
+    if (items.isEmpty) return null;
+
+    final normalizedTitle = title.trim().toLowerCase();
+    for (final item in items) {
+      if (item.title.trim().toLowerCase() == normalizedTitle) {
+        return item;
+      }
+    }
+    return items.length == 1 ? items.first : null;
+  }
+
+  /// Abre a visualização completa do treinamento selecionado na Home ou Agenda.
+  Future<void> _openTrainingDetails(
+    String id, {
+    String? title,
+    String? horseName,
+    int? code,
+    int? estimatedDurationMinutes,
+  }) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final parsedIdCode = int.tryParse(id);
+      String effectiveCode;
+      TrainingPlanGalleryItem? initialTraining;
+
+      if (code != null && code > 0) {
+        effectiveCode = code.toString();
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: code,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (parsedIdCode != null && parsedIdCode > 0) {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: parsedIdCode,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (widget.mockScenario == null) {
+        String? resolvedCode;
+        TrainingPlanGalleryItem? resolvedItem;
+
+        // 1. Tenta resolver o código numérico pelo ID do registro via getTrainingRecord
+        try {
+          final recordCall = FirebaseFunctions.instanceFor(
+            region: 'southamerica-east1',
+          ).httpsCallable('getTrainingRecord');
+          final response = await recordCall.call<dynamic>({'registroId': id});
+          final data = response.data;
+          if (data is Map && data['treinamento'] is Map) {
+            final raw = data['treinamento']['codigo']?.toString().trim();
+            if (raw != null && raw.isNotEmpty && int.tryParse(raw) != null) {
+              resolvedCode = raw;
+              final tTitle =
+                  data['treinamento']['titulo']?.toString() ?? title ?? '';
+              final tDuration =
+                  data['treinamento']['duracaoEstimada'] as int? ??
+                  estimatedDurationMinutes ??
+                  0;
+              resolvedItem = TrainingPlanGalleryItem(
+                id: id,
+                code: int.parse(raw),
+                title: tTitle,
+                estimatedDurationMinutes: tDuration,
+              );
+            }
+          }
+        } catch (_) {}
+
+        // 2. Se não resolveu pelo registro e temos título, tenta galeria como fallback
+        if (resolvedCode == null && title != null && title.trim().isNotEmpty) {
+          try {
+            final galleryResolved = await _resolveRealTrainingFromBackend(
+              title: title,
+              horseName: horseName,
+            );
+            if (galleryResolved != null && galleryResolved.code > 0) {
+              resolvedCode = galleryResolved.code.toString();
+              resolvedItem = galleryResolved;
+            }
+          } catch (_) {}
+        }
+
+        if (resolvedCode != null) {
+          effectiveCode = resolvedCode;
+          initialTraining = resolvedItem;
+        } else {
+          effectiveCode = id;
+          if (title != null) {
+            initialTraining = TrainingPlanGalleryItem(
+              id: id,
+              code: 0,
+              title: title,
+              estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+            );
+          }
+        }
+      } else {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: 0,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      }
+
+      if (!mounted) return;
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingDetailScreen(
+            trainingCode: effectiveCode,
+            initialTraining: initialTraining,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: false,
+            isOwner: false,
+            onNavigationSelected: (dest) {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop(dest);
+              }
+            },
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  /// Abre a visualização completa de um plano de treinamento a partir da Agenda.
+  Future<void> _openTrainingPlanDetails(String planId) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingPlanDetailScreen(
+            planId: planId,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: false,
+            onNavigationSelected: (dest) {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop(dest);
+              }
+            },
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  void _handleViewTraining(GuardianTraining training) {
+    if (widget.onViewTraining != null) {
+      widget.onViewTraining!(training);
+    } else {
+      _openTrainingDetails(
+        training.recordId ?? training.title,
+        title: training.title,
+        horseName: training.horseName,
+        estimatedDurationMinutes: training.durationMinutes,
+      );
+    }
   }
 
   // --- Ciclo de vida do carregador ------------------------------------------
@@ -422,15 +678,20 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         executionLoader: widget.trainingExecutionLoader,
         completionSubmitter: widget.trainingCompletionSubmitter,
         onViewPlans: widget.onViewPlans,
+        onViewPlan: (plan) {
+          if (widget.onViewPlans != null) {
+            widget.onViewPlans!();
+          } else {
+            _openTrainingPlanDetails(plan.id);
+          }
+        },
         onStartTraining: widget.onStartTraining == null
             ? null
             : (entry) => widget.onStartTraining!(toGuardianTraining(entry)),
-        onViewTraining: widget.onViewTraining == null
-            ? null
-            : (entry) => widget.onViewTraining!(toGuardianTraining(entry)),
-        onViewHistory: widget.onViewTraining == null
-            ? null
-            : (entry) => widget.onViewTraining!(toGuardianTraining(entry)),
+        onViewTraining: (entry) =>
+            _handleViewTraining(toGuardianTraining(entry)),
+        onViewHistory: (entry) =>
+            _handleViewTraining(toGuardianTraining(entry)),
       );
     }
     // A Home fornece os treinos, enquanto o perfil determina se o vínculo com
@@ -529,24 +790,31 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               plans: plansByKey.values.toList(growable: false),
               trainings: entries,
               onViewPlans: widget.onViewPlans,
+              onViewPlan: (plan) {
+                if (widget.onViewPlans != null) {
+                  widget.onViewPlans!();
+                } else {
+                  _openTrainingPlanDetails(plan.id);
+                }
+              },
               onStartTraining: widget.onStartTraining == null
                   ? null
                   : (entry) {
                       final training = sourceFor(entry);
                       if (training != null) widget.onStartTraining!(training);
                     },
-              onViewTraining: widget.onViewTraining == null
-                  ? null
-                  : (entry) {
-                      final training = sourceFor(entry);
-                      if (training != null) widget.onViewTraining!(training);
-                    },
-              onViewHistory: widget.onViewTraining == null
-                  ? null
-                  : (entry) {
-                      final training = sourceFor(entry);
-                      if (training != null) widget.onViewTraining!(training);
-                    },
+              onViewTraining: (entry) {
+                final training = sourceFor(entry);
+                if (training != null) {
+                  _handleViewTraining(training);
+                }
+              },
+              onViewHistory: (entry) {
+                final training = sourceFor(entry);
+                if (training != null) {
+                  _handleViewTraining(training);
+                }
+              },
             );
           },
         );

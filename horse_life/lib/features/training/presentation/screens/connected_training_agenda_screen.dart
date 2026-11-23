@@ -3,9 +3,21 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Desacoplamento da visualização de treinos da tela de execução,
+// direcionando "Ver detalhes" e onViewTraining para a tela padrão TrainingDetailScreen,
+// restringindo o acesso à TrainingExecutionScreen unicamente à ação onStartTraining (atletas).
+//
+// Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Recarga da semana ao retornar dos detalhes da execução para exibir
 // imediatamente o estado persistido após o registro do treinamento.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Correção do callback de abertura de detalhes para utilizar o
+// fallback _openTraining ao clicar em "Ver detalhes" de treinos na lista do
+// calendário semanal quando onViewTraining externo não é fornecido.
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -26,6 +38,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/data/models/training_execution_data.dart';
@@ -34,6 +47,8 @@ import 'package:horse_life/features/training/data/repositories/training_completi
 import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
+import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 
 /// Contêiner que mantém a agenda sincronizada com o backend por semana.
 ///
@@ -114,9 +129,9 @@ class _ConnectedTrainingAgendaScreenState
   }
 
   // Completa resumos do histórico com os dados semanais, resolve o plano pelo
-  // nome e cavalo e monta a referência exigida pela tela de detalhes. Ao voltar
+  // nome e cavalo e monta a referência exigida pela tela de execução. Ao voltar
   // da rota, relê a semana para refletir uma execução registrada no backend.
-  Future<void> _openTraining(TrainingAgendaEntry entry) async {
+  Future<void> _startTrainingExecution(TrainingAgendaEntry entry) async {
     final loader = widget.executionLoader;
     final submitter = widget.completionSubmitter;
     if (loader == null || submitter == null) return;
@@ -159,6 +174,27 @@ class _ConnectedTrainingAgendaScreenState
     _retry();
   }
 
+  // Abre a tela de visualização padrão de treinamentos (TrainingDetailScreen)
+  // de forma consultiva, sem permitir execução de treinos ou edição indevida.
+  Future<void> _openTrainingDetails(TrainingAgendaEntry entry) async {
+    await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (context) => TrainingDetailScreen(
+          trainingCode: entry.id,
+          initialTraining: TrainingPlanGalleryItem(
+            id: entry.id,
+            code: int.tryParse(entry.id) ?? 0,
+            title: entry.title,
+            estimatedDurationMinutes: entry.durationMinutes,
+          ),
+          currentUserId: FirebaseAuth.instance.currentUser?.uid,
+          isTrainer: false,
+          isOwner: false,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<TrainingAgendaData>(
@@ -184,6 +220,9 @@ class _ConnectedTrainingAgendaScreenState
                 ),
               )
               .toList(growable: false);
+          final viewTraining =
+              widget.onViewTraining ?? _openTrainingDetails;
+
           return Stack(
             children: [
               TrainingAgendaScreen(
@@ -206,7 +245,7 @@ class _ConnectedTrainingAgendaScreenState
                 onViewPlan: (plan) {
                   for (final training in data.weekTrainings) {
                     if (training.id == plan.id) {
-                      widget.onViewTraining?.call(training);
+                      viewTraining(training);
                       return;
                     }
                   }
@@ -214,13 +253,12 @@ class _ConnectedTrainingAgendaScreenState
                 },
                 onStartTraining:
                     widget.onStartTraining ??
-                    (widget.executionLoader == null ? null : _openTraining),
-                onViewTraining:
-                    widget.onViewTraining ??
-                    (widget.executionLoader == null ? null : _openTraining),
+                    (widget.executionLoader == null
+                        ? null
+                        : _startTrainingExecution),
+                onViewTraining: viewTraining,
                 onViewHistory:
-                    widget.onViewHistory ??
-                    (widget.executionLoader == null ? null : _openTraining),
+                    widget.onViewHistory ?? _openTrainingDetails,
                 onWeekChanged: _loadWeek,
               ),
               if (snapshot.connectionState != ConnectionState.done)

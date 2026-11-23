@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Preservação do status dos treinos do dia a partir de
+// historicoExecucoes (ou status próprio do item) ao navegar entre semanas no
+// calendário.
+//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos segmentos da resposta completa, das regras de
@@ -192,7 +198,32 @@ class TrainingAgendaData {
         })
         .toList(growable: false);
 
+    final history =
+        _agendaList(json['historicoExecucoes'], 'historicoExecucoes')
+            .map((value) {
+              final item = _agendaMap(value, 'historicoExecucoes[]');
+              return TrainingAgendaEntry(
+                id: _agendaString(item['id'], 'historicoExecucoes[].id'),
+                title: _agendaString(
+                  item['nomeTreinamento'],
+                  'historicoExecucoes[].nomeTreinamento',
+                ),
+                horseName: _agendaString(
+                  item['nomeCavalo'],
+                  'historicoExecucoes[].nomeCavalo',
+                ),
+                trainerName: '',
+                planName: '',
+                date: _agendaDate(item['data'], 'historicoExecucoes[].data'),
+                durationMinutes: 0,
+                status: trainingAgendaStatusFromApi(item['status'] as String?),
+                action: TrainingAgendaAction.view,
+              );
+            })
+            .toList(growable: false);
+
     final statusById = <String, TrainingAgendaStatus>{
+      for (final item in history) item.id: item.status,
       for (final training in weekTrainings) training.id: training.status,
     };
     final todayPayload = _agendaMap(json['treinosDoDia'], 'treinosDoDia');
@@ -223,35 +254,13 @@ class TrainingAgendaData {
                 date: today,
                 durationMinutes:
                     (item['duracaoEstimadaMinutos'] as num?)?.toInt() ?? 0,
-                status: statusById[id] ?? TrainingAgendaStatus.planned,
+                status: item['status'] is String
+                    ? trainingAgendaStatusFromApi(item['status'] as String)
+                    : (statusById[id] ?? TrainingAgendaStatus.planned),
                 // Somente o papel ATLETA é autorizado pelo backend a iniciar.
                 action: role == 'ATLETA'
                     ? TrainingAgendaAction.start
                     : TrainingAgendaAction.view,
-              );
-            })
-            .toList(growable: false);
-
-    final history =
-        _agendaList(json['historicoExecucoes'], 'historicoExecucoes')
-            .map((value) {
-              final item = _agendaMap(value, 'historicoExecucoes[]');
-              return TrainingAgendaEntry(
-                id: _agendaString(item['id'], 'historicoExecucoes[].id'),
-                title: _agendaString(
-                  item['nomeTreinamento'],
-                  'historicoExecucoes[].nomeTreinamento',
-                ),
-                horseName: _agendaString(
-                  item['nomeCavalo'],
-                  'historicoExecucoes[].nomeCavalo',
-                ),
-                trainerName: '',
-                planName: '',
-                date: _agendaDate(item['data'], 'historicoExecucoes[].data'),
-                durationMinutes: 0,
-                status: trainingAgendaStatusFromApi(item['status'] as String?),
-                action: TrainingAgendaAction.view,
               );
             })
             .toList(growable: false);

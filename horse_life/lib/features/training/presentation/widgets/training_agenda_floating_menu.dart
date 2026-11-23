@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Correção do alinhamento e recorte do menu flutuante ao expandir
+// no canto inferior direito (fixedCrossAxisSizeFactor e layoutBuilder no
+// AnimatedSwitcher).
+//
 // Data: 18/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação do menu flutuante expansível da agenda profissional para
@@ -56,11 +62,16 @@ class _TrainingAgendaFloatingMenuState
       children: [
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
+          layoutBuilder: (currentChild, previousChildren) => Stack(
+            alignment: Alignment.bottomRight,
+            children: [...previousChildren, ?currentChild],
+          ),
           transitionBuilder: (child, animation) => FadeTransition(
             opacity: animation,
             child: SizeTransition(
               sizeFactor: animation,
               axisAlignment: 1,
+              fixedCrossAxisSizeFactor: 1.0,
               child: child,
             ),
           ),
