@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Teste garantindo a preservação do status de treinos do dia a
+// partir do histórico de execuções ao consultar outra semana no calendário.
+//
 // Data: 21/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação da fábrica de resposta e dos limites verificados em
@@ -128,5 +133,36 @@ void main() {
       everyElement(TrainingAgendaAction.view),
     );
     expect(agenda.plans.single.trainerName, isEmpty);
+  });
+
+  // Garante que navegar para outra semana não reseta o status de um treino já concluído hoje.
+  test('mantém status concluído em treinosDoDia via historicoExecucoes quando outra semana é carregada', () {
+    final otherWeekJson = response();
+    otherWeekJson['semana'] = {'dataInicio': '2026-11-23', 'dataFim': '2026-11-29'};
+    otherWeekJson['treinamentos'] = [
+      {
+        'id': 'registro-proxima-semana',
+        'nomeTreinamento': 'Galope',
+        'nomeCavalo': 'Trovão',
+        'nomePlano': 'Condicionamento',
+        'data': '2026-11-25',
+        'status': 'PLANEJADO',
+      },
+    ];
+    otherWeekJson['historicoExecucoes'] = [
+      {
+        'id': 'registro-atleta',
+        'nomeTreinamento': 'Transições',
+        'nomeCavalo': 'Trovão',
+        'data': '2026-11-20',
+        'status': 'REALIZADO',
+      },
+    ];
+
+    final agenda = TrainingAgendaData.fromJson(otherWeekJson);
+
+    expect(agenda.todayTrainings.first.id, 'registro-atleta');
+    expect(agenda.todayTrainings.first.status, TrainingAgendaStatus.completed);
+    expect(agenda.todayTrainings.first.wasExecuted, isTrue);
   });
 }

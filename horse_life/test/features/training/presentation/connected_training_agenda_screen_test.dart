@@ -3,9 +3,20 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ajuste dos testes para verificar a abertura de TrainingDetailScreen
+// (e não TrainingExecutionScreen) ao tocar em "Ver detalhes", além de validar
+// o repasse para onViewTraining customizado.
+//
+// Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Verificação da recarga da semana depois do retorno da tela de
 // detalhes, mantendo a agenda sincronizada com o registro da execução.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Teste verificando a abertura da tela de execução ao tocar em
+// "Ver detalhes" no card semanal quando onViewTraining não é fornecido externamente.
 //
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
@@ -30,6 +41,7 @@ import 'package:horse_life/features/training/data/repositories/training_completi
 import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 
 void main() {
   // Aciona a mesma seta usada na interface e captura exceções do framework para
@@ -88,6 +100,64 @@ void main() {
 
     expect(loader.requestedDates, [null, DateTime(2026, 11, 16)]);
   });
+
+  // Garante que o botão "Ver detalhes" sob o calendário abre a tela de visualização
+  // padrão (TrainingDetailScreen) e não a de execução, preservando restrições de perfil.
+  testWidgets(
+    'opens training detail screen when tapping Ver detalhes under weekly calendar',
+    (tester) async {
+      final loader = _FakeTrainingAgendaLoader(includeTraining: true);
+      final executionLoader = _FakeExecutionLoader();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ConnectedTrainingAgendaScreen(
+              loader: loader,
+              executionLoader: executionLoader,
+              completionSubmitter: const _FakeCompletionSubmitter(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Ver detalhes'));
+      await tester.tap(find.text('Ver detalhes'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(TrainingDetailScreen), findsOneWidget);
+      expect(find.byType(TrainingExecutionScreen), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'forwards to custom onViewTraining when tapping Ver detalhes under calendar',
+    (tester) async {
+      final loader = _FakeTrainingAgendaLoader(includeTraining: true);
+      TrainingAgendaEntry? viewedTraining;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ConnectedTrainingAgendaScreen(
+              loader: loader,
+              onViewTraining: (entry) => viewedTraining = entry,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Ver detalhes'));
+      await tester.tap(find.text('Ver detalhes'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(viewedTraining?.id, 'registro-1');
+    },
+  );
 }
 
 // Registra as datas solicitadas e responde imediatamente com uma semana fixa,

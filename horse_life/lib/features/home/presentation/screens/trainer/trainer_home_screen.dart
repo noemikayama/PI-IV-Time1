@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Resolução direta do código de treinamento a partir do ID do registro
+// da agenda via callable getTrainingRecord e remoção do bloqueio indevido por SnackBar.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Remoção da correlação com dados mockados em _openTrainingDetails,
 // resolução do treinamento real no backend via galeria do treinador quando
 // identificado apenas por registroId/título e correção do direcionamento de
@@ -120,6 +125,7 @@
 // compartilhadas, Sidebar exclusiva, Mock API e três cenários de testes.
 // -----------------------------------------------------------------------------
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
@@ -391,32 +397,65 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
             estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
           );
         }
-      } else if (widget.mockScenario == null &&
-          title != null &&
-          title.trim().isNotEmpty) {
-        TrainingPlanGalleryItem? resolved;
+      } else if (widget.mockScenario == null) {
+        String? resolvedCode;
+        TrainingPlanGalleryItem? resolvedItem;
+
+        // 1. Tenta resolver o código numérico pelo ID do registro via getTrainingRecord
         try {
-          resolved = await _resolveRealTrainingFromBackend(
-            title: title,
-            horseName: horseName,
-          );
-        } catch (_) {
-          resolved = null;
+          final recordCall = FirebaseFunctions.instanceFor(
+            region: 'southamerica-east1',
+          ).httpsCallable('getTrainingRecord');
+          final response = await recordCall.call<dynamic>({'registroId': id});
+          final data = response.data;
+          if (data is Map && data['treinamento'] is Map) {
+            final raw = data['treinamento']['codigo']?.toString().trim();
+            if (raw != null && raw.isNotEmpty && int.tryParse(raw) != null) {
+              resolvedCode = raw;
+              final tTitle =
+                  data['treinamento']['titulo']?.toString() ?? title ?? '';
+              final tDuration =
+                  data['treinamento']['duracaoEstimada'] as int? ??
+                  estimatedDurationMinutes ??
+                  0;
+              resolvedItem = TrainingPlanGalleryItem(
+                id: id,
+                code: int.parse(raw),
+                title: tTitle,
+                estimatedDurationMinutes: tDuration,
+              );
+            }
+          }
+        } catch (_) {}
+
+        // 2. Se não resolveu pelo registro e temos título, tenta galeria como fallback
+        if (resolvedCode == null && title != null && title.trim().isNotEmpty) {
+          try {
+            final galleryResolved = await _resolveRealTrainingFromBackend(
+              title: title,
+              horseName: horseName,
+            );
+            if (galleryResolved != null && galleryResolved.code > 0) {
+              resolvedCode = galleryResolved.code.toString();
+              resolvedItem = galleryResolved;
+            }
+          } catch (_) {}
         }
 
-        if (!mounted) return;
-        if (resolved == null || resolved.code <= 0) {
-          AppSnackBar.show(
-            context,
-            backgroundColor: AppColors.error,
-            icon: Icons.error_outline_rounded,
-            message:
-                'Não foi possível localizar o treinamento no banco de dados.',
-          );
-          return;
+        if (resolvedCode != null) {
+          effectiveCode = resolvedCode;
+          initialTraining = resolvedItem;
+        } else {
+          effectiveCode = id;
+          if (title != null) {
+            initialTraining = TrainingPlanGalleryItem(
+              id: id,
+              code: 0,
+              title: title,
+              estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+            );
+          }
         }
-        effectiveCode = resolved.code.toString();
-        initialTraining = resolved;
       } else {
         effectiveCode = id;
         if (title != null) {
