@@ -47,7 +47,6 @@ import 'package:horse_life/app/theme/app_colors.dart';
 import 'package:horse_life/core/widgets/app_snack_bar.dart';
 import 'package:horse_life/features/exercises/presentation/routes/exercise_registration_flow_route.dart';
 import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
-import 'package:horse_life/features/horses/presentation/routes/horse_registration_flow_route.dart';
 import 'package:horse_life/features/training_plans/presentation/routes/training_plan_registration_flow_route.dart';
 import 'package:horse_life/features/trainings/presentation/routes/training_registration_flow_route.dart';
 
@@ -100,20 +99,6 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
     }
 
     navigator.push(ExerciseRegistrationFlowRoute.build());
-  }
-
-  // Fecha o menu lateral e direciona o treinador ao fluxo de cadastro de cavalos.
-  void _handleRegisterHorse() {
-    final navigator = Navigator.of(context);
-    navigator.pop();
-
-    final onRegisterHorse = widget.onRegisterHorse;
-    if (onRegisterHorse != null) {
-      onRegisterHorse();
-      return;
-    }
-
-    navigator.push(HorseRegistrationFlowRoute.build());
   }
 
   // Fecha o menu lateral e direciona o treinador ao fluxo de cadastro de treinamentos.
@@ -243,23 +228,6 @@ class _TrainerSidebarState extends State<TrainerSidebar> {
                   ),
                 ),
                 onTap: _handleCreateExercise,
-              ),
-              ListTile(
-                key: const Key('trainer-sidebar-register-horse'),
-                contentPadding: EdgeInsets.zero,
-                minTileHeight: 48,
-                leading: const Icon(
-                  Icons.add_circle_outline_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                title: Text(
-                  'Cadastrar cavalo',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-                onTap: _handleRegisterHorse,
               ),
               ListTile(
                 key: const Key('trainer-sidebar-create-training'),

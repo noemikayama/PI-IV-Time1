@@ -177,6 +177,7 @@ void main() {
     );
     expect(action.onTap, isNull);
   });
+});
 }
 
 TextSpan _spanStartingWith(InlineSpan span, String prefix) {

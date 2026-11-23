@@ -4,6 +4,11 @@
 //
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Vinculação de onShowAllHorses na Home do responsável para abrir a
+// listagem de cavalos (_openHorseList).
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Implementação do fluxo de visualização de detalhes de treinamentos
 // (TrainingDetailScreen) e planos (TrainingPlanDetailScreen) para o perfil de
 // responsável, garantindo que usuários proprietários não acessem a tela de
@@ -930,6 +935,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           sessionMockHorses: _sessionMockHorses,
           onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           onSelectHorse: _openHorseProfile,
+          onShowAllHorses: widget.onShowAllGuardianHorses ?? _openHorseList,
         ),
       },
       // Barra inferior de navegação.
