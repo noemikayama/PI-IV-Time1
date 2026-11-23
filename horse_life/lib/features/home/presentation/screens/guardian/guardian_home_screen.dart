@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Vinculação de onShowAllHorses na Home do responsável para abrir a
+// listagem de cavalos (_openHorseList).
+//
+// Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção do recarregamento síncrono da Home após o perfil e a
 // lista de cavalos; inclusão de conteúdo injetável para testes da navegação.
@@ -662,6 +667,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           sessionMockHorses: _sessionMockHorses,
           onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           onSelectHorse: _openHorseProfile,
+          onShowAllHorses: widget.onShowAllGuardianHorses ?? _openHorseList,
         ),
       },
       // Barra inferior de navegação.

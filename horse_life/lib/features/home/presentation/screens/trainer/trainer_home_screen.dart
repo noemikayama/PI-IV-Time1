@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Vinculação do botão "Mostrar tudo" da lista de cavalos para a
+// abertura direta da listagem de cavalos (_openHorseList).
+//
+// Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção dos callbacks de setState que devolviam Future durante o
 // recarregamento da Home após navegações e novas tentativas; documentação da
@@ -849,7 +854,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
               widget.onSelectHorse ?? (horse) => _openHorseProfile(horse.id),
           onSelectClient: widget.onSelectClient,
           onShowAllTrainings: widget.onShowAllTrainings,
-          onShowAllHorses: widget.onShowAllHorses,
+          onShowAllHorses: widget.onShowAllHorses ?? _openHorseList,
           onShowAllClients: widget.onShowAllClients,
         ),
       },

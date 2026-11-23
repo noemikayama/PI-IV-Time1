@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ajuste da tipografia do botão "Mostrar tudo" para labelMedium conforme o tema.
+//
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização dos componentes da Home e dos estados simulados.
@@ -62,8 +66,14 @@ class HomeSectionCard extends StatelessWidget {
                   onPressed: onShowAll,
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white,
+                    textStyle: theme.textTheme.labelMedium,
                   ),
-                  child: const Text('Mostrar tudo'),
+                  child: Text(
+                    'Mostrar tudo',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
             ],
           ),

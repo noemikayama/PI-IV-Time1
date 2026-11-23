@@ -195,7 +195,7 @@ class _TrainingDetails extends StatelessWidget {
           const SizedBox(height: 14),
           _Info(icon: const HorseAssetIcon(), text: training.horseName),
           _Info(
-            icon: const Icon(Icons.person_outline),
+            icon: const Icon(Icons.sports),
             text: training.trainerName,
           ),
           _Info(

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Renomeação do card de exercícios para "Total de exercícios criados"
+// e remoção do bottom sheet ao acionar "Mostrar tudo" na lista de cavalos.
+//
 // Data: 27/10/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Exibição de 0 como padrão no card de Total de planos ativos
@@ -244,7 +249,7 @@ class TrainerHomeContent extends StatelessWidget {
                       const SizedBox(width: 14),
                       Expanded(
                         child: TrainerStatsCard(
-                          title: 'Exercícios ativos',
+                          title: 'Total de exercícios criados',
                           value: data.createdExercises,
                           gradientColors: const [
                             Color(0xFFC8A1BC),
@@ -264,14 +269,7 @@ class TrainerHomeContent extends StatelessWidget {
                     emptyDescription:
                         'Prescreva treinos para os cavalos vinculados a você.',
                     onItemTap: onSelectHorse,
-                    onShowAll: onShowAllHorses ??
-                        () => _showAll<TrainerHorse>(
-                              context,
-                              title: 'Meus cavalos',
-                              items: data.horses,
-                              label: (horse) => horse.name,
-                              onTap: onSelectHorse,
-                            ),
+                    onShowAll: onShowAllHorses,
                   ),
                   const SizedBox(height: 16),
                   TrainerListCard<TrainerClient>(
