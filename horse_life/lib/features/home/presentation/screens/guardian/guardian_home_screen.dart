@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão do card do histórico de execuções da agenda para abrir a tela
+// de registro de execução (TrainingExecutionRecordScreen).
+//
+// Data: 23/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Padronização da confirmação do cadastro de cavalo com a cor de
 // sucesso definida em AppColors, remoção de uma dependência não utilizada e
@@ -188,6 +193,8 @@ import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/guardian/guardian_dashboard_screen.dart';
 
+import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
@@ -236,6 +243,7 @@ class GuardianHomeScreen extends StatefulWidget {
     this.trainingExecutionLoader,
     this.trainingCompletionSubmitter,
     this.horseListBuilder,
+    this.feedbackRepository,
     super.key,
   });
 
@@ -282,6 +290,9 @@ class GuardianHomeScreen extends StatefulWidget {
 
   /// Substitui somente o conteúdo da rota de cavalos em testes de navegação.
   final WidgetBuilder? horseListBuilder;
+
+  /// Repositório opcional para consulta e registro de feedback de execuções.
+  final TrainingFeedbackRepository? feedbackRepository;
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
@@ -568,6 +579,19 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     }
   }
 
+  Future<void> _openExecutionRecord(String recordId) async {
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          TrainingFeedbackRoute.forRecord(
+            recordId: recordId,
+            audience: TrainingAgendaAudience.guardian,
+            repository: widget.feedbackRepository,
+          ),
+        );
+    if (!mounted || destination == null) return;
+    _onNavigationDestination(destination);
+  }
+
   /// Abre a visualização completa de um plano de treinamento a partir da Agenda.
   Future<void> _openTrainingPlanDetails(String planId) async {
     if (_isOpeningTrainingDetails) return;
@@ -700,6 +724,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         loader: agendaLoader,
         executionLoader: widget.trainingExecutionLoader,
         completionSubmitter: widget.trainingCompletionSubmitter,
+        feedbackRepository: widget.feedbackRepository,
         onViewPlans: widget.onViewPlans,
         onViewPlan: (plan) {
           if (widget.onViewPlans != null) {
@@ -713,8 +738,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             : (entry) => widget.onStartTraining!(toGuardianTraining(entry)),
         onViewTraining: (entry) =>
             _handleViewTraining(toGuardianTraining(entry)),
-        onViewHistory: (entry) =>
-            _handleViewTraining(toGuardianTraining(entry)),
+        onViewHistory: (entry) => _openExecutionRecord(entry.id),
       );
     }
     // A Home fornece os treinos, enquanto o perfil determina se o vínculo com
@@ -812,6 +836,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               activePlansCount: plansByKey.length,
               plans: plansByKey.values.toList(growable: false),
               trainings: entries,
+              feedbackRepository: widget.feedbackRepository,
               onViewPlans: widget.onViewPlans,
               onViewPlan: (plan) {
                 if (widget.onViewPlans != null) {
@@ -834,9 +859,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               },
               onViewHistory: (entry) {
                 final training = sourceFor(entry);
-                if (training != null) {
-                  _handleViewTraining(training);
-                }
+                _openExecutionRecord(training?.recordId ?? entry.id);
               },
             );
           },

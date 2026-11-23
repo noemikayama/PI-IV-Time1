@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura da abertura de TrainingExecutionRecordScreen ao tocar
+// no card do histórico de execuções da agenda.
+//
 // Data: 22/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Ajuste dos testes para verificar a abertura de TrainingDetailScreen
@@ -33,6 +38,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:horse_life/app/theme/app_theme.dart';
+import 'package:horse_life/features/feedback/presentation/screens/training_execution_record_screen.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/data/models/training_completion_data.dart';
 import 'package:horse_life/features/training/data/models/training_execution_data.dart';
@@ -42,6 +49,8 @@ import 'package:horse_life/features/training/data/repositories/training_executio
 import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
+
+import '../../../support/features/feedback/data/repositories/mock_training_feedback_repository.dart';
 
 void main() {
   // Aciona a mesma seta usada na interface e captura exceções do framework para
@@ -158,29 +167,65 @@ void main() {
       expect(viewedTraining?.id, 'registro-1');
     },
   );
+
+  testWidgets(
+    'opens training execution record screen when tapping a history card',
+    (tester) async {
+      final loader = _FakeTrainingAgendaLoader(includeHistory: true);
+      final feedbackRepository = MockTrainingFeedbackRepository.instance;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: ConnectedTrainingAgendaScreen(
+              loader: loader,
+              feedbackRepository: feedbackRepository,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Trabalho de transições'));
+      await tester.tap(find.text('Trabalho de transições'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(TrainingExecutionRecordScreen), findsOneWidget);
+    },
+  );
 }
 
 // Registra as datas solicitadas e responde imediatamente com uma semana fixa,
 // isolando o teste de Firebase, rede e relógio.
 class _FakeTrainingAgendaLoader implements TrainingAgendaLoader {
-  _FakeTrainingAgendaLoader({this.includeTraining = false});
+  _FakeTrainingAgendaLoader({
+    this.includeTraining = false,
+    this.includeHistory = false,
+  });
 
   final bool includeTraining;
+  final bool includeHistory;
   final requestedDates = <DateTime?>[];
 
   @override
   Future<TrainingAgendaData> fetchAgenda({DateTime? date}) {
     requestedDates.add(date);
     final training = TrainingAgendaEntry(
-      id: 'registro-1',
+      id: includeHistory ? 'feedback-demo-pendente' : 'registro-1',
       title: 'Trabalho de transições',
       horseName: 'Trovão',
       trainerName: 'Ana',
       planName: 'Condicionamento',
       date: DateTime(2026, 11, 18),
       durationMinutes: 45,
-      status: TrainingAgendaStatus.planned,
-      action: TrainingAgendaAction.start,
+      status: includeHistory
+          ? TrainingAgendaStatus.completed
+          : TrainingAgendaStatus.planned,
+      action: includeHistory
+          ? TrainingAgendaAction.view
+          : TrainingAgendaAction.start,
     );
     return Future.value(
       TrainingAgendaData(
@@ -188,8 +233,8 @@ class _FakeTrainingAgendaLoader implements TrainingAgendaLoader {
         today: DateTime(2026, 11, 18),
         weekStart: DateTime(2026, 11, 16),
         weekEnd: DateTime(2026, 11, 22),
-        activePlansCount: includeTraining ? 1 : 0,
-        plans: includeTraining
+        activePlansCount: (includeTraining || includeHistory) ? 1 : 0,
+        plans: (includeTraining || includeHistory)
             ? [
                 TrainingAgendaPlan(
                   id: 'plano-1',
@@ -204,7 +249,7 @@ class _FakeTrainingAgendaLoader implements TrainingAgendaLoader {
             : const [],
         weekTrainings: includeTraining ? [training] : const [],
         todayTrainings: includeTraining ? [training] : const [],
-        history: const [],
+        history: includeHistory ? [training] : const [],
       ),
     );
   }
