@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Inclusão opcional do caminho de armazenamento (path) em
+// TrainingExerciseMedia para compatibilidade com o carrossel compartilhado.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Inclusão da permissão de início nos contratos de referência e de
@@ -124,13 +129,20 @@ enum TrainingExerciseMediaType { image, video }
 /// Recurso remoto associado a um exercício.
 @immutable
 class TrainingExerciseMedia {
-  const TrainingExerciseMedia({required this.url, required this.type});
+  const TrainingExerciseMedia({
+    required this.url,
+    required this.type,
+    this.path = '',
+  });
 
   /// URL, normalmente assinada, retornada pelo backend.
   final String url;
 
   /// Define se o recurso deve ser exibido como imagem ou vídeo.
   final TrainingExerciseMediaType type;
+
+  /// Caminho relativo opcional no Storage para inferência por extensão.
+  final String path;
 }
 
 /// Treinamento consolidado consumido pelas telas de detalhes e execução ativa.

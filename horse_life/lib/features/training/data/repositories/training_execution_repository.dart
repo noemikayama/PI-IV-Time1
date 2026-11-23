@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Preservação do caminho relativo (path) das mídias retornadas por
+// getExercise para compatibilidade com o carrossel reutilizado na execução.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Propagação da permissão de início da referência para os detalhes
@@ -187,9 +192,12 @@ class FirebaseTrainingExecutionRepository implements TrainingExecutionLoader {
   ) => _asList(value, type.name)
       .map((raw) {
         final item = _asMap(raw, '${type.name}[]');
+        final rawPath =
+            item['caminho'] ?? item['path'] ?? item['storagePath'] ?? '';
         return TrainingExerciseMedia(
           url: _asString(item['url'], '${type.name}[].url'),
           type: type,
+          path: rawPath is String ? rawPath.trim() : '',
         );
       })
       .toList(growable: false);

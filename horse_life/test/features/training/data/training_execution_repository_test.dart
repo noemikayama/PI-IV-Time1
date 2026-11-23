@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Validação da preservação do caminho relativo (path) nas mídias
+// carregadas para os exercícios da execução.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação das callables falsas e das asserções do carregamento
@@ -64,10 +69,16 @@ void main() {
           {'descricao': 'Cavalete', 'quantidade': 3},
         ],
         'imagens': [
-          {'url': 'https://example.com/image.jpg'},
+          {
+            'caminho': 'users/1/exercises/image.jpg',
+            'url': 'https://example.com/image.jpg',
+          },
         ],
         'videos': [
-          {'url': 'https://example.com/video.mp4'},
+          {
+            'caminho': 'users/1/exercises/video.mp4',
+            'url': 'https://example.com/video.mp4',
+          },
         ],
       },
     );
@@ -94,5 +105,13 @@ void main() {
     ]);
     expect(result.exercises.single.materials.single.quantity, 3);
     expect(result.exercises.single.media.length, 2);
+    expect(
+      result.exercises.single.media[0].path,
+      'users/1/exercises/image.jpg',
+    );
+    expect(
+      result.exercises.single.media[1].path,
+      'users/1/exercises/video.mp4',
+    );
   });
 }
