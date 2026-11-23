@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Substituição do carrossel de mídias pelo componente completo da
+// visualização de exercícios (ExerciseMediaCarousel), inclusão de confirmação ao
+// voltar da execução e substituição de rota ao avançar para a submissão final.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Propagação do resultado da conclusão para a tela de detalhes e
@@ -23,17 +29,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/destructive_confirmation_dialog.dart';
+import 'package:horse_life/features/exercises/application/states/exercise_media.dart';
+import 'package:horse_life/features/exercises/data/models/exercise_detail_data.dart';
+import 'package:horse_life/features/exercises/presentation/widgets/exercise_media_carousel.dart';
 import 'package:horse_life/features/training/data/models/training_completion_data.dart';
 import 'package:horse_life/features/training/data/models/training_execution_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/training_completion_screen.dart';
-import 'package:video_player/video_player.dart';
 
 /// Conduz uma execução iniciada, mede o tempo e registra exercícios concluídos.
 class ActiveTrainingScreen extends StatefulWidget {
   const ActiveTrainingScreen({
     required this.training,
     required this.completionSubmitter,
+    this.videoPlayerBuilder,
+    this.imageBuilder,
     super.key,
   });
 
@@ -42,6 +53,12 @@ class ActiveTrainingScreen extends StatefulWidget {
 
   /// Destino do formulário aberto após a confirmação de encerramento.
   final TrainingCompletionSubmitter completionSubmitter;
+
+  /// Builder opcional para renderização de vídeos em testes.
+  final ExerciseVideoBuilder? videoPlayerBuilder;
+
+  /// Builder opcional para exibição de imagens em testes.
+  final ExerciseImageBuilder? imageBuilder;
 
   @override
   State<ActiveTrainingScreen> createState() => _ActiveTrainingScreenState();
@@ -57,6 +74,7 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
   Timer? _timer;
   int _exercisePage = 0;
   bool _finishDialogOpen = false;
+  bool _exitDialogOpen = false;
 
   @override
   void initState() {
@@ -83,10 +101,10 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
   }
 
   // Pausa o tempo enquanto o diálogo está aberto. Cancelar retoma a medição;
-  // confirmar abre a conclusão com um snapshot e devolve à tela anterior se o
-  // registro foi persistido, permitindo que ela atualize o estado do treino.
+  // confirmar substitui a rota atual pelo formulário final para impedir o
+  // retorno à execução ativa depois de encerrá-la.
   Future<void> _requestFinishTraining() async {
-    if (_finishDialogOpen) return;
+    if (_finishDialogOpen || _exitDialogOpen) return;
     _finishDialogOpen = true;
     _stopwatch.stop();
     if (mounted) setState(() {});
@@ -116,7 +134,7 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
             completed: _completedExercises.contains(index),
           ),
       ];
-      final completed = await Navigator.of(context).push<bool>(
+      Navigator.of(context).pushReplacement<bool, bool>(
         MaterialPageRoute<bool>(
           builder: (context) => TrainingCompletionScreen(
             submitter: widget.completionSubmitter,
@@ -131,8 +149,33 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
           ),
         ),
       );
-      if (!mounted) return;
-      Navigator.of(context).pop(completed == true);
+      return;
+    }
+    _stopwatch.start();
+    setState(() {});
+  }
+
+  // Confirma a saída da execução ativa pausando o cronômetro durante o diálogo.
+  Future<void> _requestExitTraining() async {
+    if (_finishDialogOpen || _exitDialogOpen) return;
+    _exitDialogOpen = true;
+    _stopwatch.stop();
+    if (mounted) setState(() {});
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    final confirmed = await showDestructiveConfirmationDialog(
+      context,
+      title: 'Tem certeza que deseja sair do treino?',
+      message:
+          'Se você sair agora, todo o seu progresso desta execução será '
+          'perdido e não será salvo.',
+      cancelLabel: 'Cancelar',
+      confirmLabel: 'Sair',
+    );
+    if (!mounted) return;
+    _exitDialogOpen = false;
+    if (confirmed) {
+      Navigator.of(context).pop(false);
       return;
     }
     _stopwatch.start();
@@ -149,17 +192,23 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
   @override
   Widget build(BuildContext context) {
     final training = widget.training;
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 680),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Header(onBack: () => Navigator.of(context).maybePop()),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _requestExitTraining();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 680),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Header(onBack: _requestExitTraining),
                   const SizedBox(height: 26),
                   Text(
                     training.title,
@@ -217,6 +266,8 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
                           total: training.exercises.length,
                           completed: _completedExercises.contains(index),
                           onToggle: () => _toggleExercise(index),
+                          videoPlayerBuilder: widget.videoPlayerBuilder,
+                          imageBuilder: widget.imageBuilder,
                         ),
                       ),
                     ),
@@ -250,6 +301,7 @@ class _ActiveTrainingScreenState extends State<ActiveTrainingScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
@@ -497,6 +549,8 @@ class _Header extends StatelessWidget {
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
       IconButton(
+        key: const Key('active-training-back-button'),
+        tooltip: 'Voltar',
         onPressed: onBack,
         icon: const Icon(
           Icons.arrow_back_ios_new_rounded,
@@ -553,6 +607,8 @@ class _ExecutionCard extends StatelessWidget {
     required this.total,
     required this.completed,
     required this.onToggle,
+    this.videoPlayerBuilder,
+    this.imageBuilder,
     super.key,
   });
 
@@ -561,6 +617,8 @@ class _ExecutionCard extends StatelessWidget {
   final int total;
   final bool completed;
   final VoidCallback onToggle;
+  final ExerciseVideoBuilder? videoPlayerBuilder;
+  final ExerciseImageBuilder? imageBuilder;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -607,7 +665,22 @@ class _ExecutionCard extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          _ExerciseMediaCarousel(media: exercise.media),
+          ExerciseMediaCarousel(
+            media: exercise.media
+                .map(
+                  (item) => ExerciseDetailMedia(
+                    path: item.path,
+                    url: item.url,
+                    type: item.type == TrainingExerciseMediaType.video
+                        ? ExerciseMediaType.video
+                        : ExerciseMediaType.image,
+                  ),
+                )
+                .toList(growable: false),
+            canEdit: false,
+            videoPlayerBuilder: videoPlayerBuilder,
+            imageBuilder: imageBuilder,
+          ),
           const SizedBox(height: 24),
           Text('Orientações', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
@@ -691,190 +764,6 @@ class _ExecutionCard extends StatelessWidget {
           ),
         ],
       ),
-    ),
-  );
-}
-
-// Alterna imagens e vídeos remotos mantendo um indicador da página selecionada.
-class _ExerciseMediaCarousel extends StatefulWidget {
-  const _ExerciseMediaCarousel({required this.media});
-  final List<TrainingExerciseMedia> media;
-
-  @override
-  State<_ExerciseMediaCarousel> createState() => _ExerciseMediaCarouselState();
-}
-
-class _ExerciseMediaCarouselState extends State<_ExerciseMediaCarousel> {
-  final PageController _controller = PageController();
-  int _page = 0;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.media.isEmpty) {
-      return Container(
-        height: 235,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Center(
-          child: Icon(Icons.play_circle_outline, color: Colors.white, size: 68),
-        ),
-      );
-    }
-    return Column(
-      children: [
-        SizedBox(
-          height: 235,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: widget.media.length,
-            onPageChanged: (value) => setState(() => _page = value),
-            itemBuilder: (context, index) {
-              final media = widget.media[index];
-              return ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: media.type == TrainingExerciseMediaType.video
-                    ? _NetworkVideoPlayer(url: media.url)
-                    : Image.network(
-                        media.url,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const ColoredBox(
-                          color: Colors.black,
-                          child: Center(
-                            child: Icon(
-                              Icons.broken_image_outlined,
-                              color: Colors.white,
-                              size: 48,
-                            ),
-                          ),
-                        ),
-                      ),
-              );
-            },
-          ),
-        ),
-        if (widget.media.length > 1) ...[
-          const SizedBox(height: 10),
-          _PageDots(count: widget.media.length, selected: _page),
-        ],
-      ],
-    );
-  }
-}
-
-// Encapsula ciclo de vida, carregamento, reprodução e volume de um vídeo remoto.
-class _NetworkVideoPlayer extends StatefulWidget {
-  const _NetworkVideoPlayer({required this.url});
-  final String url;
-
-  @override
-  State<_NetworkVideoPlayer> createState() => _NetworkVideoPlayerState();
-}
-
-class _NetworkVideoPlayerState extends State<_NetworkVideoPlayer> {
-  late final VideoPlayerController _controller;
-  late final Future<void> _initialization;
-  bool _muted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
-    _initialization = _controller.initialize().then((_) {
-      _controller.setVolume(1);
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => ColoredBox(
-    color: Colors.black,
-    child: FutureBuilder<void>(
-      future: _initialization,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return const Center(
-            child: Icon(
-              Icons.videocam_off_outlined,
-              color: Colors.white,
-              size: 48,
-            ),
-          );
-        }
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            Center(
-              child: AspectRatio(
-                aspectRatio: _controller.value.aspectRatio == 0
-                    ? 16 / 9
-                    : _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              ),
-            ),
-            Center(
-              child: IconButton.filled(
-                onPressed: () => setState(() {
-                  _controller.value.isPlaying
-                      ? _controller.pause()
-                      : _controller.play();
-                }),
-                style: IconButton.styleFrom(backgroundColor: Colors.black54),
-                iconSize: 46,
-                icon: Icon(
-                  _controller.value.isPlaying
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                ),
-              ),
-            ),
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 8,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: VideoProgressIndicator(
-                      _controller,
-                      allowScrubbing: true,
-                      colors: const VideoProgressColors(
-                        playedColor: AppColors.seaGreen,
-                        bufferedColor: Colors.white54,
-                        backgroundColor: Colors.white24,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: _muted ? 'Ativar áudio' : 'Silenciar',
-                    onPressed: () {
-                      setState(() => _muted = !_muted);
-                      _controller.setVolume(_muted ? 0 : 1);
-                    },
-                    color: Colors.white,
-                    icon: Icon(_muted ? Icons.volume_off : Icons.volume_up),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
     ),
   );
 }

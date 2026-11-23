@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura do redirecionamento direto à agenda de treinos após o
+// envio e do modal de confirmação ao acionar o botão de voltar.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Inclusão dos cenários de nota inválida e treino não realizado no
@@ -21,18 +26,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/training/data/models/training_completion_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/training_completion_screen.dart';
 
 void main() {
-  // Percorre resumo, campos obrigatórios e envio para validar o formulário como
-  // o atleta o utiliza, sem depender de Firebase.
-  testWidgets('renders summary and submits the athlete form', (tester) async {
+  Route<dynamic>? generateAgendaRoute(RouteSettings settings) {
+    if (settings.name == authenticatedHomeRouteName) {
+      final destination = settings.arguments! as HomeNavigationDestination;
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (_) => Scaffold(body: Text('Destino: ${destination.name}')),
+      );
+    }
+    return null;
+  }
+
+  // Percorre resumo, campos obrigatórios e envio para validar o formulário e o
+  // redirecionamento sem pilha para a agenda de treinos.
+  testWidgets('renders summary, submits form, and redirects to trainings agenda', (
+    tester,
+  ) async {
     final submitter = _RecordingSubmitter();
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
+        onGenerateRoute: generateAgendaRoute,
         home: TrainingCompletionScreen(
           submitter: submitter,
           initialInput: _input,
@@ -70,6 +90,12 @@ void main() {
     expect(submitter.input?.performancePerception, 8);
     expect(submitter.input?.difficulty, 'Mão esquerda');
     expect(submitter.input?.notes, 'Mais agitado no início');
+    expect(find.text('Destino: trainings'), findsOneWidget);
+    expect(find.byType(TrainingCompletionScreen), findsNothing);
+    expect(
+      Navigator.of(tester.element(find.text('Destino: trainings'))).canPop(),
+      isFalse,
+    );
   });
 
   // Confirma que valores rejeitados pelo backend não chegam ao submitter.
@@ -78,6 +104,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
+        onGenerateRoute: generateAgendaRoute,
         home: TrainingCompletionScreen(
           submitter: submitter,
           initialInput: _input,
@@ -107,6 +134,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
+        onGenerateRoute: generateAgendaRoute,
         home: TrainingCompletionScreen(
           submitter: submitter,
           initialInput: _notPerformedInput,
@@ -124,6 +152,67 @@ void main() {
 
     expect(submitter.input?.performancePerception, isNull);
     expect(submitter.input?.difficulty, isEmpty);
+    expect(find.text('Destino: trainings'), findsOneWidget);
+    expect(find.byType(TrainingCompletionScreen), findsNothing);
+  });
+
+  // Voltar na submissão exige confirmação e mantém os campos se cancelado.
+  testWidgets('requires confirmation before backing out of completion screen', (
+    tester,
+  ) async {
+    final submitter = _RecordingSubmitter();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: ElevatedButton(
+              onPressed: () => Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => TrainingCompletionScreen(
+                    submitter: submitter,
+                    initialInput: _input,
+                  ),
+                ),
+              ),
+              child: const Text('Origem'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Origem'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Ex.: Cavalo mais agitado no início'),
+      'Observação em andamento',
+    );
+    await tester.tap(find.byKey(const Key('training-completion-back-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('destructive-confirmation-dialog')),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Tem certeza que deseja sair sem enviar?'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('destructive-dialog-cancel-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TrainingCompletionScreen), findsOneWidget);
+    expect(find.text('Observação em andamento'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('training-completion-back-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('destructive-dialog-confirm-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TrainingCompletionScreen), findsNothing);
+    expect(find.text('Origem'), findsOneWidget);
   });
 }
 

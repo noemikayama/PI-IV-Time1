@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização do fluxo completo para validar o redirecionamento à
+// agenda sem retorno às telas de execução e submissão após concluir o treino.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura do modo somente leitura, que exibe os detalhes sem a
@@ -25,11 +30,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/app/theme/app_theme.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/data/models/training_completion_data.dart';
 import 'package:horse_life/features/training/data/models/training_execution_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
 import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
+import 'package:horse_life/features/training/presentation/screens/active_training_screen.dart';
+import 'package:horse_life/features/training/presentation/screens/training_completion_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
 
 void main() {
@@ -129,55 +137,74 @@ void main() {
       findsNothing,
     );
     expect(find.text('Iniciar treino'), findsNothing);
-  // Percorre as três rotas para verificar o retorno do sucesso até os detalhes.
-  testWidgets('refreshes to the finished state after submitting completion', (
-    tester,
-  ) async {
-    final backend = _MutableExecutionBackend();
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.light,
-        home: TrainingExecutionScreen(
-          loader: backend,
-          completionSubmitter: backend,
-          reference: TrainingExecutionReference(
-            recordId: 'registro-1',
-            planId: 'plano-1',
-            title: 'Trabalho de transições',
-            date: DateTime(2026, 11, 21),
-            durationMinutes: 45,
-            status: TrainingAgendaStatus.planned,
+  });
+
+  // Percorre as três rotas para verificar a substituição de pilha e o
+  // redirecionamento final à agenda de treinos sem possibilidade de retorno.
+  testWidgets(
+    'redirects to training agenda without returning to execution after completion',
+    (tester) async {
+      final backend = _MutableExecutionBackend();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          onGenerateRoute: (settings) {
+            if (settings.name == authenticatedHomeRouteName) {
+              final destination =
+                  settings.arguments! as HomeNavigationDestination;
+              return MaterialPageRoute<void>(
+                settings: settings,
+                builder: (_) =>
+                    Scaffold(body: Text('Agenda: ${destination.name}')),
+              );
+            }
+            return null;
+          },
+          home: TrainingExecutionScreen(
+            loader: backend,
+            completionSubmitter: backend,
+            reference: TrainingExecutionReference(
+              recordId: 'registro-1',
+              planId: 'plano-1',
+              title: 'Trabalho de transições',
+              date: DateTime(2026, 11, 21),
+              durationMinutes: 45,
+              status: TrainingAgendaStatus.planned,
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Iniciar treino'));
-    await tester.tap(find.text('Iniciar treino'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('finish-training-button')));
-    await tester.tap(find.byKey(const Key('finish-training-button')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Sim'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const Key('submit-training-completion')),
-    );
-    await tester.tap(find.byKey(const Key('submit-training-completion')));
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Iniciar treino'));
+      await tester.tap(find.text('Iniciar treino'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('finish-training-button')));
+      await tester.tap(find.byKey(const Key('finish-training-button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sim'));
+      await tester.pumpAndSettle();
 
-    expect(backend.fetchCount, 2);
-    expect(backend.lastFetchedFinished, isFalse);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(find.text('Treino finalizado'), findsOneWidget);
-    expect(find.text('Iniciar treino'), findsNothing);
-    final action = tester.widget<InkWell>(
-      find.byKey(const Key('training-execution-primary-action')),
-    );
-    expect(action.onTap, isNull);
-  });
-});
+      expect(find.byType(ActiveTrainingScreen), findsNothing);
+      expect(find.byType(TrainingCompletionScreen), findsOneWidget);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('submit-training-completion')),
+      );
+      await tester.tap(find.byKey(const Key('submit-training-completion')));
+      await tester.pumpAndSettle();
+
+      expect(backend.fetchCount, 1);
+      expect(find.text('Agenda: trainings'), findsOneWidget);
+      expect(find.byType(TrainingExecutionScreen), findsNothing);
+      expect(find.byType(ActiveTrainingScreen), findsNothing);
+      expect(find.byType(TrainingCompletionScreen), findsNothing);
+      expect(
+        Navigator.of(tester.element(find.text('Agenda: trainings'))).canPop(),
+        isFalse,
+      );
+    },
+  );
 }
 
 TextSpan _spanStartingWith(InlineSpan span, String prefix) {
