@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Padronização da SnackBar de conclusão do treino com a cor de
+// sucesso definida no tema do aplicativo.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração do envio com o contrato do backend, validação da nota de
@@ -81,6 +86,7 @@ class _TrainingCompletionScreenState extends State<TrainingCompletionScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
+          backgroundColor: AppColors.success,
           content: Text('Registro do treino enviado com sucesso.'),
         ),
       );

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição do retorno por pop pelo redirecionamento autenticado
+// direto em todos os destinos da barra inferior.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Integração da barra de navegação tipada com callback de destino
@@ -39,20 +44,19 @@ class GuardianDashboardScreen extends StatelessWidget {
   final DashboardRepository repository;
   final Future<GuardianHomeData>? homeFuture;
 
-  void _onDestinationSelected(BuildContext context, HomeNavigationDestination destination) {
+  void _onDestinationSelected(
+    BuildContext context,
+    HomeNavigationDestination destination,
+  ) {
     if (destination == HomeNavigationDestination.dashboard) return;
-    if (destination == HomeNavigationDestination.home) {
-      if (onHome != null) {
-        onHome!();
-      } else {
-        Navigator.of(context).pop();
-      }
+    if (destination == HomeNavigationDestination.home && onHome != null) {
+      onHome!();
       return;
     }
     if (onNavigationSelected != null) {
       onNavigationSelected!(destination);
     } else {
-      Navigator.of(context).pop(destination);
+      navigateToHomeDestination(context, destination);
     }
   }
 
@@ -85,8 +89,10 @@ class GuardianDashboardScreen extends StatelessWidget {
             const SizedBox(height: 24),
             DashboardLiveTrainingContent(
               repository: repository,
-              onShowAllTrainings: () =>
-                  _onDestinationSelected(context, HomeNavigationDestination.trainings),
+              onShowAllTrainings: () => _onDestinationSelected(
+                context,
+                HomeNavigationDestination.trainings,
+              ),
             ),
           ],
         ),

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Criação do redirecionamento central dos destinos autenticados sem
+// uso de pop, reconstruindo a Home correta a partir da barra inferior.
+//
 // Data: 06/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Criação da API tipada HomeNavigationDestination, mantendo a API
@@ -31,6 +36,22 @@ import 'package:horse_life/app/theme/app_colors.dart';
 
 /// Destinos compartilhados por todas as telas autenticadas.
 enum HomeNavigationDestination { home, trainings, horses, dashboard, profile }
+
+/// Nome reservado pelo Navigator autenticado para reconstruir a Home no
+/// destino solicitado, descartando rotas intermediárias sem usar `pop`.
+const authenticatedHomeRouteName = '/authenticated-home';
+
+/// Redireciona qualquer tela autenticada para um destino principal.
+void navigateToHomeDestination(
+  BuildContext context,
+  HomeNavigationDestination destination,
+) {
+  Navigator.of(context).pushNamedAndRemoveUntil(
+    authenticatedHomeRouteName,
+    (route) => false,
+    arguments: destination,
+  );
+}
 
 /// Barra inferior controlada pela Screen; recebe índice ativo e callback de seleção.
 class HomeBottomNavBar extends StatelessWidget {
