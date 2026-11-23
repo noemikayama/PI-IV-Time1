@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Simplificação do parser de detalhes após a validação do mapa de
+// resposta, removendo verificações redundantes sem alterar os fallbacks.
+//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Enriquecimento dos treinamentos de trainingsByDay com a descrição
@@ -491,36 +496,25 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
       throw const FormatException('Datas do plano ausentes ou inválidas.');
     }
 
-    final horseMap =
-        planMap['cavalo'] ?? (response is Map ? response['cavalo'] : null);
+    final horseMap = planMap['cavalo'] ?? response['cavalo'];
     final horseId = horseMap is Map
         ? _extractId(horseMap['id'] ?? horseMap['_id'])
-        : _extractId(
-            planMap['cavaloId'] ??
-                (response is Map ? response['cavaloId'] : null),
-          );
+        : _extractId(planMap['cavaloId'] ?? response['cavaloId']);
     final rawHorseName = horseMap is Map
         ? horseMap['nome'] ?? horseMap['name']
-        : (planMap['nomeCavalo'] ??
-              (response is Map ? response['nomeCavalo'] : null));
+        : (planMap['nomeCavalo'] ?? response['nomeCavalo']);
     final horseName = rawHorseName is String ? rawHorseName.trim() : '';
 
-    final trainerMap =
-        planMap['treinador'] ??
-        (response is Map ? response['treinador'] : null);
+    final trainerMap = planMap['treinador'] ?? response['treinador'];
     final trainerId = trainerMap is Map
         ? _extractId(trainerMap['id'] ?? trainerMap['_id'])
-        : _extractId(
-            planMap['treinadorId'] ??
-                (response is Map ? response['treinadorId'] : null),
-          );
+        : _extractId(planMap['treinadorId'] ?? response['treinadorId']);
     final rawTrainerName = trainerMap is Map
         ? trainerMap['nome'] ?? trainerMap['name']
-        : (planMap['nomeTreinador'] ??
-              (response is Map ? response['nomeTreinador'] : null));
+        : (planMap['nomeTreinador'] ?? response['nomeTreinador']);
     final trainerName = rawTrainerName is String ? rawTrainerName.trim() : '';
 
-    final permissoes = response is Map && response['permissoes'] is Map
+    final permissoes = response['permissoes'] is Map
         ? response['permissoes'] as Map
         : null;
     final rawIsOwner =
@@ -533,12 +527,8 @@ final class FirebaseTrainingPlanRepository implements TrainingPlanRepository {
     final isOwner = rawIsOwner is bool ? rawIsOwner : null;
 
     final trainingsByDay = <TrainingPlanWeekday, TrainingPlanGalleryItem>{};
-    final rawByDay =
-        planMap['treinosPorDia'] ??
-        (response is Map ? response['treinosPorDia'] : null);
-    final rawPlanning =
-        planMap['planejamento'] ??
-        (response is Map ? response['planejamento'] : null);
+    final rawByDay = planMap['treinosPorDia'] ?? response['treinosPorDia'];
+    final rawPlanning = planMap['planejamento'] ?? response['planejamento'];
     if (rawByDay is Map) {
       for (final entry in rawByDay.entries) {
         final weekday = _parseWeekday(entry.key);

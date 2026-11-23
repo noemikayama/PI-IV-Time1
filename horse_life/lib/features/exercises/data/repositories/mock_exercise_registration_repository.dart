@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante do resultado de cadastro, preservando
+// o comportamento do repositório simulado.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do repositório mock para testes do fluxo de cadastro
@@ -9,7 +14,6 @@
 // -----------------------------------------------------------------------------
 
 import '../../application/states/exercise_registration_draft.dart';
-import '../models/exercise_registration_result.dart';
 import 'exercise_registration_repository.dart';
 
 class MockExerciseRegistrationRepository

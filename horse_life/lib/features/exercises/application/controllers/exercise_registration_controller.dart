@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante do resultado de cadastro, mantendo
+// o tipo disponibilizado pela interface do repositório.
+//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Suporte ao callback opcional onExerciseCreatedWithResult para
@@ -30,7 +35,6 @@
 
 import 'package:flutter/foundation.dart';
 
-import '../../data/models/exercise_registration_result.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/exercise_registration_repository.dart';
 import '../../data/repositories/firebase_trainer_linked_horse_repository.dart';
@@ -73,10 +77,8 @@ class ExerciseRegistrationController {
     final horses = await _horseRepository.fetchLinkedHorses();
     return horses
         .map(
-          (horse) => TrainerLinkedHorse(
-            id: horse.id.trim(),
-            name: horse.name.trim(),
-          ),
+          (horse) =>
+              TrainerLinkedHorse(id: horse.id.trim(), name: horse.name.trim()),
         )
         .where((horse) => horse.name.isNotEmpty)
         .toList(growable: false);

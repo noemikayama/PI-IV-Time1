@@ -1,6 +1,12 @@
 // RESPONSÁVEL: Gabriela Sichiroli Ferrari - RA 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão de chaves explícitas no tratamento de FormatException,
+// preservando o mapeamento das falhas de cadastro de cavalo.
+//
 // Data: 06/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Cadastro persistido em servidor, modalidades reais e anexos.
@@ -117,8 +123,9 @@ class FirebaseHorseRegistrationRepository
         _ => HorseRegistrationFailure(error.message ?? defaultMessage),
       };
     }
-    if (error is FormatException)
+    if (error is FormatException) {
       return HorseRegistrationFailure(error.message);
+    }
     return HorseRegistrationFailure(defaultMessage);
   }
 }

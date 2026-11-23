@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção da variável local de tema não utilizada na construção do
+// formulário, eliminando o warning sem alterar a interface.
+//
 // Data: 22/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Envio assíncrono, retorno confirmado pelo servidor e tratamento de falhas.
@@ -132,7 +137,6 @@ class _FeedbackRegistrationScreenState
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: _flow,
     builder: (context, _) {
-      final textTheme = Theme.of(context).textTheme;
       return PopScope(
         canPop: !_flow.isSaving && _flow.step == 0,
         onPopInvokedWithResult: (didPop, _) {

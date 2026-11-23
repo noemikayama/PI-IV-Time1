@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante e adequação da formatação dos testes
+// do parser de detalhes do plano de treinamento.
+//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Teste para enriquecimento de trainingsByDay a partir de treinosDaSemana/todosOsTreinos.
@@ -26,7 +31,6 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:horse_life/features/exercises/data/models/trainer_linked_horse.dart';
 import 'package:horse_life/features/training_plans/application/states/training_plan_registration_draft.dart';
-import 'package:horse_life/features/training_plans/data/models/training_plan_detail_data.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_weekday.dart';
 import 'package:horse_life/features/training_plans/data/repositories/firebase_training_plan_repository.dart';
@@ -351,17 +355,20 @@ void main() {
               },
             ],
           },
-          'todosOsTreinos': {
-            'total': 1,
-            'treinos': [],
-          },
+          'todosOsTreinos': {'total': 1, 'treinos': []},
         },
       );
 
-      final detail = await repository.getTrainingPlan('66e1a0c2f1b2c3d4e5f6e005');
+      final detail = await repository.getTrainingPlan(
+        '66e1a0c2f1b2c3d4e5f6e005',
+      );
 
-      expect(detail.trainingsByDay.containsKey(TrainingPlanWeekday.tuesday), isTrue);
-      final tuesdayTraining = detail.trainingsByDay[TrainingPlanWeekday.tuesday]!;
+      expect(
+        detail.trainingsByDay.containsKey(TrainingPlanWeekday.tuesday),
+        isTrue,
+      );
+      final tuesdayTraining =
+          detail.trainingsByDay[TrainingPlanWeekday.tuesday]!;
       expect(tuesdayTraining.id, '66e1a0c2f1b2c3d4e5f6d001');
       expect(tuesdayTraining.code, 12);
       expect(tuesdayTraining.title, 'Fortalecimento');

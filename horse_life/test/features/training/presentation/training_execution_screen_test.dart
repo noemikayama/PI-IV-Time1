@@ -2,11 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção do fechamento do cenário somente leitura para registrar
+// separadamente o teste do bloqueio local após a conclusão do treino.
+//
 // Data: 22/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura do modo somente leitura, que exibe os detalhes sem a
 // ação de iniciar a execução do treinamento.
-// 
+//
 // Data: 22/11/2026
 // Alteração: Cobertura da atualização e do bloqueio da ação principal depois
 // que o formulário de conclusão confirma o registro do treino.
@@ -129,6 +134,8 @@ void main() {
       findsNothing,
     );
     expect(find.text('Iniciar treino'), findsNothing);
+  });
+
   // Percorre as três rotas para verificar o retorno do sucesso até os detalhes.
   testWidgets('refreshes to the finished state after submitting completion', (
     tester,
@@ -177,7 +184,6 @@ void main() {
     );
     expect(action.onTap, isNull);
   });
-});
 }
 
 TextSpan _spanStartingWith(InlineSpan span, String prefix) {

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante do resultado de cadastro utilizado
+// na confirmação do exercício.
+//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Propagação de ExerciseRegistrationResult completo via
@@ -54,7 +59,6 @@ import '../../application/controllers/exercise_registration_controller.dart';
 import '../../application/states/exercise_material.dart';
 import '../../application/states/exercise_media.dart';
 import '../../application/states/exercise_registration_draft.dart';
-import '../../data/models/exercise_registration_result.dart';
 import '../../data/models/trainer_linked_horse.dart';
 import '../../data/repositories/exercise_registration_repository.dart';
 import '../routes/exercise_registration_flow_route.dart';

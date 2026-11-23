@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import não utilizado do seletor de data, mantendo o
+// calendário específico do fluxo de cadastro de cavalo.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Desacoplamento da persistência e estado com HorseRegistrationController,
@@ -15,7 +20,6 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
-import 'package:horse_life/core/widgets/app_date_picker_field.dart';
 import 'package:horse_life/core/widgets/auth_header.dart';
 import 'package:horse_life/core/widgets/auth_next_button.dart';
 import 'package:horse_life/core/widgets/form_progress_indicator.dart';

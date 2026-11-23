@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Proteção do uso do contexto após leitura assíncrona, remoção de
+// método duplicado e reutilização do estado de visibilidade da barra de rolagem.
+//
 // Data: 14/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Restrição de extensões (JPEG, PNG, MP4) e limites de tamanho
@@ -48,29 +53,14 @@ const _maxVideoBytes = 50 * 1024 * 1024; // 50 MB
 const _maxImages = 10;
 const _maxVideos = 3;
 
-const _supportedImageExtensions = <String>{
-  'png',
-  'jpg',
-  'jpeg',
-};
+const _supportedImageExtensions = <String>{'png', 'jpg', 'jpeg'};
 
-const _supportedVideoExtensions = <String>{
-  'mp4',
-};
+const _supportedVideoExtensions = <String>{'mp4'};
 
 const _exerciseMediaTypeGroup = XTypeGroup(
   label: 'Imagens e vídeos',
-  extensions: [
-    'png',
-    'jpg',
-    'jpeg',
-    'mp4',
-  ],
-  mimeTypes: [
-    'image/png',
-    'image/jpeg',
-    'video/mp4',
-  ],
+  extensions: ['png', 'jpg', 'jpeg', 'mp4'],
+  mimeTypes: ['image/png', 'image/jpeg', 'video/mp4'],
 );
 
 // Abre diretamente o explorador nativo do dispositivo para seleção múltipla de
@@ -171,10 +161,12 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
       final files = await widget.filePicker();
       if (!mounted || files.isEmpty) return;
 
-      var imageCount =
-          _mediaItems.where((m) => m.type == ExerciseMediaType.image).length;
-      var videoCount =
-          _mediaItems.where((m) => m.type == ExerciseMediaType.video).length;
+      var imageCount = _mediaItems
+          .where((m) => m.type == ExerciseMediaType.image)
+          .length;
+      var videoCount = _mediaItems
+          .where((m) => m.type == ExerciseMediaType.video)
+          .length;
 
       final validEntries = <(XFile, ExerciseMediaType, int)>[];
 
@@ -192,6 +184,7 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
         }
 
         final size = await (widget.fileSizeLoader?.call(file) ?? file.length());
+        if (!mounted) return;
 
         if (mediaType == ExerciseMediaType.image) {
           if (imageCount >= _maxImages) {
@@ -265,21 +258,6 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
     } finally {
       if (mounted) setState(() => _isPicking = false);
     }
-  }
-
-  Future<ExerciseMedia> _createExerciseMedia(
-    XFile file,
-    ExerciseMediaType type,
-  ) async {
-    final size = await (widget.fileSizeLoader?.call(file) ?? file.length());
-    return ExerciseMedia(
-      name: file.name,
-      path: file.path,
-      type: type,
-      sizeInBytes: size,
-      mimeType: file.mimeType,
-      readBytes: file.readAsBytes,
-    );
   }
 
   void _removeMediaItem(int index) {
@@ -394,20 +372,18 @@ class _ExerciseMediaScreenState extends State<ExerciseMediaScreen> {
     final visibleCount = math.min(_mediaItems.length, _maximumVisibleMedia);
     final listHeight =
         visibleCount * _mediaHeight + (visibleCount - 1) * _mediaSpacing;
-    final isScrollable = _mediaItems.length > _maximumVisibleMedia;
+    final showsScrollbar = _mediaItems.length >= _maximumVisibleMedia;
 
     return SizedBox(
       key: const Key('exercise-media-list'),
       height: listHeight,
       child: Scrollbar(
         controller: _mediaScrollController,
-        thumbVisibility: _mediaItems.length >= _maximumVisibleMedia,
+        thumbVisibility: showsScrollbar,
         child: ListView.separated(
           controller: _mediaScrollController,
           primary: false,
-          padding: EdgeInsets.only(
-            right: _mediaItems.length >= _maximumVisibleMedia ? 14 : 0,
-          ),
+          padding: EdgeInsets.only(right: showsScrollbar ? 14 : 0),
           itemCount: _mediaItems.length,
           separatorBuilder: (_, _) => const SizedBox(height: _mediaSpacing),
           itemBuilder: (context, index) {

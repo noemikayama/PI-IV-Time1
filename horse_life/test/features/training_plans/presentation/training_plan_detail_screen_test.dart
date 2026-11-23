@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante e adequação da formatação dos testes
+// de visualização, edição e cancelamento do plano.
+//
 // Data: 21/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição de teste de integração navegando de TrainingPlanDetailScreen
@@ -25,7 +30,6 @@ import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/features/exercises/data/models/trainer_linked_horse.dart';
 import 'package:horse_life/features/exercises/data/repositories/trainer_linked_horse_repository.dart';
 import 'package:horse_life/features/training_plans/data/mocks/mock_training_plan_gallery.dart';
-import 'package:horse_life/features/training_plans/data/models/training_plan_detail_data.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
 import 'package:horse_life/features/training_plans/data/models/training_plan_weekday.dart';
 import 'package:horse_life/features/training_plans/data/repositories/training_plan_repository.dart';
@@ -49,7 +53,9 @@ class _SpyPlanDetailRepository extends LocalTrainingPlanRepository {
   Future<TrainingPlanDetailData> getTrainingPlan(String planId) async {
     getCalls++;
     if (failDetailFirstCall && getCalls == 1) {
-      throw const TrainingPlanDetailFailure('Falha simulada ao carregar plano.');
+      throw const TrainingPlanDetailFailure(
+        'Falha simulada ao carregar plano.',
+      );
     }
     return _currentPlan;
   }
@@ -124,7 +130,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Condicionamento para 1,00 m'), findsWidgets);
-      expect(find.byKey(const Key('edit-training-plan-button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('edit-training-plan-button')),
+        findsOneWidget,
+      );
       expect(
         find.byKey(const Key('cancel-training-plan-button')),
         findsOneWidget,
@@ -143,7 +152,9 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.byKey(const Key('training-plan-view-details-button')));
+      await tester.tap(
+        find.byKey(const Key('training-plan-view-details-button')),
+      );
       await tester.pumpAndSettle();
       expect(viewedTraining?.title, 'Trabalho de transições');
 
@@ -200,7 +211,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('edit-training-plan-button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('edit-training-plan-button')),
+        findsOneWidget,
+      );
       expect(
         find.byKey(const Key('cancel-training-plan-button')),
         findsNothing,

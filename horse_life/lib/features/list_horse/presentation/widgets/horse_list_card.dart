@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Nomeação dos parâmetros do callback de erro da imagem para atender
+// ao analisador, preservando o placeholder exibido em caso de falha.
+//
 // Data: 18/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Reorganização da camada de dados e atualização dos imports; padronização
@@ -70,7 +75,7 @@ class HorseListCard extends StatelessWidget {
                         horse.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleLarge
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 5),
                       Container(
@@ -125,10 +130,7 @@ class _DetailLine extends StatelessWidget {
     return Text.rich(
       TextSpan(
         children: <TextSpan>[
-          TextSpan(
-            text: label,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          TextSpan(text: label, style: Theme.of(context).textTheme.bodyMedium),
           TextSpan(text: value),
         ],
       ),
@@ -217,7 +219,7 @@ class _HorsePhotoPlaceholder extends StatelessWidget {
             height: 42,
             width: 42,
             color: Colors.black87,
-            errorBuilder: (_, __, ___) =>
+            errorBuilder: (context, error, stackTrace) =>
                 const Icon(Icons.pets_rounded, size: 36),
           ),
         ),
