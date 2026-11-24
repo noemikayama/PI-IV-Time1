@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Uso de matches() na seleção da galeria para compatibilizar
+// exercícios pré-selecionados carregados via detalhes do treinamento.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Desacoplamento do carregamento de cavalos vinculados e exercícios,
@@ -191,13 +196,13 @@ class _ExerciseGalleryBottomSheetState
   }
 
   bool _isExerciseSelected(TrainingExerciseItem exercise) {
-    return _selectedExercises.any((item) => item.id == exercise.id);
+    return _selectedExercises.any((item) => item.matches(exercise));
   }
 
   void _toggleExerciseSelection(TrainingExerciseItem exercise) {
     setState(() {
       final index = _selectedExercises.indexWhere(
-        (item) => item.id == exercise.id,
+        (item) => item.matches(exercise),
       );
       if (index >= 0) {
         _selectedExercises.removeAt(index);

@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Leitura opcional de codigo e descricao nos itens da galeria.
+//
 // Data: 17/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação do adapter Firebase para listagem da galeria de exercícios
@@ -77,6 +81,8 @@ final class FirebaseTrainingExerciseGalleryRepository
     final name = item['nome'];
     final rawDuration = item['duracaoPadraoMinutos'];
     final privacy = item['privacidade'];
+    final rawCode = item['codigo'] ?? item['code'];
+    final rawDescription = item['descricao'] ?? item['description'];
 
     if (id.isEmpty || name is! String || name.trim().isEmpty) {
       throw const FormatException('Dados do exercício na galeria incompletos.');
@@ -87,6 +93,18 @@ final class FirebaseTrainingExerciseGalleryRepository
       final num value => value.toInt(),
       _ => 0,
     };
+
+    final code = switch (rawCode) {
+      final int value when value > 0 => value,
+      final num value when value > 0 => value.toInt(),
+      final String value => int.tryParse(value.trim()),
+      _ => null,
+    };
+
+    final description = rawDescription is String &&
+            rawDescription.trim().isNotEmpty
+        ? rawDescription.trim()
+        : null;
 
     final exerciseType = privacy == 'ESPECIFICO'
         ? ExerciseType.specific
@@ -108,6 +126,8 @@ final class FirebaseTrainingExerciseGalleryRepository
       estimatedDurationMinutes: durationMinutes,
       exerciseType: exerciseType,
       horse: horse,
+      code: code,
+      description: description,
     );
   }
 

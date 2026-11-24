@@ -1,6 +1,11 @@
 // RESPONSÁVEL PELA ATUALIZAÇÃO: Gabriela Sichiroli Ferrari - 25013763
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição do parâmetro opcional onStartTraining em GuardianHomeContent
+// e conexão ao DailyTrainingCard para habilitar o botão Iniciar treino na Home.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos segmentos de carregamento, erro, estado vazio e
@@ -49,6 +54,7 @@ class GuardianHomeContent extends StatefulWidget {
     this.onShowAllHorses,
     this.sessionMockHorses = const [],
     this.onSelectHorse,
+    this.onStartTraining,
   });
 
   final Future<GuardianHomeData> homeFuture;
@@ -58,6 +64,7 @@ class GuardianHomeContent extends StatefulWidget {
   final VoidCallback? onShowAllHorses;
   final List<String> sessionMockHorses;
   final ValueChanged<String>? onSelectHorse;
+  final ValueChanged<GuardianTraining>? onStartTraining;
 
   @override
   State<GuardianHomeContent> createState() => _GuardianHomeContentState();
@@ -118,7 +125,10 @@ class _GuardianHomeContentState extends State<GuardianHomeContent> {
                         style: theme.textTheme.bodyLarge,
                       ),
                       const SizedBox(height: 32),
-                      DailyTrainingCard(trainings: data.todayTrainings),
+                      DailyTrainingCard(
+                        trainings: data.todayTrainings,
+                        onStart: widget.onStartTraining,
+                      ),
                       const SizedBox(height: 24),
                       if (isNarrow) ...[
                         TrainingStatsCard(

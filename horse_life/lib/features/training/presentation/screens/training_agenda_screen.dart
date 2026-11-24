@@ -2,6 +2,22 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Abertura direta de TrainingExecutionRecordScreen ao tocar no card
+// de histórico de execuções quando onViewHistory não for fornecido.
+//
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Ajuste do círculo colorido do calendário para acompanhar somente
+// o dia selecionado, inclusive quando a nova data não possui treinos; revisão
+// da documentação das fontes autoritativas fornecidas pelo backend.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Suporte aos dados diários e históricos fornecidos pelo backend,
+// atualização remota da semana e filtragem dos planos pelo dia selecionado.
+//
 // Data: 18/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Implementação da agenda semanal compartilhada entre responsável
@@ -15,6 +31,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/features/home/presentation/widgets/horse_asset_icon.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 
@@ -30,6 +48,9 @@ class TrainingAgendaScreen extends StatefulWidget {
     required this.activePlansCount,
     required this.plans,
     required this.trainings,
+    this.calendarPlans,
+    this.todayTrainings,
+    this.history,
     this.audience = TrainingAgendaAudience.guardian,
     this.initialDate,
     this.maxDayIndicators = 3,
@@ -38,6 +59,8 @@ class TrainingAgendaScreen extends StatefulWidget {
     this.onStartTraining,
     this.onViewTraining,
     this.onViewHistory,
+    this.onWeekChanged,
+    this.feedbackRepository,
     super.key,
   }) : assert(maxDayIndicators > 0);
 
@@ -49,6 +72,16 @@ class TrainingAgendaScreen extends StatefulWidget {
 
   // Treinos usados pelo calendário, carrossel diário e histórico.
   final List<TrainingAgendaEntry> trainings;
+
+  // Representações dos treinos semanais usadas na lista sob o calendário.
+  // Quando presentes, são filtradas pelo dia; quando ausentes, a tela mantém a
+  // listagem legada de planos ativos da semana.
+  final List<TrainingAgendaPlan>? calendarPlans;
+
+  // Listas autoritativas retornadas pelo backend para as seções diárias. Se não
+  // forem fornecidas, a tela as deduz de [trainings] para compatibilidade.
+  final List<TrainingAgendaEntry>? todayTrainings;
+  final List<TrainingAgendaEntry>? history;
 
   // Público atual, usado para ajustar textos e informações sensíveis.
   final TrainingAgendaAudience audience;
@@ -73,6 +106,12 @@ class TrainingAgendaScreen extends StatefulWidget {
 
   // Chamado ao selecionar uma execução no histórico.
   final TrainingAgendaEntryCallback? onViewHistory;
+
+  // Solicita ao contêiner uma nova semana após o usuário navegar no calendário.
+  final ValueChanged<DateTime>? onWeekChanged;
+
+  /// Fonte de feedback injetável para consulta e gravação do registro.
+  final TrainingFeedbackRepository? feedbackRepository;
 
   @override
   State<TrainingAgendaScreen> createState() => _TrainingAgendaScreenState();
@@ -142,6 +181,7 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
       _trainingPage = 0;
     });
     _resetTrainingPage();
+    widget.onWeekChanged?.call(_selectedDate);
   }
 
   // Seleciona um dia do calendário e reinicia o carrossel diário.
@@ -238,13 +278,22 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
               !_dateOnly(training.date).isAfter(lastDay),
         )
         .toList(growable: false);
-    final weekPlans = widget.plans
-        .where(
-          (plan) =>
-              !_dateOnly(plan.date).isBefore(firstDay) &&
-              !_dateOnly(plan.date).isAfter(lastDay),
-        )
-        .toList(growable: false);
+    // A API conectada fornece representações por dia; a API legada fornece
+    // planos ativos e, por isso, mantém o filtro pelos limites da semana.
+    final weekPlans = widget.calendarPlans != null
+        ? widget.calendarPlans!
+              .where((plan) => _sameDay(plan.date, _selectedDate))
+              .toList(growable: false)
+        : widget.plans
+              .where(
+                (plan) =>
+                    !_dateOnly(plan.date).isBefore(firstDay) &&
+                    !_dateOnly(plan.date).isAfter(lastDay),
+              )
+              .toList(growable: false);
+    final showEmptyState = widget.calendarPlans != null
+        ? weekPlans.isEmpty
+        : weekTrainings.isEmpty;
     return _AgendaSection(
       child: Column(
         children: [
@@ -290,7 +339,7 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
                 )
                 .toList(growable: false),
           ),
-          if (weekTrainings.isEmpty) ...[
+          if (showEmptyState) ...[
             const SizedBox(height: 18),
             _AgendaEmptyCard(
               icon: Icons.event_busy_outlined,
@@ -315,7 +364,7 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
 
   // Monta o treino do dia, o carrossel ou o estado vazio correspondente.
   Widget _buildDailyTrainings(BuildContext context) {
-    final trainings = _selectedTrainings;
+    final trainings = widget.todayTrainings ?? _selectedTrainings;
     final allCompleted =
         trainings.isNotEmpty &&
         trainings.every((training) => training.wasExecuted);
@@ -374,9 +423,19 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
     );
   }
 
+  void _openExecutionRecord(BuildContext context, TrainingAgendaEntry entry) {
+    Navigator.of(context).push<dynamic>(
+      TrainingFeedbackRoute.fromAgenda(
+        entry: entry,
+        audience: widget.audience,
+        repository: widget.feedbackRepository,
+      ),
+    );
+  }
+
   // Monta as execuções do dia ou a orientação adequada ao público atual.
   Widget _buildHistory(BuildContext context) {
-    final history = _selectedHistory;
+    final history = widget.history ?? _selectedHistory;
     return _AgendaSection(
       title: 'Histórico de execuções',
       child: history.isEmpty
@@ -396,9 +455,13 @@ class _TrainingAgendaScreenState extends State<TrainingAgendaScreen> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _HistoryCard(
                         training: training,
-                        onTap: widget.onViewHistory == null
-                            ? null
-                            : () => widget.onViewHistory!(training),
+                        onTap: () {
+                          if (widget.onViewHistory != null) {
+                            widget.onViewHistory!(training);
+                          } else {
+                            _openExecutionRecord(context, training);
+                          }
+                        },
                       ),
                     ),
                   )
@@ -617,7 +680,7 @@ class _AgendaSection extends StatelessWidget {
   }
 }
 
-// Dia selecionável do calendário com cor de estado e indicadores de treinos.
+// Dia selecionável do calendário com destaque de seleção e indicadores.
 class _CalendarDay extends StatelessWidget {
   const _CalendarDay({
     required this.date,
@@ -638,8 +701,8 @@ class _CalendarDay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _dayStatusColor(trainings);
-    final background = statusColor?.withValues(alpha: selected ? 1 : 0.5);
-    final foreground = selected && background != null
+    final background = selected ? statusColor ?? AppColors.tropicalTeal : null;
+    final foreground = background != null
         ? _contrastingColor(background)
         : AppColors.text;
     final visibleIndicators = math.min(trainings.length, maxIndicators);

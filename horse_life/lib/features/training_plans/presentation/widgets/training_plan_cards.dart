@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Extensão do SelectedDayTrainingCard para suportar exibição de
+// descrição e botão opcional "Ver detalhes" na visualização do plano.
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Criação dos cards de seção por dia da semana, card de treinamento
@@ -117,45 +122,89 @@ class TrainingPlanWeekdaySectionCard extends StatelessWidget {
   }
 }
 
-/// Card interno com resumo do treinamento selecionado (título, duração, lista
-/// de exercícios e botão opcional de remoção).
+/// Card interno com resumo do treinamento selecionado (título, duração,
+/// descrição opcional, lista de exercícios e botões opcionais de remoção ou
+/// visualização de detalhes).
 class SelectedDayTrainingCard extends StatelessWidget {
   const SelectedDayTrainingCard({
     required this.training,
     this.removeKey,
     this.onRemove,
+    this.showDescription = false,
+    this.onViewDetails,
+    this.viewDetailsKey,
     super.key,
   });
 
   final TrainingPlanGalleryItem training;
   final Key? removeKey;
   final VoidCallback? onRemove;
+  final bool showDescription;
+  final VoidCallback? onViewDetails;
+  final Key? viewDetailsKey;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 12, 16),
+      padding: EdgeInsets.fromLTRB(18, 14, onRemove != null ? 12 : 18, 16),
       decoration: const BoxDecoration(
         color: AppColors.whiteSmoke,
         borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: _TrainingMetadataColumn(training: training),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _TrainingMetadataColumn(
+                  training: training,
+                  showDescription: showDescription,
+                ),
+              ),
+              if (onRemove != null)
+                IconButton(
+                  key: removeKey,
+                  onPressed: onRemove,
+                  tooltip: 'Remover ${training.title}',
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: AppColors.error,
+                    size: 26,
+                  ),
+                ),
+            ],
           ),
-          if (onRemove != null)
-            IconButton(
-              key: removeKey,
-              onPressed: onRemove,
-              tooltip: 'Remover ${training.title}',
-              icon: const Icon(
-                Icons.delete_rounded,
-                color: AppColors.error,
-                size: 26,
+          if (onViewDetails != null) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: OutlinedButton(
+                key: viewDetailsKey,
+                onPressed: onViewDetails,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.seaGreen,
+                  side: const BorderSide(
+                    color: AppColors.seaGreen,
+                    width: 1.8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.seaGreen,
+                  ),
+                ),
+                child: const Text('Ver detalhes'),
               ),
             ),
+          ],
         ],
       ),
     );
@@ -214,9 +263,13 @@ class GalleryTrainingSelectableCard extends StatelessWidget {
 }
 
 class _TrainingMetadataColumn extends StatelessWidget {
-  const _TrainingMetadataColumn({required this.training});
+  const _TrainingMetadataColumn({
+    required this.training,
+    this.showDescription = false,
+  });
 
   final TrainingPlanGalleryItem training;
+  final bool showDescription;
 
   @override
   Widget build(BuildContext context) {
@@ -233,6 +286,7 @@ class _TrainingMetadataColumn extends StatelessWidget {
       color: AppColors.text,
       height: 1.32,
     );
+    final trimmedDescription = training.description?.trim() ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,6 +309,22 @@ class _TrainingMetadataColumn extends StatelessWidget {
             ],
           ),
         ),
+        if (showDescription) ...[
+          const SizedBox(height: 2),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(text: 'Descrição: ', style: labelStyle),
+                TextSpan(
+                  text: trimmedDescription.isNotEmpty
+                      ? trimmedDescription
+                      : 'Não informada',
+                  style: valueStyle,
+                ),
+              ],
+            ),
+          ),
+        ],
         const Divider(color: AppColors.grey, height: 18, thickness: 0.8),
         Text('Exercícios selecionados:', style: labelStyle),
         const SizedBox(height: 4),

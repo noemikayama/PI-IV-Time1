@@ -2,6 +2,15 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão de padding configurável para propagar ajustes visuais a
+// seções específicas sem modificar os demais cards compartilhados da Home.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ajuste da tipografia do botão "Mostrar tudo" para labelMedium conforme o tema.
+//
 // Data: 18/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Padronização dos componentes da Home e dos estados simulados.
@@ -23,12 +32,14 @@ class HomeSectionCard extends StatelessWidget {
   final String title;
   final Widget child;
   final VoidCallback? onShowAll;
+  final EdgeInsetsGeometry padding;
 
   const HomeSectionCard({
     super.key,
     required this.title,
     required this.child,
     this.onShowAll,
+    this.padding = const EdgeInsets.all(20),
   });
 
   @override
@@ -37,7 +48,7 @@ class HomeSectionCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: padding,
       decoration: BoxDecoration(
         color: AppColors.blueSpruce,
         borderRadius: BorderRadius.circular(24),
@@ -62,8 +73,14 @@ class HomeSectionCard extends StatelessWidget {
                   onPressed: onShowAll,
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.white,
+                    textStyle: theme.textTheme.labelMedium,
                   ),
-                  child: const Text('Mostrar tudo'),
+                  child: Text(
+                    'Mostrar tudo',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
             ],
           ),

@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura da abertura da listagem de cavalos pelo botão
+// "Mostrar tudo" do perfil do responsável.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Revisão da documentação dos cenários de carregamento, edição,
@@ -220,6 +225,33 @@ void main() {
 
     expect(find.text('Meu perfil'), findsOneWidget);
     expect(find.text('Ana Silva'), findsOneWidget);
+  });
+
+  testWidgets('opens the horse list from the guardian profile', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: GuardianHomeScreen(
+          loader: _GuardianHomeLoader(),
+          guardianProfileLoader: () async => const GuardianProfileData(
+            name: 'Ana Silva',
+            email: 'ana@email.com',
+            horses: [],
+          ),
+          horseListBuilder: (_) =>
+              const Scaffold(body: Text('Listagem completa de cavalos')),
+          onLogout: () async {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Perfil'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mostrar tudo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Listagem completa de cavalos'), findsOneWidget);
   });
 
   testWidgets(

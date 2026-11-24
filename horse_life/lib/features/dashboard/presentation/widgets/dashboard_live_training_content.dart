@@ -2,6 +2,21 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão dos botões "Ver feedback" e "Mostrar tudo" da seção
+// Últimos Feedbacks à tela do registro de execução e à agenda de treinos.
+//
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Integração do botão "Ver treino" dos registros recentes com a
+// tela de detalhes por meio do registro retornado pelo dashboard.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Readequação da altura dos cards para 326px (métricas em 155px),
+// tornando-os mais quadrados, eliminando overflow e acomodando o donut expandido.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do callback onShowAllTrainings para navegação da lista de
@@ -23,6 +38,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
+import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 import '../../data/models/dashboard_response.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import 'dashboard_filters.dart';
@@ -75,6 +93,36 @@ class _DashboardLiveTrainingContentState
 
   void _reload() {
     setState(_fetch);
+  }
+
+  /// Abre a tela de visualização do treinamento a partir do registro do backend.
+  ///
+  /// O identificador do registro é repassado para a [TrainingDetailScreen] e
+  /// resolvido pelo repositório até o código correspondente cadastrado.
+  Future<void> _openTraining(Map<String, dynamic> training) async {
+    final recordId = training['registroId']?.toString().trim() ?? '';
+    if (recordId.isEmpty) return;
+    await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (_) => TrainingDetailScreen(trainingCode: recordId),
+      ),
+    );
+  }
+
+  /// Abre a tela de registro da execução e feedbacks associados ao treino.
+  ///
+  /// Utiliza a rota [TrainingFeedbackRoute.forRecord] para consultar os detalhes
+  /// do feedback persistido com o público de responsável ([TrainingAgendaAudience.guardian]).
+  Future<void> _openFeedback(Map<String, dynamic> feedback) async {
+    final recordId =
+        (feedback['registroId'] ?? feedback['id'])?.toString().trim() ?? '';
+    if (recordId.isEmpty) return;
+    await Navigator.of(context).push<dynamic>(
+      TrainingFeedbackRoute.forRecord(
+        recordId: recordId,
+        audience: TrainingAgendaAudience.guardian,
+      ),
+    );
   }
 
   @override
@@ -142,7 +190,7 @@ class _DashboardLiveTrainingContentState
           else ...[
             LayoutBuilder(
               builder: (context, constraints) {
-                const gap = 18.0;
+                const gap = 16.0;
                 final width = (constraints.maxWidth - gap) / 2;
                 final train = data.section('treinosRealizados');
                 final comp = data.section('cumprimentoTreinos');
@@ -152,7 +200,7 @@ class _DashboardLiveTrainingContentState
                   children: [
                     SizedBox(
                       width: width,
-                      height: 478,
+                      height: 326,
                       child: DashboardTrainingCard(
                         completedPercent: DashboardResponse.numeric(
                           train,
@@ -176,16 +224,18 @@ class _DashboardLiveTrainingContentState
                             title: 'Percentual de cumprimento dos treinos',
                             value:
                                 '${DashboardResponse.numeric(comp, 'percentual').round()}%',
+                            height: 155,
                             gradient: const [
                               AppColors.goldenApricot,
                               Color(0xFFFFC488),
                             ],
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 16),
                           DashboardMetricCard(
                             title: 'Frequência de execução dos treinos',
                             value:
                                 '${DashboardResponse.numeric(freq, 'percentual').round()}%',
+                            height: 155,
                             gradient: const [
                               AppColors.tropicalTeal,
                               AppColors.prussianBlue,
@@ -203,6 +253,7 @@ class _DashboardLiveTrainingContentState
               title: 'Últimos treinos',
               liveTrainings: data.trainings,
               onShowAll: widget.onShowAllTrainings,
+              onItemTap: _openTraining,
             ),
             if (data.role == 'RESPONSAVEL') ...[
               const SizedBox(height: 22),
@@ -210,6 +261,8 @@ class _DashboardLiveTrainingContentState
                 title: 'Últimos Feedbacks',
                 feedback: true,
                 liveFeedbacks: data.feedbacks,
+                onShowAll: widget.onShowAllTrainings,
+                onItemTap: _openFeedback,
               ),
             ],
           ],

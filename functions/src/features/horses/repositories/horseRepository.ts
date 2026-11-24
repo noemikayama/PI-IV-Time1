@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: _id dos cavalos ativos vinculados a uma pessoa, usados pelo
+// acesso ao exercício.
+//
 // Data: 01/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Microchip repetido na edição vira 'already-exists'; nome e
@@ -139,6 +144,32 @@ export async function findTrainerListHorses(
     "situacaoCadastral": "ATIVO",
     "treinadores._id": uid,
   });
+}
+
+/** Busca os _id dos cavalos ativos em que a pessoa é proprietária, atleta
+ * ou treinadora, que são os vínculos que dão acesso aos exercícios do
+ * cavalo. Usa idx_cavalos_proprietario, idx_cavalos_atleta e
+ * idx_cavalos_treinadores.
+ * @param {string} uid UID do responsável ou do treinador.
+ * @return {Promise<ObjectId[]>} _id dos cavalos vinculados.
+ */
+export async function findLinkedHorseIds(uid: string): Promise<ObjectId[]> {
+  const db = await getDatabase();
+  const horses = await db
+    .collection<HorseDocument>(COLLECTIONS.Cavalos)
+    .find(
+      {
+        "situacaoCadastral": "ATIVO",
+        "$or": [
+          {"proprietario._id": uid},
+          {"atleta._id": uid},
+          {"treinadores._id": uid},
+        ],
+      },
+      {projection: {_id: 1}}
+    )
+    .toArray();
+  return horses.map((horse) => horse._id);
 }
 
 /** Lê os campos da lista, trazendo só a primeira imagem.

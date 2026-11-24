@@ -2,6 +2,17 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Verificação da abertura de TrainingDetailScreen para perfil de
+// responsável proprietário sem permissão de execução de treinos.
+//
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Inclusão do teste de regressão que verifica a transferência do
+// círculo colorido para o novo dia selecionado no calendário e documentação do
+// cenário e da inspeção visual usada na asserção.
+//
 // Data: 18/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Cobertura da agenda semanal, estados vazios, perfis de acesso,
@@ -20,6 +31,7 @@ import 'package:horse_life/features/home/presentation/screens/trainer/trainer_ho
 import 'package:horse_life/features/profile/data/models/guardian_profile_data.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 
 void main() {
   // Data fixa que torna previsíveis a semana, os rótulos e as chaves dos dias.
@@ -194,6 +206,47 @@ void main() {
     expect(find.text('dezembro 2026'), findsOneWidget);
   });
 
+  // Reproduz a seleção de um dia vazio após um dia com treino e inspeciona o
+  // preenchimento real dos círculos, não apenas o estado semântico do widget.
+  testWidgets('moves the colored date circle to the selected day', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildAgenda(
+        trainings: [
+          entry(
+            id: 'planejado',
+            horse: 'Trovão',
+            status: TrainingAgendaStatus.planned,
+            action: TrainingAgendaAction.start,
+          ),
+        ],
+      ),
+    );
+
+    // Lê a cor do AnimatedContainer pertencente à chave estável de cada dia.
+    Color? dateCircleColor(String dateKey) {
+      final day = find.byKey(ValueKey<String>(dateKey));
+      final circle = find.descendant(
+        of: day,
+        matching: find.byType(AnimatedContainer),
+      );
+      final decoration = tester.widget<AnimatedContainer>(circle).decoration;
+      return (decoration as BoxDecoration).color;
+    }
+
+    expect(dateCircleColor('agenda-day-2026-11-18'), isNotNull);
+    expect(dateCircleColor('agenda-day-2026-11-19'), isNull);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('agenda-day-2026-11-19')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(dateCircleColor('agenda-day-2026-11-18'), isNull);
+    expect(dateCircleColor('agenda-day-2026-11-19'), isNotNull);
+  });
+
   testWidgets('shows all empty states and renders exactly one week', (
     tester,
   ) async {
@@ -330,6 +383,10 @@ void main() {
       await tester.drag(find.byType(PageView), const Offset(-500, 0));
       await tester.pumpAndSettle();
       expect(find.text('Ver treino'), findsOneWidget);
+
+      await tester.tap(find.text('Ver treino'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TrainingDetailScreen), findsOneWidget);
     },
   );
 
@@ -372,6 +429,15 @@ void main() {
     expect(find.text('Plano de treinos'), findsOneWidget);
     expect(find.text('Treinamento'), findsOneWidget);
     expect(find.text('Exercício'), findsOneWidget);
+
+    // Garante que o menu expansível permanece alinhado à direita junto ao FAB
+    // sem deslocamento nem recorte para fora da borda esquerda da tela.
+    final fabRect = tester.getRect(find.byKey(const Key('trainer-agenda-fab')));
+    final optionsRect = tester.getRect(
+      find.byKey(const Key('trainer-agenda-fab-options')),
+    );
+    expect(optionsRect.left, greaterThanOrEqualTo(0));
+    expect((optionsRect.right - fabRect.right).abs(), lessThan(1.0));
 
     await tester.tap(find.byKey(const Key('trainer-agenda-create-plan')));
     await tester.pumpAndSettle();

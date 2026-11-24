@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Mapeamento do período e treino diário do plano ativo, além da ação
+// de execução calculada pelo backend para o perfil consultado.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação dos contratos, mapeamentos e fluxos de perfil,
@@ -422,6 +427,7 @@ HorseProfileData mapHorseProfile(Map<String, dynamic> json) {
         )
         .toList(growable: false),
     responsibilities: _textList(json['responsabilidades']),
+    trainingAction: _trainingAction(_map(json['permissoes'])['acaoTreino']),
   );
 }
 
@@ -459,14 +465,47 @@ HorseProfileModality? _optionalModality(dynamic value) {
   );
 }
 
+// Converte o plano e preserva a ausência legítima de período ou treino diário.
 HorseProfilePlan? _optionalPlan(dynamic value) {
   if (value == null) return null;
   final json = _map(value);
+  final today = _map(json['treinoDoDia']);
+  final training = _map(today['treino']);
   return HorseProfilePlan(
     id: _requiredText(json['id'], 'id do plano'),
     title: _requiredText(json['titulo'], 'título do plano'),
+    startDate: DateTime.tryParse(_text(json['dataInicio'])),
+    endDate: DateTime.tryParse(_text(json['dataFim'])),
+    todayTraining: training.isEmpty
+        ? null
+        : HorseProfileDayTraining(
+            recordId: _requiredText(
+              training['registroId'],
+              'registro do treino do dia',
+            ),
+            name: _requiredText(
+              training['nomeTreino'],
+              'nome do treino do dia',
+            ),
+            planName: _requiredText(training['nomePlano'], 'nome do plano'),
+            durationMinutes: _integer(training['duracaoMinutos']),
+            personRole: _text(_map(training['pessoa'])['papel']),
+            personName: _text(_map(training['pessoa'])['nome']),
+            status: _requiredText(
+              training['status'],
+              'status do treino do dia',
+            ),
+          ),
   );
 }
+
+// Traduz somente as ações públicas do contrato; valores novos ficam seguros.
+HorseProfileTrainingAction _trainingAction(dynamic value) =>
+    switch (_text(value)) {
+      'INICIAR' => HorseProfileTrainingAction.start,
+      'VER' => HorseProfileTrainingAction.view,
+      _ => HorseProfileTrainingAction.none,
+    };
 
 Map<String, dynamic> _map(dynamic value) =>
     value is Map ? Map<String, dynamic>.from(value) : const {};

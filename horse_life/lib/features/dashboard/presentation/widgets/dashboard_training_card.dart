@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Readequação do layout interno e altura do donut (116px) para evitar
+// estouro de tamanho (overflow) e preencher melhor a largura do card.
+//
 // Data: 29/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Card de treinos realizados com donut modular.
@@ -37,7 +42,7 @@ class DashboardTrainingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+    padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(24),
       gradient: const LinearGradient(
@@ -54,9 +59,9 @@ class DashboardTrainingCard extends StatelessWidget {
           child: Text(
             'Treinos\nrealizados',
             style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
-              height: 1.0,
+              height: 1.05,
               letterSpacing: 0,
               color: Colors.white,
             ),
@@ -65,18 +70,22 @@ class DashboardTrainingCard extends StatelessWidget {
         const SizedBox(height: 10),
         Expanded(
           child: Container(
-            padding: const EdgeInsets.fromLTRB(9, 12, 9, 12),
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
             decoration: BoxDecoration(
               color: AppColors.whiteSmoke,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Column(
               children: [
-                DashboardDonutChart(
-                  completedPercent: completedPercent,
-                  partialPercent: partialPercent,
+                const SizedBox(height: 2),
+                SizedBox(
+                  height: 116,
+                  child: DashboardDonutChart(
+                    completedPercent: completedPercent,
+                    partialPercent: partialPercent,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 _legend(AppColors.pearlAqua, 'Realizados'),
                 _legend(AppColors.blueSpruce, 'Parciais'),
                 const Spacer(),
@@ -87,12 +96,12 @@ class DashboardTrainingCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Padding(
-                        padding: EdgeInsets.only(bottom: 5),
+                        padding: EdgeInsets.only(bottom: 4),
                         child: Text(
                           'total: ',
                           style: TextStyle(
                             fontFamily: 'Urbanist',
-                            fontSize: 19,
+                            fontSize: 18,
                             height: 1,
                           ),
                         ),
@@ -101,7 +110,7 @@ class DashboardTrainingCard extends StatelessWidget {
                         '$total',
                         style: const TextStyle(
                           fontFamily: 'Urbanist',
-                          fontSize: 54,
+                          fontSize: 42,
                           height: 1,
                         ),
                       ),
@@ -117,11 +126,11 @@ class DashboardTrainingCard extends StatelessWidget {
   );
 
   Widget _legend(Color color, String text) => Padding(
-    padding: const EdgeInsets.only(top: 5),
+    padding: const EdgeInsets.only(top: 3),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(width: 13, height: 13, color: color),
+        Container(width: 10, height: 10, color: color),
         const SizedBox(width: 6),
         Flexible(
           child: Text(

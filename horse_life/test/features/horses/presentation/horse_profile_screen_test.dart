@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Cobertura do treino diário por perfil, abertura da execução pelo
+// atleta, quebra de linha do plano ativo e navegação para cadastrar um plano.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação e cobertura das permissões por usuário, chamada de
@@ -29,8 +34,48 @@ import 'package:horse_life/features/horses/data/repositories/horse_profile_repos
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_edit_screen.dart';
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import 'package:horse_life/features/horses/presentation/services/horse_image_selection_service.dart';
+import 'package:horse_life/features/training/data/models/training_completion_data.dart';
+import 'package:horse_life/features/training/data/models/training_execution_data.dart';
+import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
+import 'package:horse_life/features/training/presentation/screens/active_training_screen.dart';
+import 'package:horse_life/features/training_plans/presentation/screens/training_plan_title_screen.dart';
 
 void main() {
+  // Usa a menor largura suportada para transformar o overflow em regressão.
+  testWidgets('quebra o nome longo do plano ativo sem overflow', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final plan = HorseProfilePlan(
+      id: 'plan-1',
+      title:
+          'Plano de condicionamento físico avançado para competições nacionais',
+      startDate: DateTime(2026, 11, 1),
+      endDate: DateTime(2026, 11, 30),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HorseProfileScreen(
+          horseId: 'horse-1',
+          repository: _FakeRepository(_horse(currentPlan: plan)),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(NestedScrollView), const Offset(0, -420));
+    await tester.pumpAndSettle();
+
+    final planLink = find.byKey(const Key('horse-current-plan-link'));
+    expect(planLink, findsOneWidget);
+    await tester.ensureVisible(planLink);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining(plan.title), findsOneWidget);
+  });
+
   testWidgets('mostra dados e edição para o proprietário', (tester) async {
     await tester.binding.setSurfaceSize(const Size(800, 1400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -244,6 +289,130 @@ void main() {
     );
   }
 
+  // Exercita as três perspectivas que recebem ações distintas no treino diário.
+  for (final scenario in const [
+    (
+      name: 'atleta com permissão remota desatualizada',
+      responsibility: 'ATLETA',
+      action: HorseProfileTrainingAction.view,
+      personRole: 'TREINADOR',
+      personName: 'Carlos',
+      button: 'Iniciar treino',
+      isTrainer: false,
+    ),
+    (
+      name: 'proprietário',
+      responsibility: 'PROPRIETARIO',
+      action: HorseProfileTrainingAction.view,
+      personRole: 'TREINADOR',
+      personName: 'Carlos',
+      button: 'Ver treino',
+      isTrainer: false,
+    ),
+    (
+      name: 'treinador',
+      responsibility: '',
+      action: HorseProfileTrainingAction.view,
+      personRole: 'ATLETA',
+      personName: 'Beatriz',
+      button: 'Ver treino',
+      isTrainer: true,
+    ),
+  ]) {
+    testWidgets('mostra o treino do dia para ${scenario.name}', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final plan = HorseProfilePlan(
+        id: 'plan-1',
+        title: 'Plano A',
+        startDate: DateTime(2026, 11, 1),
+        endDate: DateTime(2026, 11, 30),
+        todayTraining: HorseProfileDayTraining(
+          recordId: 'record-1',
+          name: 'Trabalho de transições',
+          planName: 'Plano A',
+          durationMinutes: 45,
+          personRole: scenario.personRole,
+          personName: scenario.personName,
+          status: 'PLANEJADO',
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: HorseProfileScreen(
+            horseId: 'horse-1',
+            isTrainer: scenario.isTrainer,
+            repository: _FakeRepository(
+              _horse(
+                responsibilities: scenario.responsibility.isEmpty
+                    ? const []
+                    : [scenario.responsibility],
+                currentPlan: plan,
+                trainingAction: scenario.action,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Plano atual'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('horse-today-training-card')),
+        findsOneWidget,
+      );
+      expect(find.text('Trabalho de transições'), findsOneWidget);
+      expect(find.text(scenario.personName), findsOneWidget);
+      expect(find.text(scenario.button), findsOneWidget);
+    });
+  }
+
+  // Confirma o atalho do atleta até a execução sem passar pela tela consultiva.
+  testWidgets('atleta inicia o treino diretamente pelo perfil', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final plan = HorseProfilePlan(
+      id: 'plan-1',
+      title: 'Plano A',
+      startDate: DateTime(2026, 11, 1),
+      endDate: DateTime(2026, 11, 30),
+      todayTraining: const HorseProfileDayTraining(
+        recordId: 'record-1',
+        name: 'Trabalho de transições',
+        planName: 'Plano A',
+        durationMinutes: 45,
+        personRole: 'TREINADOR',
+        personName: 'Carlos',
+        status: 'PLANEJADO',
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: HorseProfileScreen(
+          horseId: 'horse-1',
+          repository: _FakeRepository(
+            _horse(
+              responsibilities: const ['ATLETA'],
+              currentPlan: plan,
+              trainingAction: HorseProfileTrainingAction.start,
+            ),
+          ),
+          trainingLoader: const _FakeTodayTrainingLoader(),
+          completionSubmitter: const _FakeTrainingSubmitter(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Plano atual'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Iniciar treino'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ActiveTrainingScreen), findsOneWidget);
+    expect(find.text('Ver informações do treino'), findsOneWidget);
+  });
+
   testWidgets('mostra ações de plano e avaliação somente para treinador', (
     tester,
   ) async {
@@ -273,8 +442,12 @@ void main() {
     expect(addPlan, findsOneWidget);
     expect(find.text('Adicionar plano'), findsOneWidget);
     await tester.tap(find.text('Adicionar plano'));
-    await tester.pump();
-    expect(find.byKey(const Key('horse-plan-empty-state')), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(TrainingPlanTitleScreen), findsOneWidget);
+    expect(find.text('Título do plano'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Avaliações'));
     await tester.pumpAndSettle();
@@ -882,6 +1055,8 @@ HorseProfileData _horse({
   List<HorseProfileImage> images = const [],
   List<String> physicalLimitations = const [],
   List<HorseInjuryRecord> injuries = const [],
+  HorseProfilePlan? currentPlan,
+  HorseProfileTrainingAction trainingAction = HorseProfileTrainingAction.none,
 }) => HorseProfileData(
   id: 'horse-1',
   microchip: '123123456789012',
@@ -899,7 +1074,37 @@ HorseProfileData _horse({
   owner: const HorseProfilePerson(id: 'owner-1', name: 'Ana'),
   athlete: athlete,
   trainers: trainers,
-  currentPlan: null,
+  currentPlan: currentPlan,
   evaluations: const [],
   responsibilities: responsibilities,
+  trainingAction: trainingAction,
 );
+
+// Carrega uma execução mínima sem acessar as três callables de produção.
+class _FakeTodayTrainingLoader implements TrainingExecutionLoader {
+  const _FakeTodayTrainingLoader();
+
+  @override
+  Future<TrainingExecutionData> fetchTraining(
+    TrainingExecutionReference reference,
+  ) async => TrainingExecutionData(
+    recordId: reference.recordId,
+    title: reference.title,
+    durationMinutes: reference.durationMinutes,
+    description: 'Treino carregado diretamente pelo perfil.',
+    guidelines: const [],
+    exercises: const [],
+    isFinished: false,
+    canStart: true,
+  );
+}
+
+// Satisfaz a dependência da execução ativa sem enviar registros ao Firebase.
+class _FakeTrainingSubmitter implements TrainingCompletionSubmitter {
+  const _FakeTrainingSubmitter();
+
+  @override
+  Future<TrainingCompletionResult> submit(
+    TrainingCompletionInput input,
+  ) async => const TrainingCompletionResult(status: 'REALIZADO');
+}

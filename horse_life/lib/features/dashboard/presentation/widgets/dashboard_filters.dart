@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte à exibição opcional do seletor de cavalo para reuso
+// do filtro em painéis exclusivos de período (como o painel profissional).
+//
 // Data: 29/10/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Modularização do Dashboard Guardian e preparação para dados da Cloud Function.
@@ -19,16 +24,19 @@ import 'package:horse_life/app/theme/app_colors.dart';
 class DashboardFilters extends StatelessWidget {
   const DashboardFilters({
     super.key,
-    required this.horse,
+    this.horse = 'Todos',
     required this.period,
-    required this.horses,
+    this.horses = const ['Todos'],
     required this.periods,
-    required this.onHorseChanged,
+    this.onHorseChanged,
     required this.onPeriodChanged,
+    this.showHorse = true,
   });
   final String horse, period;
   final List<String> horses, periods;
-  final ValueChanged<String> onHorseChanged, onPeriodChanged;
+  final ValueChanged<String>? onHorseChanged;
+  final ValueChanged<String> onPeriodChanged;
+  final bool showHorse;
 
   void _show(BuildContext context, {required bool selectHorse}) {
     final options = selectHorse ? horses : periods;
@@ -103,7 +111,7 @@ class DashboardFilters extends StatelessWidget {
                           ),
                           onTap: () {
                             if (selectHorse) {
-                              onHorseChanged(option);
+                              onHorseChanged?.call(option);
                             } else {
                               onPeriodChanged(option);
                             }
@@ -150,12 +158,13 @@ class DashboardFilters extends StatelessWidget {
     spacing: 10,
     runSpacing: 9,
     children: [
-      _chip(
-        context,
-        Icons.filter_alt_outlined,
-        horse,
-        () => _show(context, selectHorse: true),
-      ),
+      if (showHorse)
+        _chip(
+          context,
+          Icons.filter_alt_outlined,
+          horse,
+          () => _show(context, selectHorse: true),
+        ),
       _chip(
         context,
         Icons.hourglass_empty,

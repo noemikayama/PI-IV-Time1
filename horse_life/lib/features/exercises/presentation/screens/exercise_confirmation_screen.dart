@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante do resultado de cadastro utilizado
+// na confirmação do exercício.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Propagação de ExerciseRegistrationResult completo via
+// onExerciseCreatedWithResult após conclusão do cadastro.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Propagação do identificador real do exercício criado via
@@ -232,10 +242,10 @@ class _ExerciseConfirmationScreenState
     final controller = widget.registrationController;
     setState(() => _isSubmitting = true);
     try {
-      String? createdExerciseId;
+      ExerciseRegistrationResult? createdResult;
       if (controller != null) {
         final result = await controller.registerExercise(draft: updatedDraft);
-        createdExerciseId = result.id;
+        createdResult = result;
         if (!mounted) return;
         if (result.hasMediaWarning) {
           AppSnackBar.show(
@@ -247,7 +257,7 @@ class _ExerciseConfirmationScreenState
         }
       }
       if (!mounted) return;
-      _finishRegistration(updatedDraft, createdExerciseId);
+      _finishRegistration(updatedDraft, createdResult);
     } on ExerciseRegistrationFailure catch (error) {
       if (!mounted) return;
       _showError(error.message);
@@ -272,13 +282,17 @@ class _ExerciseConfirmationScreenState
 
   void _finishRegistration([
     ExerciseRegistrationDraft? createdDraft,
-    String? createdExerciseId,
+    ExerciseRegistrationResult? createdResult,
   ]) {
     if (createdDraft != null) {
       widget.registrationController?.onExerciseCreated?.call(createdDraft);
       widget.registrationController?.onExerciseCreatedWithId?.call(
         createdDraft,
-        createdExerciseId,
+        createdResult?.id,
+      );
+      widget.registrationController?.onExerciseCreatedWithResult?.call(
+        createdDraft,
+        createdResult,
       );
     }
 

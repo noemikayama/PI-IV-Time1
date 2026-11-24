@@ -1,6 +1,11 @@
 // RESPONSÁVEL: Noemi Kayama - 25004140
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Enriquecimento dos cavalos vinculados com os dados de getHorseProfile
+// para disponibilizar a foto real nos cards do perfil do responsável.
+//
 // Data: 15/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Documentação das fronteiras de domínio, adaptador de Functions,
@@ -53,6 +58,9 @@ abstract interface class GuardianProfileRemoteDataSource {
   /// Retorna a resposta bruta da callable de consulta.
   Future<Object?> getGuardianProfile();
 
+  /// Retorna os dados completos de um cavalo vinculado ao perfil.
+  Future<Object?> getHorse(String id);
+
   /// Retorna a resposta bruta da callable de atualização.
   Future<Object?> updateGuardianProfile(Map<String, String> input);
 }
@@ -71,6 +79,14 @@ final class FirebaseGuardianProfileRemoteDataSource
     final response = await _functions
         .httpsCallable('getGuardianProfile')
         .call<Object?>(const <String, dynamic>{});
+    return response.data;
+  }
+
+  @override
+  Future<Object?> getHorse(String id) async {
+    final response = await _functions
+        .httpsCallable('getHorseProfile')
+        .call<Object?>(<String, dynamic>{'id': id});
     return response.data;
   }
 
@@ -99,7 +115,17 @@ class FirebaseGuardianProfileRepository implements GuardianProfileRepository {
     if (response is! Map) {
       throw const FormatException('Resposta inválida da Cloud Function.');
     }
-    return mapGuardianProfile(Map<String, dynamic>.from(response));
+    final profile = Map<String, dynamic>.from(response);
+    final enrichedProfile = await enrichGuardianProfileHorses(profile, (
+      id,
+    ) async {
+      final horse = await _remote.getHorse(id);
+      if (horse is! Map) {
+        throw const FormatException('Resposta de cavalo inválida.');
+      }
+      return Map<String, dynamic>.from(horse);
+    });
+    return mapGuardianProfile(enrichedProfile);
   }
 
   // --- Atualização e validação da resposta ----------------------------------
@@ -126,6 +152,26 @@ class FirebaseGuardianProfileRepository implements GuardianProfileRepository {
     }
     return GuardianProfileUpdate(name: name, updatedAt: updatedAt);
   }
+}
+
+/// Carrega os dados completos dos cavalos resumidos pelo perfil.
+///
+/// Referências sem identificador são preservadas para que um registro antigo
+/// não impeça a exibição dos demais vínculos válidos.
+Future<Map<String, dynamic>> enrichGuardianProfileHorses(
+  Map<String, dynamic> profile,
+  Future<Map<String, dynamic>> Function(String id) loadHorse,
+) async {
+  final references = _asList(profile['cavalos']).map(_asMap).toList();
+  final horses = await Future.wait(
+    references.map((reference) async {
+      final id = _horseId(reference);
+      if (id.isEmpty) return reference;
+      final horse = await loadHorse(id);
+      return <String, dynamic>{...reference, ...horse, 'id': id};
+    }),
+  );
+  return <String, dynamic>{...profile, 'cavalos': horses};
 }
 
 /// Converte a resposta da API em dados seguros para apresentação.

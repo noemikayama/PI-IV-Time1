@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Remoção de import redundante do resultado de cadastro, mantendo
+// o tipo disponibilizado pela interface do repositório.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Suporte ao callback opcional onExerciseCreatedWithResult para
+// propagar também o código sequencial do exercício recém-cadastrado.
+//
 // Data: 18/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do callback onExerciseCreatedWithId para propagar o
@@ -40,6 +50,7 @@ class ExerciseRegistrationController {
         const FirebaseTrainerLinkedHorseRepository(),
     this.onExerciseCreated,
     this.onExerciseCreatedWithId,
+    this.onExerciseCreatedWithResult,
   }) : _horseRepository = horseRepository;
 
   final ExerciseRegistrationRepository _registrationRepository;
@@ -53,15 +64,21 @@ class ExerciseRegistrationController {
   final void Function(ExerciseRegistrationDraft draft, String? exerciseId)?
   onExerciseCreatedWithId;
 
+  /// Callback opcional acionado com o rascunho consolidado e o resultado
+  /// completo retornado pelo backend (incluindo identificador e código).
+  final void Function(
+    ExerciseRegistrationDraft draft,
+    ExerciseRegistrationResult? result,
+  )?
+  onExerciseCreatedWithResult;
+
   // Obtém e normaliza a lista de cavalos vinculados ao treinador autenticado.
   Future<List<TrainerLinkedHorse>> fetchLinkedHorses() async {
     final horses = await _horseRepository.fetchLinkedHorses();
     return horses
         .map(
-          (horse) => TrainerLinkedHorse(
-            id: horse.id.trim(),
-            name: horse.name.trim(),
-          ),
+          (horse) =>
+              TrainerLinkedHorse(id: horse.id.trim(), name: horse.name.trim()),
         )
         .where((horse) => horse.name.isNotEmpty)
         .toList(growable: false);
@@ -80,6 +97,11 @@ class ExerciseRegistrationController {
     ValueChanged<ExerciseRegistrationDraft>? callback, {
     void Function(ExerciseRegistrationDraft draft, String? exerciseId)?
     onExerciseCreatedWithId,
+    void Function(
+      ExerciseRegistrationDraft draft,
+      ExerciseRegistrationResult? result,
+    )?
+    onExerciseCreatedWithResult,
   }) {
     return ExerciseRegistrationController(
       _registrationRepository,
@@ -87,6 +109,8 @@ class ExerciseRegistrationController {
       onExerciseCreated: callback,
       onExerciseCreatedWithId:
           onExerciseCreatedWithId ?? this.onExerciseCreatedWithId,
+      onExerciseCreatedWithResult:
+          onExerciseCreatedWithResult ?? this.onExerciseCreatedWithResult,
     );
   }
 }

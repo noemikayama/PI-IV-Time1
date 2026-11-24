@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Redirecionamento direto da barra inferior para as telas
+// autenticadas, sem devolver o destino por pop.
+//
 // Data: 18/11/2026
 // Autor: Gabriela Sichiroli Ferrari - RA 25013763
 // Alteração: Reorganização da camada de dados e atualização dos imports; padronização
@@ -13,6 +18,7 @@
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import '../../../data/models/horse_list_item.dart';
 import '../../../data/repositories/horse_list_repository.dart';
 import '../horse_list_screen.dart';
@@ -44,7 +50,12 @@ class ProfessionalHorseListScreen extends StatelessWidget {
       repository: repository,
       onHorseSelected: onHorseSelected,
       onMenuPressed: onMenuPressed,
-      onNavigationSelected: onNavigationSelected,
+      onNavigationSelected:
+          onNavigationSelected ??
+          (index) => navigateToHomeDestination(
+            context,
+            HomeNavigationDestination.values[index],
+          ),
       appBar: appBar,
       bottomNavigationBar: bottomNavigationBar,
       drawer: drawer,

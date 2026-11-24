@@ -2,6 +2,62 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão de onStartTraining no GuardianHomeContent para habilitar o
+// botão Iniciar treino na seção Treinos do dia da Home do responsável e abrir
+// TrainingExecutionScreen com atualização síncrona da Home ao retornar.
+//
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão do card do histórico de execuções da agenda para abrir a tela
+// de registro de execução (TrainingExecutionRecordScreen).
+//
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Padronização da confirmação do cadastro de cavalo com a cor de
+// sucesso definida em AppColors, remoção de uma dependência não utilizada e
+// conexão do "Mostrar tudo" do perfil à listagem completa de cavalos. Inclusão
+// do destino inicial e redirecionamento direto das rotas filhas sem pop.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Vinculação de onShowAllHorses na Home do responsável para abrir a
+// listagem de cavalos (_openHorseList).
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Implementação do fluxo de visualização de detalhes de treinamentos
+// (TrainingDetailScreen) e planos (TrainingPlanDetailScreen) para o perfil de
+// responsável, garantindo que usuários proprietários não acessem a tela de
+// execução de treinos a partir da agenda ou do calendário semanal.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção do recarregamento síncrono da Home após o perfil e a
+// lista de cavalos; inclusão de conteúdo injetável para testes da navegação.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Auditoria e correção dos comentários da integração da agenda, com
+// documentação das dependências usadas para consultar e finalizar treinos.
+//
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção e detalhamento da documentação do fluxo conectado da
+// agenda e da adaptação dos callbacks legados do responsável. Encaminhamento
+// das dependências necessárias para abrir e finalizar a execução do treino.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conexão opcional da agenda do responsável ao backend, com
+// adaptação dos treinos retornados para as ações já expostas pela Home.
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização de _homeFuture ao retornar do perfil de cavalos e da
+// listagem, e filtragem de treinos cancelados na montagem da agenda.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da navegação da barra inferior para chamar _onNavigationDestination,
@@ -131,12 +187,20 @@
 // seguindo a arquitetura e os padrões visuais oficiais do HorseLife.
 // -----------------------------------------------------------------------------
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
+import 'package:horse_life/features/training_plans/data/repositories/firebase_training_plan_repository.dart';
+import 'package:horse_life/features/training_plans/presentation/screens/training_plan_detail_screen.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/guardian/guardian_dashboard_screen.dart';
 
+import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/core/widgets/guardian_sidebar.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
@@ -151,7 +215,13 @@ import 'package:horse_life/features/profile/data/repositories/guardian_profile_r
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_edit_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/training/data/models/training_execution_data.dart';
+import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
+import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
+import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
 
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/guardian_home_data.dart';
@@ -165,6 +235,7 @@ import '../../widgets/guardian_home_content.dart';
 class GuardianHomeScreen extends StatefulWidget {
   const GuardianHomeScreen({
     required this.onLogout,
+    this.initialDestination = HomeNavigationDestination.home,
     this.mockScenario,
     this.loader,
     this.dashboardRepository,
@@ -176,8 +247,16 @@ class GuardianHomeScreen extends StatefulWidget {
     this.onStartTraining,
     this.onViewTraining,
     this.onViewPlans,
+    this.agendaLoader,
+    this.trainingExecutionLoader,
+    this.trainingCompletionSubmitter,
+    this.horseListBuilder,
+    this.feedbackRepository,
     super.key,
   });
+
+  /// Seção principal exibida quando a rota autenticada é reconstruída.
+  final HomeNavigationDestination initialDestination;
 
   // Use normal, empty ou completed nos testes. Null usa os dados reais.
   final String? mockScenario;
@@ -202,10 +281,26 @@ class GuardianHomeScreen extends StatefulWidget {
   final VoidCallback? onEditGuardianProfile;
   final VoidCallback? onShowAllGuardianHorses;
 
-  // Ações da agenda. O backend ainda fornece somente os treinos de hoje.
+  // Ações legadas da Home. A agenda conectada adapta seus contratos antes de
+  // encaminhar um treino para esses callbacks.
   final ValueChanged<GuardianTraining>? onStartTraining;
   final ValueChanged<GuardianTraining>? onViewTraining;
   final VoidCallback? onViewPlans;
+
+  /// Fonte da agenda completa. Ausente mantém a adaptação legada para testes.
+  final TrainingAgendaLoader? agendaLoader;
+
+  /// Carrega os detalhes do treino selecionado na agenda conectada.
+  final TrainingExecutionLoader? trainingExecutionLoader;
+
+  /// Persiste o formulário preenchido após a execução ativa.
+  final TrainingCompletionSubmitter? trainingCompletionSubmitter;
+
+  /// Substitui somente o conteúdo da rota de cavalos em testes de navegação.
+  final WidgetBuilder? horseListBuilder;
+
+  /// Repositório opcional para consulta e registro de feedback de execuções.
+  final TrainingFeedbackRepository? feedbackRepository;
 
   // A operação de logout é recebida externamente.
   final Future<void> Function() onLogout;
@@ -218,14 +313,15 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // A fonte real é usada por padrão; cenários mock ficam restritos aos testes.
 
   // Estado local da navegação inferior.
-  HomeNavigationDestination _selectedDestination =
-      HomeNavigationDestination.home;
+  late HomeNavigationDestination _selectedDestination;
   late Future<GuardianHomeData> _homeFuture;
 
   // Cadastro mockado não muda o backend; mantém os nomes visíveis só na sessão.
   final List<String> _sessionMockHorses = [];
   late HomeLoader<GuardianHomeData> _loader;
   bool _isOpeningHorseProfile = false;
+  bool _isOpeningTrainingDetails = false;
+  bool _isStartingTraining = false;
 
   // O repositório é criado sob demanda e reutilizado no carregamento e edição.
   FirebaseGuardianProfileRepository? _guardianProfileRepository;
@@ -243,18 +339,25 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     _isOpeningHorseProfile = true;
 
     try {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
           builder: (_) => HorseProfileScreen(
             horseId: id,
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: false,
-            onNavigationSelected: (destination) {
-              if (mounted) setState(() => _selectedDestination = destination);
-            },
           ),
         ),
       );
+      if (!mounted) return;
+      // A nova consulta é criada antes do setState para que o callback apenas
+      // substitua o estado e nunca devolva uma Future ao framework.
+      final refreshedHome = _fetchHome();
+      setState(() {
+        _homeFuture = refreshedHome;
+      });
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
     } finally {
       _isOpeningHorseProfile = false;
     }
@@ -290,6 +393,332 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     return wasUpdated ?? false;
   }
 
+  /// Resolve os dados reais do treinamento no backend via galeria quando a
+  /// navegação fornece apenas o ID do registro da agenda/home.
+  Future<TrainingPlanGalleryItem?> _resolveRealTrainingFromBackend({
+    required String title,
+    String? horseName,
+  }) async {
+    final home = await _homeFuture;
+    final normalizedHorse = horseName?.trim().toLowerCase() ?? '';
+    String? horseId;
+
+    if (normalizedHorse.isNotEmpty) {
+      for (var i = 0; i < home.horses.length; i++) {
+        if (home.horses[i].trim().toLowerCase() == normalizedHorse &&
+            i < home.horseIds.length) {
+          horseId = home.horseIds[i];
+          break;
+        }
+      }
+    }
+
+    if (horseId == null || horseId.isEmpty) {
+      if (home.horseIds.isNotEmpty) {
+        horseId = home.horseIds.first;
+      } else {
+        try {
+          final profile = await _fetchAgendaProfile();
+          if (normalizedHorse.isNotEmpty) {
+            for (final horse in profile.horses) {
+              if (horse.name.trim().toLowerCase() == normalizedHorse &&
+                  horse.id.isNotEmpty) {
+                horseId = horse.id;
+                break;
+              }
+            }
+          }
+          if ((horseId == null || horseId.isEmpty) &&
+              profile.horses.isNotEmpty) {
+            final firstWithId = profile.horses.firstWhere(
+              (h) => h.id.isNotEmpty,
+              orElse: () => profile.horses.first,
+            );
+            if (firstWithId.id.isNotEmpty) {
+              horseId = firstWithId.id;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    if (horseId == null || horseId.isEmpty) return null;
+
+    final items = await const FirebaseTrainingPlanRepository()
+        .fetchTrainingGallery(horseId: horseId, searchQuery: title);
+    if (items.isEmpty) return null;
+
+    final normalizedTitle = title.trim().toLowerCase();
+    for (final item in items) {
+      if (item.title.trim().toLowerCase() == normalizedTitle) {
+        return item;
+      }
+    }
+    return items.length == 1 ? items.first : null;
+  }
+
+  /// Abre a visualização completa do treinamento selecionado na Home ou Agenda.
+  Future<void> _openTrainingDetails(
+    String id, {
+    String? title,
+    String? horseName,
+    int? code,
+    int? estimatedDurationMinutes,
+  }) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final parsedIdCode = int.tryParse(id);
+      String effectiveCode;
+      TrainingPlanGalleryItem? initialTraining;
+
+      if (code != null && code > 0) {
+        effectiveCode = code.toString();
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: code,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (parsedIdCode != null && parsedIdCode > 0) {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: parsedIdCode,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (widget.mockScenario == null) {
+        String? resolvedCode;
+        TrainingPlanGalleryItem? resolvedItem;
+
+        // 1. Tenta resolver o código numérico pelo ID do registro via getTrainingRecord
+        try {
+          final recordCall = FirebaseFunctions.instanceFor(
+            region: 'southamerica-east1',
+          ).httpsCallable('getTrainingRecord');
+          final response = await recordCall.call<dynamic>({'registroId': id});
+          final data = response.data;
+          if (data is Map && data['treinamento'] is Map) {
+            final raw = data['treinamento']['codigo']?.toString().trim();
+            if (raw != null && raw.isNotEmpty && int.tryParse(raw) != null) {
+              resolvedCode = raw;
+              final tTitle =
+                  data['treinamento']['titulo']?.toString() ?? title ?? '';
+              final tDuration =
+                  data['treinamento']['duracaoEstimada'] as int? ??
+                  estimatedDurationMinutes ??
+                  0;
+              resolvedItem = TrainingPlanGalleryItem(
+                id: id,
+                code: int.parse(raw),
+                title: tTitle,
+                estimatedDurationMinutes: tDuration,
+              );
+            }
+          }
+        } catch (_) {}
+
+        // 2. Se não resolveu pelo registro e temos título, tenta galeria como fallback
+        if (resolvedCode == null && title != null && title.trim().isNotEmpty) {
+          try {
+            final galleryResolved = await _resolveRealTrainingFromBackend(
+              title: title,
+              horseName: horseName,
+            );
+            if (galleryResolved != null && galleryResolved.code > 0) {
+              resolvedCode = galleryResolved.code.toString();
+              resolvedItem = galleryResolved;
+            }
+          } catch (_) {}
+        }
+
+        if (resolvedCode != null) {
+          effectiveCode = resolvedCode;
+          initialTraining = resolvedItem;
+        } else {
+          effectiveCode = id;
+          if (title != null) {
+            initialTraining = TrainingPlanGalleryItem(
+              id: id,
+              code: 0,
+              title: title,
+              estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+            );
+          }
+        }
+      } else {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: 0,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      }
+
+      if (!mounted) return;
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingDetailScreen(
+            trainingCode: effectiveCode,
+            initialTraining: initialTraining,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: false,
+            isOwner: false,
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  Future<void> _openExecutionRecord(String recordId) async {
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          TrainingFeedbackRoute.forRecord(
+            recordId: recordId,
+            audience: TrainingAgendaAudience.guardian,
+            repository: widget.feedbackRepository,
+          ),
+        );
+    if (!mounted || destination == null) return;
+    _onNavigationDestination(destination);
+  }
+
+  /// Abre a visualização completa de um plano de treinamento a partir da Agenda.
+  Future<void> _openTrainingPlanDetails(String planId) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingPlanDetailScreen(
+            planId: planId,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: false,
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _homeFuture = _fetchHome());
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  void _handleViewTraining(GuardianTraining training) {
+    if (widget.onViewTraining != null) {
+      widget.onViewTraining!(training);
+    } else {
+      _openTrainingDetails(
+        training.recordId ?? training.title,
+        title: training.title,
+        horseName: training.horseName,
+        estimatedDurationMinutes: training.durationMinutes,
+      );
+    }
+  }
+
+  /// Inicia o fluxo de execução do treino a partir do card da Home.
+  ///
+  /// Se um callback externo [onStartTraining] for fornecido, delega a ação. Caso
+  /// contrário, resolve o identificador do plano ([planId]) e a data correspondente
+  /// consultando a agenda antes de abrir a [TrainingExecutionScreen], evitando falhas
+  /// de contrato na busca da prescrição. Ao retornar da execução, recarrega os dados
+  /// da Home de forma síncrona.
+  Future<void> _handleStartTraining(GuardianTraining training) async {
+    if (widget.onStartTraining != null) {
+      widget.onStartTraining!(training);
+      return;
+    }
+    final loader = widget.trainingExecutionLoader;
+    final submitter = widget.trainingCompletionSubmitter;
+    final recordId = training.recordId?.trim();
+    if (_isStartingTraining ||
+        loader == null ||
+        submitter == null ||
+        recordId == null ||
+        recordId.isEmpty) {
+      return;
+    }
+    _isStartingTraining = true;
+    try {
+      var planId = '';
+      var trainingDate = DateTime.now();
+      final agendaLoader = widget.agendaLoader;
+      if (agendaLoader != null) {
+        try {
+          final agenda = await agendaLoader.fetchAgenda();
+          final normalizedPlan = training.planName.trim().toLowerCase();
+          final normalizedHorse = training.horseName.trim().toLowerCase();
+          for (final plan in agenda.plans) {
+            if (plan.planName.trim().toLowerCase() == normalizedPlan &&
+                plan.horseName.trim().toLowerCase() == normalizedHorse) {
+              planId = plan.id;
+              break;
+            }
+          }
+          trainingDate = agenda.today;
+          for (final entry in [
+            ...agenda.todayTrainings,
+            ...agenda.weekTrainings,
+          ]) {
+            if (entry.id == recordId) {
+              trainingDate = entry.date;
+              break;
+            }
+          }
+        } catch (_) {}
+      }
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) => TrainingExecutionScreen(
+            loader: loader,
+            completionSubmitter: submitter,
+            reference: TrainingExecutionReference(
+              recordId: recordId,
+              planId: planId,
+              title: training.title,
+              date: trainingDate,
+              durationMinutes: training.durationMinutes,
+              status: trainingAgendaStatusFromApi(training.status),
+            ),
+          ),
+        ),
+      );
+      if (!mounted) return;
+      final refreshedHome = _fetchHome();
+      setState(() {
+        _homeFuture = refreshedHome;
+      });
+    } finally {
+      _isStartingTraining = false;
+    }
+  }
+
   // --- Ciclo de vida do carregador ------------------------------------------
   void _configureLoader() {
     _loader =
@@ -314,6 +743,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     _retryHome();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        backgroundColor: AppColors.success,
         content: Text(
           result.warning ?? 'Cadastro de ${result.name} concluído!',
         ),
@@ -334,6 +764,20 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     super.initState();
     _configureLoader();
     _homeFuture = _fetchHome();
+    _selectedDestination = switch (widget.initialDestination) {
+      HomeNavigationDestination.horses ||
+      HomeNavigationDestination.dashboard => HomeNavigationDestination.home,
+      final destination => destination,
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.initialDestination == HomeNavigationDestination.horses) {
+        _openHorseList();
+      } else if (widget.initialDestination ==
+          HomeNavigationDestination.dashboard) {
+        _openDashboard();
+      }
+    });
   }
 
   @override
@@ -348,7 +792,42 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
     }
   }
 
+  // Usa a agenda completa quando o carregador foi injetado. A adaptação local
+  // preserva a API pública da Home para os fluxos de iniciar e consultar treino.
   Widget _buildTrainingAgenda() {
+    final agendaLoader = widget.agendaLoader;
+    if (agendaLoader != null) {
+      GuardianTraining toGuardianTraining(TrainingAgendaEntry entry) =>
+          GuardianTraining(
+            title: entry.title,
+            horseName: entry.horseName,
+            trainerName: entry.trainerName,
+            durationMinutes: entry.durationMinutes,
+            planName: entry.planName,
+            recordId: entry.id,
+            status: trainingAgendaStatusToApi(entry.status),
+          );
+      return ConnectedTrainingAgendaScreen(
+        loader: agendaLoader,
+        executionLoader: widget.trainingExecutionLoader,
+        completionSubmitter: widget.trainingCompletionSubmitter,
+        feedbackRepository: widget.feedbackRepository,
+        onViewPlans: widget.onViewPlans,
+        onViewPlan: (plan) {
+          if (widget.onViewPlans != null) {
+            widget.onViewPlans!();
+          } else {
+            _openTrainingPlanDetails(plan.id);
+          }
+        },
+        onStartTraining: widget.onStartTraining == null
+            ? null
+            : (entry) => widget.onStartTraining!(toGuardianTraining(entry)),
+        onViewTraining: (entry) =>
+            _handleViewTraining(toGuardianTraining(entry)),
+        onViewHistory: (entry) => _openExecutionRecord(entry.id),
+      );
+    }
     // A Home fornece os treinos, enquanto o perfil determina se o vínculo com
     // cada cavalo permite iniciar a execução ou somente consultar o treino.
     return FutureBuilder<GuardianHomeData>(
@@ -387,7 +866,10 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
                 <String>{};
             final home = homeSnapshot.data!;
             final today = DateTime.now();
-            final entries = home.todayTrainings
+            final activeTodayTrainings = home.todayTrainings
+                .where((training) => training.status != 'CANCELADO')
+                .toList(growable: false);
+            final entries = activeTodayTrainings
                 .map(
                   (training) => TrainingAgendaEntry(
                     id:
@@ -410,7 +892,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
             final plansByKey = <String, TrainingAgendaPlan>{};
             // O resumo da Home não possui uma coleção própria de planos. A
             // chave composta elimina repetições entre treinos do mesmo plano.
-            for (final training in home.todayTrainings) {
+            for (final training in activeTodayTrainings) {
               final key = '${training.planName}:${training.horseName}';
               plansByKey.putIfAbsent(
                 key,
@@ -428,7 +910,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
 
             GuardianTraining? sourceFor(TrainingAgendaEntry entry) {
               // Recupera o contrato original esperado pelos callbacks da Home.
-              for (final training in home.todayTrainings) {
+              for (final training in activeTodayTrainings) {
                 final id =
                     training.recordId ??
                     '${training.planName}:${training.horseName}';
@@ -441,38 +923,45 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               activePlansCount: plansByKey.length,
               plans: plansByKey.values.toList(growable: false),
               trainings: entries,
+              feedbackRepository: widget.feedbackRepository,
               onViewPlans: widget.onViewPlans,
+              onViewPlan: (plan) {
+                if (widget.onViewPlans != null) {
+                  widget.onViewPlans!();
+                } else {
+                  _openTrainingPlanDetails(plan.id);
+                }
+              },
               onStartTraining: widget.onStartTraining == null
                   ? null
                   : (entry) {
                       final training = sourceFor(entry);
                       if (training != null) widget.onStartTraining!(training);
                     },
-              onViewTraining: widget.onViewTraining == null
-                  ? null
-                  : (entry) {
-                      final training = sourceFor(entry);
-                      if (training != null) widget.onViewTraining!(training);
-                    },
-              onViewHistory: widget.onViewTraining == null
-                  ? null
-                  : (entry) {
-                      final training = sourceFor(entry);
-                      if (training != null) widget.onViewTraining!(training);
-                    },
+              onViewTraining: (entry) {
+                final training = sourceFor(entry);
+                if (training != null) {
+                  _handleViewTraining(training);
+                }
+              },
+              onViewHistory: (entry) {
+                final training = sourceFor(entry);
+                _openExecutionRecord(training?.recordId ?? entry.id);
+              },
             );
           },
         );
       },
     );
   }
-  
+
   /// Listagem autenticada exclusivamente pela callable listHorses.
   Future<void> _openHorseList() async {
-    final destination = await Navigator.of(context)
-        .push<HomeNavigationDestination>(
-          MaterialPageRoute<HomeNavigationDestination>(
-            builder: (listContext) => GuardianHorseListScreen(
+    final destination = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (listContext) =>
+            widget.horseListBuilder?.call(listContext) ??
+            GuardianHorseListScreen(
               onRegistrationCompleted: (result) {
                 if (mounted && result.isPersisted) _retryHome();
               },
@@ -485,23 +974,29 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
               ),
               bottomNavigationBar: HomeBottomNavBar(
                 selectedDestination: HomeNavigationDestination.horses,
-                onDestinationSelected: (selected) {
-                  if (selected != HomeNavigationDestination.horses) {
-                    Navigator.of(listContext).pop(selected);
-                  }
-                },
+                onDestinationSelected: (selected) =>
+                    navigateToHomeDestination(listContext, selected),
               ),
             ),
-          ),
-        );
-    if (!mounted || destination == null) return;
-    setState(() => _selectedDestination = destination);
+      ),
+    );
+    if (!mounted) return;
+    // Mantém a criação assíncrona fora do callback síncrono de setState.
+    final refreshedHome = _fetchHome();
+    setState(() {
+      _homeFuture = refreshedHome;
+    });
+    if (destination is HomeNavigationDestination) {
+      _onNavigationDestination(destination);
+    }
   }
 
   /// Mantém a aba atual quando a listagem é aberta como rota secundária.
   void _onNavigationDestination(HomeNavigationDestination destination) {
     if (destination == HomeNavigationDestination.horses) {
       _openHorseList();
+    } else if (destination == HomeNavigationDestination.dashboard) {
+      _openDashboard();
     } else {
       setState(() => _selectedDestination = destination);
     }
@@ -511,20 +1006,24 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   // Abre o painel do perfil sem alterar o destino atual da Home.
   // Ao voltar, os dados já carregados da Home continuam disponíveis.
   Future<void> _openDashboard() async {
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
-        builder: (dashboardContext) => GuardianDashboardScreen(
-          onLogout: widget.onLogout,
-          onHome: () => Navigator.of(dashboardContext).pop(),
-          onNavigationSelected: (selected) {
-            Navigator.of(dashboardContext).pop(selected);
-          },
-          homeFuture: _homeFuture,
-          repository:
-              widget.dashboardRepository ?? DashboardComposition.production(),
-        ),
-      ),
-    );
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (dashboardContext) => GuardianDashboardScreen(
+              onLogout: widget.onLogout,
+              onHome: () => navigateToHomeDestination(
+                dashboardContext,
+                HomeNavigationDestination.home,
+              ),
+              onNavigationSelected: (selected) =>
+                  navigateToHomeDestination(dashboardContext, selected),
+              homeFuture: _homeFuture,
+              repository:
+                  widget.dashboardRepository ??
+                  DashboardComposition.production(),
+            ),
+          ),
+        );
     if (!mounted || destination == null) return;
     _onNavigationDestination(destination);
   }
@@ -551,7 +1050,8 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           onEditGuardianProfileData: widget.onEditGuardianProfile == null
               ? _openGuardianProfileEditor
               : null,
-          onShowAllGuardianHorses: widget.onShowAllGuardianHorses,
+          onShowAllGuardianHorses:
+              widget.onShowAllGuardianHorses ?? _openHorseList,
           // O perfil usa o mesmo fluxo de cadastro aberto pela Home.
           onRegisterGuardianHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           onSelectGuardianHorse: _openHorseProfile,
@@ -563,6 +1063,13 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           sessionMockHorses: _sessionMockHorses,
           onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           onSelectHorse: _openHorseProfile,
+          onShowAllHorses: widget.onShowAllGuardianHorses ?? _openHorseList,
+          onStartTraining:
+              (widget.onStartTraining != null ||
+                  (widget.trainingExecutionLoader != null &&
+                      widget.trainingCompletionSubmitter != null))
+              ? _handleStartTraining
+              : null,
         ),
       },
       // Barra inferior de navegação.

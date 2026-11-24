@@ -2,6 +2,11 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Remoção dos itens excedentes/provisórios da barra lateral do
+// responsável, preservando apenas o cadastro de cavalo e logout.
+//
 // Data: 13/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do link funcional "Cadastrar cavalo" na barra lateral do
@@ -55,13 +60,6 @@ class GuardianSidebar extends StatefulWidget {
 
 class _GuardianSidebarState extends State<GuardianSidebar> {
   bool _isLoggingOut = false;
-
-  // Itens provisórios da Sidebar.
-  static const List<String> _menuItems = [
-    'Item 1',
-    'Item 1',
-    'Item 1',
-  ];
 
   // Fecha o menu lateral e direciona o responsável ao fluxo de cadastro de cavalos.
   void _handleRegisterHorse() {
@@ -195,29 +193,6 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                 onTap: _handleRegisterHorse,
               ),
 
-              // Itens provisórios.
-              ..._menuItems.map(
-                (item) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  minTileHeight: 50,
-                  leading: const Icon(
-                    Icons.add_circle_outline_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                  title: Text(
-                    item,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
-                  ),
-
-                  // Sem ação até as telas serem criadas.
-                  onTap: null,
-                ),
-              ),
-
               const SizedBox(height: 12),
 
               const Divider(color: AppColors.alabasterGray),
@@ -241,14 +216,14 @@ class _GuardianSidebarState extends State<GuardianSidebar> {
                     : const Icon(
                         Icons.logout_rounded,
                         color: Colors.white,
-                        size: 28,
+                        size: 24,
                       ),
 
                 title: Text(
                   _isLoggingOut ? 'Saindo...' : 'Sair',
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: Colors.white,
-                    fontSize: 21,
+                    fontSize: 20,
                   ),
                 ),
 

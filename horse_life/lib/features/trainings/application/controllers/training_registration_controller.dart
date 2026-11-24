@@ -2,6 +2,10 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Adição do parâmetro opcional code em recordCreatedExerciseFromDraft.
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Adição do callback opcional onTrainingCreated e do método
@@ -90,8 +94,13 @@ class TrainingRegistrationController {
   TrainingExerciseItem recordCreatedExerciseFromDraft(
     ExerciseRegistrationDraft draft, {
     String? id,
+    int? code,
   }) {
-    final item = TrainingExerciseItem.fromExerciseDraft(draft, id: id);
+    final item = TrainingExerciseItem.fromExerciseDraft(
+      draft,
+      id: id,
+      code: code,
+    );
     final alreadyStored = _sessionCreatedExercises.any(
       (existing) => _isSameExercise(existing, item),
     );

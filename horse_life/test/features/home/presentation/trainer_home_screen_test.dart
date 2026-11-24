@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Teste de regressão do recarregamento da Home ao retornar do perfil
+// do cavalo sem devolver Future pelo callback de setState; documentação do
+// carregador com contagem de consultas.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura da filtragem defensiva de treinos CANCELADO na agenda e na Home.
+//
 // Data: 19/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Cobertura do link "Cadastrar plano de treino" na barra lateral
@@ -53,6 +63,31 @@ import 'package:horse_life/features/training_plans/presentation/screens/training
 import 'package:horse_life/features/trainings/presentation/screens/training_title_screen.dart';
 
 void main() {
+  // Abre e fecha a rota antes do carregamento remoto para isolar o setState.
+  testWidgets(
+    'reloads after horse profile without returning Future from setState',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final loader = _TrainerHomeWithHorseLoader();
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainerHomeScreen(loader: loader, onLogout: () async {}),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Trovão'));
+      final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+      navigator.pop();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(loader.fetchCount, 2);
+    },
+  );
+
   // --- Navegação para o perfil ----------------------------------------------
   // Valida o estado temporário da aba: a estrutura permanece, mas os cards da
   // Home são retirados até a implementação do perfil do treinador.
@@ -220,6 +255,65 @@ void main() {
       expect(find.text('Título do plano'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'ignora treinos com status CANCELADO tanto na Home quanto na aba de treinos da agenda',
+    (tester) async {
+      final loader = _TrainerHomeWithCanceledTrainingLoader();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainerHomeScreen(loader: loader, onLogout: () async {}),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Na Home, não deve exibir o treino cancelado
+      expect(find.text('Treino Cancelado Indevido'), findsNothing);
+      expect(find.text('Treino Ativo Válido'), findsOneWidget);
+
+      // Na aba de Treinos (Agenda), também não deve exibir o cancelado
+      await tester.tap(find.text('Treinos'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Treino Cancelado Indevido'), findsNothing);
+      expect(find.text('Treino Ativo Válido'), findsWidgets);
+    },
+  );
+}
+
+class _TrainerHomeWithCanceledTrainingLoader
+    implements HomeLoader<TrainerHomeData> {
+  @override
+  Future<TrainerHomeData> fetchHome() async => const TrainerHomeData(
+    trainerName: 'Ana Souza',
+    specialty: 'Adestramento',
+    todayTrainings: [
+      TrainerTraining(
+        id: 'rec-valid',
+        title: 'Treino Ativo Válido',
+        horseName: 'Valente',
+        planName: 'Plano Regular',
+        status: 'PLANEJADO',
+      ),
+      TrainerTraining(
+        id: 'rec-canceled',
+        title: 'Treino Cancelado Indevido',
+        horseName: 'Valente',
+        planName: 'Plano Cancelado',
+        status: 'CANCELADO',
+      ),
+    ],
+    weeklyFeedbacksDone: 0,
+    weeklyFeedbacksTotal: 0,
+    activePlans: 1,
+    weeklyTrainingsCompleted: 0,
+    weeklyTrainingsPlanned: 1,
+    createdExercises: 0,
+    horses: [],
+    clients: [],
+  );
 }
 
 /// Carregador estável que evita acesso a serviços externos durante o teste.
@@ -238,4 +332,27 @@ class _TrainerHomeLoader implements HomeLoader<TrainerHomeData> {
     horses: [],
     clients: [],
   );
+}
+
+// Expõe um cavalo selecionável e contabiliza a recarga após a navegação.
+class _TrainerHomeWithHorseLoader implements HomeLoader<TrainerHomeData> {
+  int fetchCount = 0;
+
+  @override
+  Future<TrainerHomeData> fetchHome() async {
+    fetchCount++;
+    return const TrainerHomeData(
+      trainerName: 'Ana Souza',
+      specialty: 'Adestramento',
+      todayTrainings: [],
+      weeklyFeedbacksDone: 0,
+      weeklyFeedbacksTotal: 0,
+      activePlans: 0,
+      weeklyTrainingsCompleted: 0,
+      weeklyTrainingsPlanned: 0,
+      createdExercises: 0,
+      horses: [TrainerHorse(id: 'horse-1', name: 'Trovão')],
+      clients: [],
+    );
+  }
 }

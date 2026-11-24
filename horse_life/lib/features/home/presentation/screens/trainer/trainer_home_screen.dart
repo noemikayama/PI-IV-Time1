@@ -2,6 +2,72 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão do card do histórico de execuções da agenda para abrir a tela
+// de registro de execução (TrainingExecutionRecordScreen).
+//
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conexão do botão "Mostrar tudo" do perfil profissional à
+// listagem completa dos cavalos vinculados, remoção de imports não utilizados,
+// destino inicial e redirecionamento direto das rotas filhas sem pop.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Vinculação do botão "Mostrar tudo" da lista de cavalos para a
+// abertura direta da listagem de cavalos (_openHorseList).
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Correção dos callbacks de setState que devolviam Future durante o
+// recarregamento da Home após navegações e novas tentativas; documentação da
+// regra de atualização síncrona da Future armazenada.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Resolução direta do código de treinamento a partir do ID do registro
+// da agenda via callable getTrainingRecord e remoção do bloqueio indevido por SnackBar.
+//
+// Data: 22/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Remoção da correlação com dados mockados em _openTrainingDetails,
+// resolução do treinamento real no backend via galeria do treinador quando
+// identificado apenas por registroId/título e correção do direcionamento de
+// onViewPlan para TrainingPlanDetailScreen.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Ajuste na instanciação de TrainingPlanGalleryItem em _openTrainingDetails
+// para fornecer os campos obrigatórios code e estimatedDurationMinutes.
+//
+// Data: 21/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Integração da navegação para a tela de visualização de treinamentos
+// (TrainingDetailScreen) a partir dos botões "Ver detalhes" dos cards da agenda
+// e "Ver treino" da Home do treinador.
+//
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Auditoria dos comentários da agenda profissional e documentação
+// das dependências encaminhadas ao fluxo de execução e finalização do treino.
+//
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação do carregador conectado da agenda profissional e da
+// adaptação dos treinos da API para os callbacks da Home. Encaminhamento das
+// dependências de consulta e finalização da execução do treino.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Conexão opcional da agenda profissional ao backend, preservando
+// os callbacks de consulta de planos, treinos e histórico da Home.
+//
+// Data: 20/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Atualização de _homeFuture ao retornar do perfil de cavalos e da
+// listagem, e filtragem de treinos cancelados na montagem da agenda.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Correção da duplicidade em onDestinationSelected na HomeBottomNavBar,
@@ -81,11 +147,14 @@
 // compartilhadas, Sidebar exclusiva, Mock API e três cenários de testes.
 // -----------------------------------------------------------------------------
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/features/dashboard/dashboard_composition.dart';
 import 'package:horse_life/features/dashboard/data/repositories/dashboard_repository.dart';
 import 'package:horse_life/features/dashboard/presentation/screens/trainer/trainer_dashboard_screen.dart';
+import 'package:horse_life/features/feedback/data/repositories/training_feedback_repository.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
 import 'package:horse_life/core/widgets/home_app_bar.dart';
 import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
 import 'package:horse_life/core/widgets/trainer_sidebar.dart';
@@ -104,10 +173,18 @@ import 'package:horse_life/features/profile/presentation/screens/trainer_experie
 import 'package:horse_life/features/horses/presentation/screens/horse_profile_screen.dart';
 import 'package:horse_life/core/widgets/add_trainer_certifications_dialog.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
+import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
+import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/widgets/training_agenda_floating_menu.dart';
+import 'package:horse_life/features/training_plans/data/models/training_plan_gallery_item.dart';
+import 'package:horse_life/features/training_plans/data/repositories/firebase_training_plan_repository.dart';
 import 'package:horse_life/features/training_plans/presentation/routes/training_plan_registration_flow_route.dart';
+import 'package:horse_life/features/training_plans/presentation/screens/training_plan_detail_screen.dart';
 import 'package:horse_life/features/trainings/presentation/routes/training_registration_flow_route.dart';
+import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/trainer_home_data.dart';
 import '../../../data/repositories/trainer_repository.dart';
@@ -122,6 +199,7 @@ class TrainerHomeScreen extends StatefulWidget {
   const TrainerHomeScreen({
     super.key,
     required this.onLogout,
+    this.initialDestination = HomeNavigationDestination.home,
     this.mockScenario,
     this.loader,
     this.dashboardRepository,
@@ -153,7 +231,14 @@ class TrainerHomeScreen extends StatefulWidget {
     this.onCreateTrainingPlan,
     this.onCreateTraining,
     this.onCreateExercise,
+    this.agendaLoader,
+    this.trainingExecutionLoader,
+    this.trainingCompletionSubmitter,
+    this.feedbackRepository,
   });
+
+  /// Seção principal exibida quando a rota autenticada é reconstruída.
+  final HomeNavigationDestination initialDestination;
 
   // --- Fontes de dados -------------------------------------------------------
   /// `null` usa o Firebase; os demais cenários habilitam dados simulados.
@@ -215,6 +300,19 @@ class TrainerHomeScreen extends StatefulWidget {
   final VoidCallback? onCreateTraining;
   final VoidCallback? onCreateExercise;
 
+  /// Fonte da agenda completa. Quando ausente, mantém a adaptação dos dados da
+  /// Home usada pelos cenários legados e pelos testes existentes.
+  final TrainingAgendaLoader? agendaLoader;
+
+  /// Carrega os detalhes do treino consultado a partir da agenda.
+  final TrainingExecutionLoader? trainingExecutionLoader;
+
+  /// Envia ao backend os dados preenchidos ao concluir uma execução.
+  final TrainingCompletionSubmitter? trainingCompletionSubmitter;
+
+  /// Repositório opcional para consulta e registro de feedback de execuções.
+  final TrainingFeedbackRepository? feedbackRepository;
+
   @override
   State<TrainerHomeScreen> createState() => _TrainerHomeScreenState();
 }
@@ -222,11 +320,11 @@ class TrainerHomeScreen extends StatefulWidget {
 class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   // --- Estado compartilhado --------------------------------------------------
   late Future<TrainerHomeData> _homeFuture;
-  HomeNavigationDestination _selectedDestination =
-      HomeNavigationDestination.home;
+  late HomeNavigationDestination _selectedDestination;
 
   late HomeLoader<TrainerHomeData> _loader;
   bool _isOpeningHorseProfile = false;
+  bool _isOpeningTrainingDetails = false;
   FirebaseTrainerProfileRepository? _trainerProfileRepository;
   FirebaseTrainerRegistrationRepository? _trainerAttachmentRepository;
   FirebasePasswordResetRepository? _passwordResetRepository;
@@ -240,21 +338,245 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     _isOpeningHorseProfile = true;
 
     try {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute(
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
           builder: (_) => HorseProfileScreen(
             horseId: id,
             currentUserId: FirebaseAuth.instance.currentUser?.uid,
             isTrainer: true,
-            onNavigationSelected: (destination) {
-              if (mounted) setState(() => _selectedDestination = destination);
-            },
           ),
         ),
       );
+      if (!mounted) return;
+      setState(() {
+        _homeFuture = _fetchHome();
+      });
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
     } finally {
       _isOpeningHorseProfile = false;
     }
+  }
+
+  /// Resolve os dados reais do treinamento no backend via galeria quando a
+  /// navegação fornece apenas o ID do registro da agenda/home.
+  Future<TrainingPlanGalleryItem?> _resolveRealTrainingFromBackend({
+    required String title,
+    String? horseName,
+  }) async {
+    final home = await _homeFuture;
+    if (home.horses.isEmpty) return null;
+
+    final normalizedHorse = horseName?.trim().toLowerCase() ?? '';
+    String horseId = home.horses.first.id;
+    if (normalizedHorse.isNotEmpty) {
+      for (final horse in home.horses) {
+        if (horse.name.trim().toLowerCase() == normalizedHorse) {
+          horseId = horse.id;
+          break;
+        }
+      }
+    }
+
+    final items = await const FirebaseTrainingPlanRepository()
+        .fetchTrainingGallery(horseId: horseId, searchQuery: title);
+    if (items.isEmpty) return null;
+
+    final normalizedTitle = title.trim().toLowerCase();
+    for (final item in items) {
+      if (item.title.trim().toLowerCase() == normalizedTitle) {
+        return item;
+      }
+    }
+    return items.length == 1 ? items.first : null;
+  }
+
+  /// Abre a visualização completa do treinamento selecionado na Home ou Agenda.
+  Future<void> _openTrainingDetails(
+    String id, {
+    String? title,
+    String? horseName,
+    int? code,
+    int? estimatedDurationMinutes,
+  }) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final parsedIdCode = int.tryParse(id);
+      String effectiveCode;
+      TrainingPlanGalleryItem? initialTraining;
+
+      if (code != null && code > 0) {
+        effectiveCode = code.toString();
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: code,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (parsedIdCode != null && parsedIdCode > 0) {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: parsedIdCode,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      } else if (widget.mockScenario == null) {
+        String? resolvedCode;
+        TrainingPlanGalleryItem? resolvedItem;
+
+        // 1. Tenta resolver o código numérico pelo ID do registro via getTrainingRecord
+        try {
+          final recordCall = FirebaseFunctions.instanceFor(
+            region: 'southamerica-east1',
+          ).httpsCallable('getTrainingRecord');
+          final response = await recordCall.call<dynamic>({'registroId': id});
+          final data = response.data;
+          if (data is Map && data['treinamento'] is Map) {
+            final raw = data['treinamento']['codigo']?.toString().trim();
+            if (raw != null && raw.isNotEmpty && int.tryParse(raw) != null) {
+              resolvedCode = raw;
+              final tTitle =
+                  data['treinamento']['titulo']?.toString() ?? title ?? '';
+              final tDuration =
+                  data['treinamento']['duracaoEstimada'] as int? ??
+                  estimatedDurationMinutes ??
+                  0;
+              resolvedItem = TrainingPlanGalleryItem(
+                id: id,
+                code: int.parse(raw),
+                title: tTitle,
+                estimatedDurationMinutes: tDuration,
+              );
+            }
+          }
+        } catch (_) {}
+
+        // 2. Se não resolveu pelo registro e temos título, tenta galeria como fallback
+        if (resolvedCode == null && title != null && title.trim().isNotEmpty) {
+          try {
+            final galleryResolved = await _resolveRealTrainingFromBackend(
+              title: title,
+              horseName: horseName,
+            );
+            if (galleryResolved != null && galleryResolved.code > 0) {
+              resolvedCode = galleryResolved.code.toString();
+              resolvedItem = galleryResolved;
+            }
+          } catch (_) {}
+        }
+
+        if (resolvedCode != null) {
+          effectiveCode = resolvedCode;
+          initialTraining = resolvedItem;
+        } else {
+          effectiveCode = id;
+          if (title != null) {
+            initialTraining = TrainingPlanGalleryItem(
+              id: id,
+              code: 0,
+              title: title,
+              estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+            );
+          }
+        }
+      } else {
+        effectiveCode = id;
+        if (title != null) {
+          initialTraining = TrainingPlanGalleryItem(
+            id: id,
+            code: 0,
+            title: title,
+            estimatedDurationMinutes: estimatedDurationMinutes ?? 0,
+          );
+        }
+      }
+
+      if (!mounted) return;
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingDetailScreen(
+            trainingCode: effectiveCode,
+            initialTraining: initialTraining,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: true,
+            isOwner: true,
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _homeFuture = _fetchHome();
+      });
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  /// Abre a visualização completa de um plano de treinamento a partir da Agenda.
+  Future<void> _openTrainingPlanDetails(String planId) async {
+    if (_isOpeningTrainingDetails) return;
+    _isOpeningTrainingDetails = true;
+
+    try {
+      final destination = await Navigator.of(context).push<dynamic>(
+        MaterialPageRoute<dynamic>(
+          builder: (_) => TrainingPlanDetailScreen(
+            planId: planId,
+            currentUserId: FirebaseAuth.instance.currentUser?.uid,
+            isTrainer: true,
+            onNavigationSelected: (dest) =>
+                navigateToHomeDestination(context, dest),
+          ),
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _homeFuture = _fetchHome();
+      });
+      if (destination is HomeNavigationDestination) {
+        _onNavigationDestination(destination);
+      }
+    } finally {
+      _isOpeningTrainingDetails = false;
+    }
+  }
+
+  void _handleViewTraining(TrainerTraining training) {
+    if (widget.onViewTraining != null) {
+      widget.onViewTraining!(training);
+    } else {
+      _openTrainingDetails(
+        training.id,
+        title: training.title,
+        horseName: training.horseName,
+      );
+    }
+  }
+
+  Future<void> _openExecutionRecord(String recordId) async {
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          TrainingFeedbackRoute.forRecord(
+            recordId: recordId,
+            audience: TrainingAgendaAudience.trainer,
+            repository: widget.feedbackRepository,
+          ),
+        );
+    if (!mounted || destination == null) return;
+    _onNavigationDestination(destination);
   }
 
   Future<TrainerProfileData> _fetchTrainerProfile() {
@@ -321,10 +643,28 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     super.initState();
     _configureLoader();
     _homeFuture = _fetchHome();
+    _selectedDestination = switch (widget.initialDestination) {
+      HomeNavigationDestination.horses ||
+      HomeNavigationDestination.dashboard => HomeNavigationDestination.home,
+      final destination => destination,
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.initialDestination == HomeNavigationDestination.horses) {
+        _openHorseList();
+      } else if (widget.initialDestination ==
+          HomeNavigationDestination.dashboard) {
+        _openDashboard();
+      }
+    });
   }
 
   /// Substitui a Future armazenada para executar uma nova tentativa.
-  void _retry() => setState(() => _homeFuture = _fetchHome());
+  void _retry() {
+    setState(() {
+      _homeFuture = _fetchHome();
+    });
+  }
 
   void _openExerciseCreation() {
     // Exercícios já possuem fluxo próprio e podem ser abertos diretamente.
@@ -350,7 +690,36 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
     }
   }
 
+  // Prioriza a resposta completa da agenda quando disponível e converte cada
+  // item consultado para o modelo que a Home já expõe aos seus consumidores.
   Widget _buildTrainingAgenda() {
+    final agendaLoader = widget.agendaLoader;
+    if (agendaLoader != null) {
+      return ConnectedTrainingAgendaScreen(
+        loader: agendaLoader,
+        executionLoader: widget.trainingExecutionLoader,
+        completionSubmitter: widget.trainingCompletionSubmitter,
+        feedbackRepository: widget.feedbackRepository,
+        onViewPlans: widget.onViewPlans,
+        onViewPlan: (plan) {
+          if (widget.onViewPlans != null) {
+            widget.onViewPlans!();
+          } else {
+            _openTrainingPlanDetails(plan.id);
+          }
+        },
+        onViewTraining: (entry) => _handleViewTraining(
+          TrainerTraining(
+            id: entry.id,
+            title: entry.title,
+            horseName: entry.horseName,
+            planName: entry.planName,
+            status: trainingAgendaStatusToApi(entry.status),
+          ),
+        ),
+        onViewHistory: (entry) => _openExecutionRecord(entry.id),
+      );
+    }
     // Converte o resumo retornado pela Home nos contratos reutilizáveis da
     // agenda, preservando os modelos originais para os callbacks externos.
     return FutureBuilder<TrainerHomeData>(
@@ -371,7 +740,10 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
         final home = snapshot.data!;
         final today = DateTime.now();
-        final entries = home.todayTrainings
+        final activeTodayTrainings = home.todayTrainings
+            .where((training) => training.status != 'CANCELADO')
+            .toList(growable: false);
+        final entries = activeTodayTrainings
             .map(
               (training) => TrainingAgendaEntry(
                 id: training.id,
@@ -390,8 +762,8 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         final plansByKey = <String, TrainingAgendaPlan>{};
         // Agrupa treinos por plano e cavalo, pois a Home não retorna os planos
         // como uma lista independente.
-        for (final training in home.todayTrainings) {
-          final key = '${training.planName}:${training.horseName}';
+        for (final training in activeTodayTrainings) {
+          final key = training.id;
           plansByKey.putIfAbsent(
             key,
             () => TrainingAgendaPlan(
@@ -408,7 +780,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
         TrainerTraining? sourceFor(TrainingAgendaEntry entry) {
           // Resolve o item adaptado de volta ao modelo exposto pela Home.
-          for (final training in home.todayTrainings) {
+          for (final training in activeTodayTrainings) {
             if (training.id == entry.id) return training;
           }
           return null;
@@ -416,7 +788,15 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
 
         void viewEntry(TrainingAgendaEntry entry) {
           final training = sourceFor(entry);
-          if (training != null) widget.onViewTraining?.call(training);
+          if (training != null) {
+            _handleViewTraining(training);
+          } else {
+            _openTrainingDetails(
+              entry.id,
+              title: entry.title,
+              horseName: entry.horseName,
+            );
+          }
         }
 
         return TrainingAgendaScreen(
@@ -425,42 +805,54 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           plans: plansByKey.values.toList(growable: false),
           trainings: entries,
           onViewPlans: widget.onViewPlans,
-          onViewPlan: widget.onViewPlans == null
-              ? null
-              : (_) => widget.onViewPlans!(),
-          onViewTraining: widget.onViewTraining == null ? null : viewEntry,
-          onViewHistory: widget.onViewTraining == null ? null : viewEntry,
+          onViewPlan: (plan) {
+            if (widget.onViewPlans != null) {
+              widget.onViewPlans!();
+            } else {
+              _openTrainingPlanDetails(plan.id);
+            }
+          },
+          onViewTraining: viewEntry,
+          onViewHistory: (entry) => _openExecutionRecord(entry.id),
         );
       },
     );
   }
-  
+
   /// Treinador consulta cavalos vinculados; cadastro segue exclusivo do responsável.
   Future<void> _openHorseList() async {
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
+    final destination = await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
         builder: (listContext) => ProfessionalHorseListScreen(
           appBar: const HomeAppBar(),
-          drawer: TrainerSidebar(onLogout: widget.onLogout, homeFuture: _homeFuture),
+          drawer: TrainerSidebar(
+            onLogout: widget.onLogout,
+            homeFuture: _homeFuture,
+          ),
           bottomNavigationBar: HomeBottomNavBar(
             selectedDestination: HomeNavigationDestination.horses,
-            onDestinationSelected: (selected) {
-              if (selected != HomeNavigationDestination.horses) {
-                Navigator.of(listContext).pop(selected);
-              }
-            },
+            onDestinationSelected: (selected) =>
+                navigateToHomeDestination(listContext, selected),
           ),
         ),
       ),
     );
-    if (!mounted || destination == null) return;
-    setState(() => _selectedDestination = destination);
+    if (!mounted) return;
+    setState(() {
+      _homeFuture = _fetchHome();
+    });
+    if (destination is HomeNavigationDestination) {
+      _onNavigationDestination(destination);
+    }
   }
 
   void _onNavigationDestination(HomeNavigationDestination destination) {
     if (destination == HomeNavigationDestination.horses) {
       widget.onNavigationSelected?.call(destination.index);
       _openHorseList();
+    } else if (destination == HomeNavigationDestination.dashboard) {
+      widget.onNavigationSelected?.call(destination.index);
+      _openDashboard();
     } else {
       setState(() => _selectedDestination = destination);
       widget.onNavigationSelected?.call(destination.index);
@@ -471,20 +863,24 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
   // Abre o painel do perfil sem alterar o destino atual da Home.
   // Ao voltar, os dados já carregados da Home continuam disponíveis.
   Future<void> _openDashboard() async {
-    final destination = await Navigator.of(context).push<HomeNavigationDestination>(
-      MaterialPageRoute<HomeNavigationDestination>(
-        builder: (dashboardContext) => TrainerDashboardScreen(
-          onLogout: widget.onLogout,
-          onHome: () => Navigator.of(dashboardContext).pop(),
-          onNavigationSelected: (selected) {
-            Navigator.of(dashboardContext).pop(selected);
-          },
-          homeFuture: _homeFuture,
-          repository:
-              widget.dashboardRepository ?? DashboardComposition.production(),
-        ),
-      ),
-    );
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (dashboardContext) => TrainerDashboardScreen(
+              onLogout: widget.onLogout,
+              onHome: () => navigateToHomeDestination(
+                dashboardContext,
+                HomeNavigationDestination.home,
+              ),
+              onNavigationSelected: (selected) =>
+                  navigateToHomeDestination(dashboardContext, selected),
+              homeFuture: _homeFuture,
+              repository:
+                  widget.dashboardRepository ??
+                  DashboardComposition.production(),
+            ),
+          ),
+        );
     if (!mounted || destination == null) return;
     _onNavigationDestination(destination);
   }
@@ -506,7 +902,7 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
           onViewExperience: widget.onViewExperience,
           onViewCertifications: widget.onViewCertifications,
           onViewServiceRegions: widget.onViewServiceRegions,
-          onShowAllHorses: widget.onShowAllHorses,
+          onShowAllHorses: widget.onShowAllHorses ?? _openHorseList,
           experienceDocumentBuilder: widget.experienceDocumentBuilder,
           experienceFilePicker: widget.experienceFilePicker,
           uploadTrainerExperience: _uploadTrainerExperience,
@@ -523,12 +919,12 @@ class _TrainerHomeScreenState extends State<TrainerHomeScreen> {
         _ => TrainerHomeContent(
           homeFuture: _homeFuture,
           onRetry: _retry,
-          onViewTraining: widget.onViewTraining,
+          onViewTraining: _handleViewTraining,
           onSelectHorse:
               widget.onSelectHorse ?? (horse) => _openHorseProfile(horse.id),
           onSelectClient: widget.onSelectClient,
           onShowAllTrainings: widget.onShowAllTrainings,
-          onShowAllHorses: widget.onShowAllHorses,
+          onShowAllHorses: widget.onShowAllHorses ?? _openHorseList,
           onShowAllClients: widget.onShowAllClients,
         ),
       },

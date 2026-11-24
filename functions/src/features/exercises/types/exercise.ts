@@ -2,6 +2,16 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 21/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Materiais e mídias atuais do exercício para o treino agendado
+// (ExerciseExtrasSource, ExerciseExtras).
+//
+// Data: 20/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Tipos da consulta, da resposta, da edição e do acesso ao
+// exercício (visualização e edição).
+//
 // Data: 20/11/2026
 // Autor: Miguel Afonso Castro de Almeida - 25016044
 // Alteração: Tipo e cavalo do exercício lidos pelos detalhes do treinamento.
@@ -16,6 +26,7 @@
 // -----------------------------------------------------------------------------
 
 import type {ObjectId} from "mongodb";
+import type {RefView} from "../../horses";
 
 export type ExercisePrivacy = "GENERICO" | "ESPECIFICO";
 
@@ -61,7 +72,7 @@ export type ExerciseDocument = {
 // Dados enviados ao repository; o 'codigo' é gerado na própria inserção.
 export type NewExercise = Omit<ExerciseDocument, "codigo">;
 
-// Campos informados no cadastro e, futuramente, alteráveis na edição.
+// Campos informados no cadastro e alteráveis na edição.
 export type ExerciseDetailsInput = {
     nome: string;
     descricao: string;
@@ -150,3 +161,72 @@ export type ExerciseGalleryResult = {exercicios: ExerciseGalleryItem[]};
 
 // Soma de duracaoPadraoMinutos dos exercícios selecionados.
 export type ExerciseDurationSumResult = {duracaoTotalMinutos: number};
+
+// Consulta de um exercício: pelo _id ou pelo código, nunca pelos dois.
+export type ExerciseLookup = {id: ObjectId} | {codigo: number};
+
+// Cavalo do exercício na consulta e na edição; 'codigo' é o microchip.
+export type ExerciseHorseView = {id: string; codigo: string; nome: string};
+
+// O que quem consulta pode fazer com o exercício.
+export type ExercisePermissions = {editar: boolean};
+
+// Resposta de getExercise e de updateExercise: _id viram 'id' (string) e
+// datas viram ISO.
+export type ExerciseView = {
+    id: string;
+    codigo: number;
+    nome: string;
+    descricao: string;
+    orientacoes: string[];
+    duracaoPadraoMinutos: number;
+    materiais: ExerciseMaterial[];
+    privacidade: ExercisePrivacy;
+    // Só no ESPECIFICO, e só para o autor ou para quem tem vínculo com o
+    // cavalo: um exercício que mudou de cavalo depois de planejado não
+    // revela o cavalo novo a quem só conhece o antigo.
+    cavalo?: ExerciseHorseView;
+    treinador: RefView;
+    imagens: ExerciseMediaView[];
+    videos: ExerciseMediaView[];
+    permissoes: ExercisePermissions;
+    criadoEm: string;
+    atualizadoEm: string;
+};
+
+// Edição: só os campos enviados mudam. 'cavaloId' só vem junto com
+// 'privacidade' e é null no GENERICO.
+export type ExerciseUpdateChanges = Partial<ExerciseDetailsInput> & {
+    privacidade?: ExercisePrivacy;
+    cavaloId?: ObjectId | null;
+};
+
+export type ExerciseUpdateInput = {
+    id: ObjectId;
+    changes: ExerciseUpdateChanges;
+};
+
+// Relação de quem consulta com o exercício; sem acesso, a regra devolve
+// null.
+export type ExerciseAccess = {isAuthor: boolean; showHorse: boolean};
+
+// Exercício cadastrado por um treinador. Os da plataforma não têm autor e
+// nunca chegam à consulta nem à edição.
+export type AuthoredExercise = ExerciseDocument & {
+    treinador: ExerciseTrainerRef;
+};
+
+// Campos do exercício que não fazem parte da cópia guardada no treino
+// agendado: o treino lê os materiais da versão atual, e o código localiza
+// as mídias no Storage.
+export type ExerciseExtrasSource = Pick<
+    ExerciseDocument,
+    "_id" | "codigo" | "materiais"
+>;
+
+// Materiais e mídias que existem no Storage, já com URL de leitura.
+export type ExerciseExtras = {
+    materiais: ExerciseMaterial[];
+    imagens: ExerciseMediaView[];
+    videos: ExerciseMediaView[];
+};

@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Substituição do retorno por pop pelo redirecionamento autenticado
+// direto em todos os destinos da barra inferior e atualização da propriedade
+// de cor do Switch para a API vigente do Flutter.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Integração da barra de navegação tipada com callback de destino
@@ -47,18 +53,15 @@ class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
 
   void _onDestinationSelected(HomeNavigationDestination destination) {
     if (destination == HomeNavigationDestination.dashboard) return;
-    if (destination == HomeNavigationDestination.home) {
-      if (widget.onHome != null) {
-        widget.onHome!();
-      } else {
-        Navigator.of(context).pop();
-      }
+    if (destination == HomeNavigationDestination.home &&
+        widget.onHome != null) {
+      widget.onHome!();
       return;
     }
     if (widget.onNavigationSelected != null) {
       widget.onNavigationSelected!(destination);
     } else {
-      Navigator.of(context).pop(destination);
+      navigateToHomeDestination(context, destination);
     }
   }
 
@@ -95,7 +98,7 @@ class _TrainerDashboardScreenState extends State<TrainerDashboardScreen> {
               children: [
                 Switch(
                   value: _professional,
-                  activeColor: Colors.white,
+                  activeThumbColor: Colors.white,
                   activeTrackColor: const Color(0xFF027068),
                   onChanged: (value) => setState(() => _professional = value),
                 ),

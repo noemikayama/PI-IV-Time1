@@ -2,6 +2,12 @@
 // -----------------------------------------------------------------------------
 // HISTÓRICO DE ALTERAÇÕES
 //
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Padronização da confirmação do cadastro de cavalo com a cor de
+// sucesso do aplicativo e encaminhamento direto dos destinos retornados pelo
+// perfil, sem propagar a navegação por pop.
+//
 // Data: 20/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Link padrão dos cards de cavalos para seus respectivos perfis (HorseProfileScreen)
@@ -102,7 +108,8 @@ class _HorseListScreenState extends State<HorseListScreen>
   }
 
   void _loadFromFirebase() {
-    final repository = widget.repository ?? ListHorseComposition.productionRepository();
+    final repository =
+        widget.repository ?? ListHorseComposition.productionRepository();
     _horsesFuture = repository.listHorses(
       profile: widget.profile,
       search: _query,
@@ -113,7 +120,8 @@ class _HorseListScreenState extends State<HorseListScreen>
   @override
   void didUpdateWidget(covariant HorseListScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.profile != widget.profile || oldWidget.repository != widget.repository) {
+    if (oldWidget.profile != widget.profile ||
+        oldWidget.repository != widget.repository) {
       _searchDebounce?.cancel();
       _loadFromFirebase();
     }
@@ -173,17 +181,21 @@ class _HorseListScreenState extends State<HorseListScreen>
   }
 
   Future<void> _registerHorse() async {
-    if (widget.profile != HorseListProfile.guardian || _openingRegistration) return;
+    if (widget.profile != HorseListProfile.guardian || _openingRegistration) {
+      return;
+    }
     setState(() => _openingRegistration = true);
     try {
       // Não injeta repositório de demonstração: o formulário usa Firebase.
-      final result = await Navigator.of(context).push<HorseRegistrationResult>(
-        HorseRegistrationFlowRoute.build(),
-      );
+      final result = await Navigator.of(
+        context,
+      ).push<HorseRegistrationResult>(HorseRegistrationFlowRoute.build());
       if (!mounted || result == null) return;
       if (!result.isPersisted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('O cadastro não foi confirmado pelo servidor.')),
+          const SnackBar(
+            content: Text('O cadastro não foi confirmado pelo servidor.'),
+          ),
         );
         return;
       }
@@ -192,7 +204,12 @@ class _HorseListScreenState extends State<HorseListScreen>
       widget.onRegistrationCompleted?.call(result);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.warning ?? 'Cadastro de ${result.name} concluído!')),
+        SnackBar(
+          backgroundColor: AppColors.success,
+          content: Text(
+            result.warning ?? 'Cadastro de ${result.name} concluído!',
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _openingRegistration = false);
@@ -212,30 +229,33 @@ class _HorseListScreenState extends State<HorseListScreen>
         case 'deadline-exceeded':
           return 'Firebase indisponível no momento. Verifique a conexão e tente novamente.';
         default:
-          return error.message ?? 'Não foi possível consultar a lista no Firebase.';
+          return error.message ??
+              'Não foi possível consultar a lista no Firebase.';
       }
     }
     if (error is FormatException) return error.message;
     return 'Não foi possível consultar os cavalos. Tente novamente.';
   }
 
-  void _openHorseDetails(HorseListItem horse) {
+  Future<void> _openHorseDetails(HorseListItem horse) async {
     if (widget.onHorseSelected != null) {
       widget.onHorseSelected!(horse);
       return;
     }
-    Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => HorseProfileScreen(
-          horseId: horse.id,
-          currentUserId: FirebaseAuth.instance.currentUser?.uid,
-          isTrainer: widget.profile == HorseListProfile.professional,
-          onNavigationSelected: (destination) {
-            _navigate(destination.index);
-          },
-        ),
-      ),
-    );
+    final destination = await Navigator.of(context)
+        .push<HomeNavigationDestination>(
+          MaterialPageRoute<HomeNavigationDestination>(
+            builder: (_) => HorseProfileScreen(
+              horseId: horse.id,
+              currentUserId: FirebaseAuth.instance.currentUser?.uid,
+              isTrainer: widget.profile == HorseListProfile.professional,
+            ),
+          ),
+        );
+    if (!mounted || destination == null) return;
+    if (destination != HomeNavigationDestination.horses) {
+      navigateToHomeDestination(context, destination);
+    }
   }
 
   void _navigate(int tab) {
@@ -247,21 +267,26 @@ class _HorseListScreenState extends State<HorseListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: widget.appBar ?? (widget.drawer != null
-          ? const HomeAppBar()
-          : AppBar(title: const Text('Meus cavalos'))),
+      appBar:
+          widget.appBar ??
+          (widget.drawer != null
+              ? const HomeAppBar()
+              : AppBar(title: const Text('Meus cavalos'))),
       drawer: widget.drawer,
-      bottomNavigationBar: widget.bottomNavigationBar ??
+      bottomNavigationBar:
+          widget.bottomNavigationBar ??
           HomeBottomNavBar(
             selectedDestination: HomeNavigationDestination.horses,
-            onDestinationSelected: (destination) => _navigate(destination.index),
+            onDestinationSelected: (destination) =>
+                _navigate(destination.index),
           ),
       floatingActionButton: widget.profile == HorseListProfile.guardian
           ? FutureBuilder<List<HorseListItem>>(
               future: _horsesFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done ||
-                    !snapshot.hasData || snapshot.data!.isEmpty) {
+                    !snapshot.hasData ||
+                    snapshot.data!.isEmpty) {
                   return const SizedBox.shrink();
                 }
                 // Proporção do botão "+" no Figma: 60 x 60.
@@ -337,7 +362,10 @@ class _HorseListScreenState extends State<HorseListScreen>
                               children: <Widget>[
                                 const Icon(Icons.cloud_off_outlined, size: 42),
                                 const SizedBox(height: 12),
-                                Text(_describeError(snapshot.error!), textAlign: TextAlign.center),
+                                Text(
+                                  _describeError(snapshot.error!),
+                                  textAlign: TextAlign.center,
+                                ),
                                 const SizedBox(height: 10),
                                 TextButton.icon(
                                   onPressed: () => setState(_loadFromFirebase),
@@ -373,7 +401,8 @@ class _HorseListScreenState extends State<HorseListScreen>
                           alignment: Alignment.topCenter,
                           child: HorseListEmptyState(
                             profile: widget.profile,
-                            onAddHorse: widget.profile == HorseListProfile.guardian &&
+                            onAddHorse:
+                                widget.profile == HorseListProfile.guardian &&
                                     !_openingRegistration
                                 ? _registerHorse
                                 : null,
@@ -384,10 +413,12 @@ class _HorseListScreenState extends State<HorseListScreen>
                         onRefresh: _refreshHorses,
                         child: ListView.separated(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
                           padding: const EdgeInsets.fromLTRB(20, 2, 20, 100),
                           itemCount: horses.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 18),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 18),
                           itemBuilder: (context, index) {
                             final horse = horses[index];
                             return HorseListCard(
