@@ -1,4 +1,18 @@
+<!--
+  RESPONSÁVEL: Noemi Kayama - RA 25004140
+  HISTÓRICO DE ALTERAÇÕES
+
+  Data: 21/11/2026
+  Autor: Noemi Kayama - RA 25004140
+  Alteração: Inclusão da permissão de acesso à internet usada pelas consultas
+  da execução de treino e pelo carregamento de mídias remotas.
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
     <application
         android:label="horse_life"
         android:name="${applicationName}"

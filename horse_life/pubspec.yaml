@@ -1,3 +1,39 @@
+# RESPONSÁVEL: Noemi Kayama - 25004140
+# -----------------------------------------------------------------------------
+# HISTÓRICO DE ALTERAÇÕES
+#
+# Data: 21/11/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão do video_player para reproduzir as mídias dos exercícios
+# durante a execução ativa do treino.
+#
+# Data: 20/11/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Fixação do pdfrx na versão 2.4.7 para manter compatibilidade com
+# as versões de Dart e Flutter usadas pelo projeto.
+#
+# Data: 13/11/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão das localizações oficiais do Flutter para os calendários
+# e campos de data em português do Brasil.
+#
+# Data: 06/11/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão do pdfrx 2.4.7 para renderização nativa dos documentos PDF
+# anexados aos perfis profissionais.
+#
+# Data: 20/10/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão do Cloud Functions e do Firebase Authentication para o
+# login integrado e a criação da sessão autenticada e autenticação temporária 
+# do profissional e do cliente HTTP para envio dos PDFs ao Storage.
+#
+# Data: 15/10/2026
+# Autor: Noemi Kayama - RA 25004140
+# Alteração: Inclusão do seletor nativo de arquivo único para documentos da
+# experiência profissional no Android e iOS.
+# -----------------------------------------------------------------------------
+
 name: horse_life
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
@@ -30,10 +66,26 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.9
+  cloud_functions: ^6.4.0
+  firebase_auth: ^6.6.0
+  firebase_core: ^4.15.0
+  flutter_web_plugins:
+    sdk: flutter
+  file_selector: ^1.1.0
+  image_picker: ^1.2.3
+  permission_handler: ^12.0.3
+  country_state_city: ^0.1.6
+  http: ^1.6.0
+  pdfrx: 2.4.7
+  material_symbols_icons: ^4.2960.0
+  fl_chart: ^1.3.1
+  video_player: ^2.11.1
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +108,41 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/foto_cavalo_tela_inicial.jpg
+    - assets/Logo_HorseLife.png
+    - assets/Logo_somente_simbolo.png
+    - assets/black-head-horse.png
+    
+  # Famílias locais usadas pelo AppTheme, sem carregamento em rede.
+  fonts:
+    - family: LeagueSpartan
+      fonts:
+        - asset: assets/google_fonts/LeagueSpartan-Regular.ttf
+          weight: 400
+        - asset: assets/google_fonts/LeagueSpartan-Medium.ttf
+          weight: 500
+        - asset: assets/google_fonts/LeagueSpartan-SemiBold.ttf
+          weight: 600
+        - asset: assets/google_fonts/LeagueSpartan-Bold.ttf
+          weight: 700
+        - asset: assets/google_fonts/LeagueSpartan-ExtraBold.ttf
+          weight: 800
+    - family: Urbanist
+      fonts:
+        - asset: assets/google_fonts/Urbanist-Light.ttf
+          weight: 300
+        - asset: assets/google_fonts/Urbanist-Regular.ttf
+          weight: 400
+        - asset: assets/google_fonts/Urbanist-Medium.ttf
+          weight: 500
+        - asset: assets/google_fonts/Urbanist-SemiBold.ttf
+          weight: 600
+        - asset: assets/google_fonts/Urbanist-Bold.ttf
+          weight: 700
+        - asset: assets/google_fonts/Urbanist-ExtraBold.ttf
+          weight: 800
 
   # To add assets to your application, add an assets section, like this:
   # assets:

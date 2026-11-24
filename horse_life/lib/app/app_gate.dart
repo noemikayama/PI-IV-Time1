@@ -1,0 +1,266 @@
+// RESPONSÁVEL: Noemi Kayama - 25004140
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 23/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Leitura do destino solicitado pela navegação autenticada para
+// reconstruir a Home diretamente na seção correta, sem retorno pela pilha, e
+// compatibilidade com chamadas anteriores durante hot reload.
+//
+// Data: 22/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Revisão dos comentários do ciclo de inicialização, observação da
+// sessão e composição autenticada das Homes com as dependências de treino.
+//
+// Data: 21/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Documentação da composição das Homes autenticadas e do repasse do
+// carregador conectado da agenda conforme o papel da sessão. Injeção das
+// dependências de consulta e finalização da execução nas duas Homes.
+//
+// Data: 20/11/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Injeção do carregador conectado da agenda nas Homes autenticadas
+// de responsável e treinador.
+//
+// Data: 20/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Observação da sessão persistente para alternar entre o conteúdo
+// público e a home, com encerramento pelo repositório de autenticação.
+//
+// Data: 13/10/2026
+// Autor: Noemi Kayama - RA 25004140
+// Alteração: Criação do controle de inicialização do Firebase, com splash
+// de quatro segundos e tratamento de carregamento, falha e nova tentativa.
+//
+// Data: 27/10/2026
+// Autor: Gabriela Sichiroli Ferrari - RA 25013763
+// Alteração: Roteamento da sessão para a Home de Guardian ou Trainer,
+// injeção tardia dos loaders e isolamento da navegação após login/logout.
+// -----------------------------------------------------------------------------
+
+import 'package:flutter/material.dart';
+import 'package:horse_life/app/app_dependencies.dart';
+import 'package:horse_life/features/authentication/application/states/login_session.dart';
+import 'package:horse_life/features/authentication/data/repositories/authentication_session_repository.dart';
+import 'package:horse_life/features/home/application/controllers/home_loader.dart';
+import 'package:horse_life/features/home/data/models/guardian_home_data.dart';
+import 'package:horse_life/features/home/data/models/trainer_home_data.dart';
+import 'package:horse_life/features/home/home_composition.dart';
+import 'package:horse_life/features/home/presentation/screens/guardian/guardian_home_screen.dart';
+import 'package:horse_life/features/home/presentation/screens/trainer/trainer_home_screen.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
+import 'package:horse_life/features/splash/presentation/screens/splash_screen.dart';
+
+/// Permite testar o gate sem montar os cards de cada Home.
+typedef SessionHomeBuilder =
+    Widget Function(
+      BuildContext context,
+      LoginSession session,
+      Future<void> Function() onLogout,
+    );
+
+/// Coordena bootstrap, splash, sessão autenticada e escolha da Home inicial.
+class AppGate extends StatefulWidget {
+  const AppGate({
+    required this.initializeApp,
+    required this.home,
+    this.dependencies,
+    this.sessionRepository,
+    this.guardianLoader,
+    this.trainerLoader,
+    this.guardianHomeBuilder,
+    this.trainerHomeBuilder,
+    this.minimumSplashDuration = const Duration(seconds: 4),
+    super.key,
+  });
+
+  /// Inicialização externa, normalmente responsável pelo Firebase.
+  final Future<void> Function() initializeApp;
+
+  /// Fluxo público mostrado quando não existe sessão autenticada.
+  final Widget home;
+
+  /// Composição preferencial das dependências compartilhadas.
+  final AppDependencies? dependencies;
+
+  // Compatibilidade com chamadas anteriores do AppGate.
+  final AuthenticationSessionRepository? sessionRepository;
+  final HomeLoader<GuardianHomeData>? guardianLoader;
+  final HomeLoader<TrainerHomeData>? trainerLoader;
+
+  /// Builders opcionais que substituem as Homes reais em testes isolados.
+  final SessionHomeBuilder? guardianHomeBuilder;
+  final SessionHomeBuilder? trainerHomeBuilder;
+
+  /// Tempo mínimo de exibição do splash, mesmo com bootstrap rápido.
+  final Duration minimumSplashDuration;
+
+  @override
+  State<AppGate> createState() => _AppGateState();
+}
+
+class _AppGateState extends State<AppGate> {
+  late Future<void> _initialization;
+  Stream<LoginSession?>? _sessionStream;
+  HomeLoader<GuardianHomeData>? _legacyGuardianLoader;
+  HomeLoader<TrainerHomeData>? _legacyTrainerLoader;
+
+  AuthenticationSessionRepository? get _sessionRepository =>
+      widget.dependencies?.sessionRepository ?? widget.sessionRepository;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialization = _initialize();
+  }
+
+  @override
+  void didUpdateWidget(covariant AppGate oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final previousRepository =
+        oldWidget.dependencies?.sessionRepository ??
+        oldWidget.sessionRepository;
+    if (!identical(previousRepository, _sessionRepository)) {
+      _sessionStream = null;
+    }
+  }
+
+  /// Mantém splash e inicialização em paralelo; não bloqueia o primeiro frame.
+  Future<void> _initialize() async {
+    await Future.wait<void>([
+      Future<void>.sync(widget.initializeApp),
+      Future<void>.delayed(widget.minimumSplashDuration),
+    ]);
+  }
+
+  void _retryInitialization() {
+    setState(() {
+      _sessionStream = null;
+      _initialization = _initialize();
+    });
+  }
+
+  void _retrySession() {
+    // Não chama FirebaseBootstrap.initialize outra vez por erro de sessão.
+    setState(() => _sessionStream = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _initialization,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const SplashScreen();
+        }
+        if (snapshot.hasError) {
+          return SplashScreen.failed(onRetry: _retryInitialization);
+        }
+        return _buildSessionGate();
+      },
+    );
+  }
+
+  Widget _buildSessionGate() {
+    final repository = _sessionRepository;
+    if (repository == null) return widget.home; // Compatibilidade legada.
+
+    _sessionStream ??= repository.watchSession();
+    return StreamBuilder<LoginSession?>(
+      stream: _sessionStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+        if (snapshot.hasError) {
+          return SplashScreen.failed(onRetry: _retrySession);
+        }
+
+        final session = snapshot.data;
+        if (session == null) {
+          return _buildFlow(
+            identity: 'public',
+            pageBuilder: (context, settings) => widget.home,
+          );
+        }
+        return _buildFlow(
+          identity: 'authenticated:${session.uid}:${session.role.value}',
+          pageBuilder: (context, settings) => _buildAuthenticatedHome(
+            context,
+            session,
+            repository.signOut,
+            initialDestination: settings.arguments is HomeNavigationDestination
+                ? settings.arguments! as HomeNavigationDestination
+                : HomeNavigationDestination.home,
+          ),
+        );
+      },
+    );
+  }
+
+  /// Troca o Navigator inteiro quando a identidade muda: não mantém rotas
+  /// do login/registro acessíveis após o logout ou uma troca de perfil.
+  Widget _buildFlow({
+    required String identity,
+    required Widget Function(BuildContext, RouteSettings) pageBuilder,
+  }) {
+    return HeroControllerScope.none(
+      child: Navigator(
+        key: ValueKey<String>('horse-life-flow:$identity'),
+        onGenerateRoute: (settings) => MaterialPageRoute<void>(
+          settings: settings,
+          builder: (context) => pageBuilder(context, settings),
+        ),
+      ),
+    );
+  }
+
+  HomeLoader<GuardianHomeData> get _guardianLoader =>
+      widget.dependencies?.guardianLoader ??
+      widget.guardianLoader ??
+      (_legacyGuardianLoader ??= HomeComposition.guardian());
+
+  HomeLoader<TrainerHomeData> get _trainerLoader =>
+      widget.dependencies?.trainerLoader ??
+      widget.trainerLoader ??
+      (_legacyTrainerLoader ??= HomeComposition.trainer());
+
+  // Escolhe a Home pelo papel autenticado e compartilha as dependências
+  // criadas pela raiz. Builders injetados continuam tendo precedência em teste.
+  Widget _buildAuthenticatedHome(
+    BuildContext context,
+    LoginSession session,
+    Future<void> Function() onLogout, {
+    HomeNavigationDestination initialDestination =
+        HomeNavigationDestination.home,
+  }) {
+    switch (session.role) {
+      case AuthenticationRole.guardian:
+        return widget.guardianHomeBuilder?.call(context, session, onLogout) ??
+            GuardianHomeScreen(
+              onLogout: onLogout,
+              initialDestination: initialDestination,
+              loader: _guardianLoader,
+              agendaLoader: widget.dependencies?.trainingAgendaLoader,
+              trainingExecutionLoader:
+                  widget.dependencies?.trainingExecutionLoader,
+              trainingCompletionSubmitter:
+                  widget.dependencies?.trainingCompletionSubmitter,
+            );
+      case AuthenticationRole.trainer:
+        return widget.trainerHomeBuilder?.call(context, session, onLogout) ??
+            TrainerHomeScreen(
+              onLogout: onLogout,
+              initialDestination: initialDestination,
+              loader: _trainerLoader,
+              agendaLoader: widget.dependencies?.trainingAgendaLoader,
+              trainingExecutionLoader:
+                  widget.dependencies?.trainingExecutionLoader,
+              trainingCompletionSubmitter:
+                  widget.dependencies?.trainingCompletionSubmitter,
+            );
+    }
+  }
+}
