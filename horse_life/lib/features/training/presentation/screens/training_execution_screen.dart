@@ -3,6 +3,12 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Substituição do modal inferior de "Ver detalhes" dos cards de
+// exercícios pela navegação para ExerciseDetailScreen (com callback opcional
+// onViewExerciseDetails para testes).
+//
+// Data: 23/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Unificação do estado final retornado pelo backend com a conclusão
 // local para atualizar e bloquear imediatamente a ação de iniciar o treino.
@@ -30,6 +36,8 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/core/widgets/home_bottom_nav_bar.dart';
+import 'package:horse_life/features/exercises/presentation/screens/exercise_detail_screen.dart';
 import 'package:horse_life/features/training/data/models/training_execution_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
 import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
@@ -42,6 +50,7 @@ class TrainingExecutionScreen extends StatefulWidget {
     required this.reference,
     required this.completionSubmitter,
     this.onStart,
+    this.onViewExerciseDetails,
     super.key,
   });
 
@@ -56,6 +65,9 @@ class TrainingExecutionScreen extends StatefulWidget {
 
   /// Substitui a navegação padrão ao iniciar, principalmente em testes.
   final ValueChanged<TrainingExecutionData>? onStart;
+
+  /// Substitui a navegação padrão ao abrir os detalhes de um exercício.
+  final ValueChanged<TrainingExecutionExercise>? onViewExerciseDetails;
 
   @override
   State<TrainingExecutionScreen> createState() =>
@@ -111,6 +123,30 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
       _completedLocally = true;
       _future = widget.loader.fetchTraining(widget.reference);
     });
+  }
+
+  // Redireciona a visualização para a tela completa do exercício.
+  //
+  // Prioriza o callback injetável [onViewExerciseDetails] para validações de teste;
+  // em ambiente de produção, abre a [ExerciseDetailScreen] consultiva, impedindo
+  // edição indevida e fornecendo integração com a navegação inferior autenticada.
+  Future<void> _openExerciseDetails(TrainingExecutionExercise exercise) async {
+    final callback = widget.onViewExerciseDetails;
+    if (callback != null) {
+      callback(exercise);
+      return;
+    }
+    await Navigator.of(context).push<dynamic>(
+      MaterialPageRoute<dynamic>(
+        builder: (_) => ExerciseDetailScreen(
+          exerciseCode: exercise.code,
+          isTrainer: false,
+          canEditOverride: false,
+          onNavigationSelected: (destination) =>
+              navigateToHomeDestination(context, destination),
+        ),
+      ),
+    );
   }
 
   @override
@@ -231,6 +267,8 @@ class _TrainingExecutionScreenState extends State<TrainingExecutionScreen> {
                         exercise: training.exercises[index],
                         position: index + 1,
                         total: training.exercises.length,
+                        onViewDetails: () =>
+                            _openExerciseDetails(training.exercises[index]),
                       ),
                     ),
                   ),
@@ -377,16 +415,18 @@ class _GuidelineCard extends StatelessWidget {
   );
 }
 
-// Resumo paginado de um exercício com acesso à descrição completa.
+// Resumo paginado de um exercício com acesso à tela completa de detalhes.
 class _ExerciseCard extends StatelessWidget {
   const _ExerciseCard({
     required this.exercise,
     required this.position,
     required this.total,
+    required this.onViewDetails,
   });
   final TrainingExecutionExercise exercise;
   final int position;
   final int total;
+  final VoidCallback onViewDetails;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -449,19 +489,7 @@ class _ExerciseCard extends StatelessWidget {
         SizedBox(
           height: 50,
           child: OutlinedButton(
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              showDragHandle: true,
-              builder: (context) => Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                child: _LabeledText(
-                  label: exercise.name,
-                  value: exercise.description.isEmpty
-                      ? 'Sem descrição.'
-                      : exercise.description,
-                ),
-              ),
-            ),
+            onPressed: onViewDetails,
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.seaGreen,
               side: const BorderSide(color: AppColors.seaGreen, width: 2.5),

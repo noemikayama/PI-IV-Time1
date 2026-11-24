@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Padronização do card de Últimos Feedbacks com HomeSectionCard e
+// carrossel horizontal unificado ao modelo de Últimos treinos.
+//
+// Data: 23/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Adequação dos treinos recentes ao padrão HomeSectionCard, com
 // padding uniforme, rolagem horizontal, ícone oficial do cavalo, data e ação
@@ -55,110 +60,51 @@ class DashboardRecentList extends StatelessWidget {
   String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
+  /// Constrói a lista horizontal ou o estado vazio do card.
+  ///
+  /// Mantém a padronização visual entre a listagem de treinos recentes e feedbacks
+  /// utilizando o [HomeSectionCard] com padding uniforme e botão "Mostrar tudo" condicional.
   @override
   Widget build(BuildContext context) {
     final count = feedback ? liveFeedbacks.length : liveTrainings.length;
-    if (!feedback) {
-      return HomeSectionCard(
-        title: title,
-        padding: const EdgeInsets.all(18),
-        onShowAll: count > 0 ? onShowAll : null,
-        child: count == 0 ? _emptyList() : _trainingCarousel(),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
-      decoration: BoxDecoration(
-        color: AppColors.blueSpruce,
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    height: 1.0,
-                    letterSpacing: 0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              if (count > 0)
-                TextButton(
-                  onPressed: onShowAll,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
-                  ),
-                  child: const Text(
-                    'Mostrar tudo',
-                    style: TextStyle(
-                      fontFamily: 'LeagueSpartan',
-                      color: Colors.white70,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (count == 0)
-            _emptyList()
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                // Mostra o início do próximo card, indicando a rolagem lateral.
-                final cardWidth = constraints.maxWidth <= 230
-                    ? constraints.maxWidth
-                    : constraints.maxWidth * .92;
-                return SizedBox(
-                  height: 245,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    clipBehavior: Clip.hardEdge,
-                    itemCount: count,
-                    separatorBuilder: (_, _) => const SizedBox(width: 12),
-                    itemBuilder: (context, index) => SizedBox(
-                      width: cardWidth,
-                      child: feedback
-                          ? _liveFeedbackCard(liveFeedbacks[index])
-                          : _liveTrainingCard(liveTrainings[index]),
-                    ),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
+    return HomeSectionCard(
+      title: title,
+      padding: const EdgeInsets.all(18),
+      onShowAll: count > 0 ? onShowAll : null,
+      child: count == 0 ? _emptyList() : _carousel(count),
     );
   }
 
-  /// Mantém cada treino como um item independente e revela parte do próximo
-  /// card para comunicar que o conteúdo aceita gesto lateral.
-  Widget _trainingCarousel() => LayoutBuilder(
+  /// Mantém cada registro como um item independente e revela parte do próximo
+  /// card para comunicar visualmente que o conteúdo aceita gesto de rolagem lateral.
+  ///
+  /// Utiliza identificadores de chave estáveis ([listKey] e [itemPrefix]) para
+  /// diferenciar treinos e feedbacks em testes automatizados.
+  Widget _carousel(int count) => LayoutBuilder(
     builder: (context, constraints) {
-      final cardWidth = liveTrainings.length == 1 || constraints.maxWidth <= 250
+      final cardWidth = count == 1 || constraints.maxWidth <= 250
           ? constraints.maxWidth
           : constraints.maxWidth * .9;
+      final listKey = feedback
+          ? const Key('dashboard-recent-feedback-list')
+          : const Key('dashboard-recent-training-list');
+      final itemPrefix = feedback
+          ? 'dashboard-recent-feedback-item-'
+          : 'dashboard-recent-training-item-';
       return SizedBox(
         height: 235,
         child: ListView.separated(
-          key: const Key('dashboard-recent-training-list'),
+          key: listKey,
           scrollDirection: Axis.horizontal,
           clipBehavior: Clip.hardEdge,
-          itemCount: liveTrainings.length,
+          itemCount: count,
           separatorBuilder: (_, _) => const SizedBox(width: 12),
           itemBuilder: (context, index) => SizedBox(
-            key: Key('dashboard-recent-training-item-$index'),
+            key: Key('$itemPrefix$index'),
             width: cardWidth,
-            child: _liveTrainingCard(liveTrainings[index]),
+            child: feedback
+                ? _liveFeedbackCard(liveFeedbacks[index])
+                : _liveTrainingCard(liveTrainings[index]),
           ),
         ),
       );

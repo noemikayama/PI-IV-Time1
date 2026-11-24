@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Cobertura do botão Ver detalhes dos cards de exercícios para
+// acionar a navegação de detalhes em vez do bottom sheet.
+//
+// Data: 23/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Correção do fechamento do cenário somente leitura para registrar
 // separadamente o teste do bloqueio local após a conclusão do treino.
@@ -208,6 +213,42 @@ void main() {
         Navigator.of(tester.element(find.text('Agenda: trainings'))).canPop(),
         isFalse,
       );
+    },
+  );
+
+  testWidgets(
+    'tapping Ver detalhes on exercise card opens exercise details instead of bottom sheet',
+    (tester) async {
+      TrainingExecutionExercise? openedExercise;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: TrainingExecutionScreen(
+            loader: const _FakeExecutionLoader(finished: false),
+            completionSubmitter: const _FakeCompletionSubmitter(),
+            reference: TrainingExecutionReference(
+              recordId: 'registro-1',
+              planId: 'plano-1',
+              title: 'Trabalho de transições',
+              date: DateTime(2026, 11, 21),
+              durationMinutes: 45,
+              status: TrainingAgendaStatus.planned,
+            ),
+            onViewExerciseDetails: (exercise) => openedExercise = exercise,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Ver detalhes'));
+      await tester.tap(find.text('Ver detalhes'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(openedExercise, isNotNull);
+      expect(openedExercise!.code, '12');
+      expect(openedExercise!.name, 'Aquecimento ao passo');
     },
   );
 }
