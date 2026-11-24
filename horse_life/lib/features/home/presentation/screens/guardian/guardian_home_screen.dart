@@ -4,6 +4,12 @@
 //
 // Data: 23/11/2026
 // Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão de onStartTraining no GuardianHomeContent para habilitar o
+// botão Iniciar treino na seção Treinos do dia da Home do responsável e abrir
+// TrainingExecutionScreen com atualização síncrona da Home ao retornar.
+//
+// Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
 // Alteração: Conexão do card do histórico de execuções da agenda para abrir a tela
 // de registro de execução (TrainingExecutionRecordScreen).
 //
@@ -209,11 +215,13 @@ import 'package:horse_life/features/profile/data/repositories/guardian_profile_r
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_edit_screen.dart';
 import 'package:horse_life/features/profile/presentation/screens/guardian_profile_screen.dart';
 import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
+import 'package:horse_life/features/training/data/models/training_execution_data.dart';
 import 'package:horse_life/features/training/data/repositories/training_agenda_repository.dart';
 import 'package:horse_life/features/training/data/repositories/training_completion_repository.dart';
 import 'package:horse_life/features/training/data/repositories/training_execution_repository.dart';
 import 'package:horse_life/features/training/presentation/screens/connected_training_agenda_screen.dart';
 import 'package:horse_life/features/training/presentation/screens/training_agenda_screen.dart';
+import 'package:horse_life/features/training/presentation/screens/training_execution_screen.dart';
 
 import '../../../application/controllers/home_loader.dart';
 import '../../../data/models/guardian_home_data.dart';
@@ -313,6 +321,7 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
   late HomeLoader<GuardianHomeData> _loader;
   bool _isOpeningHorseProfile = false;
   bool _isOpeningTrainingDetails = false;
+  bool _isStartingTraining = false;
 
   // O repositório é criado sob demanda e reutilizado no carregamento e edição.
   FirebaseGuardianProfileRepository? _guardianProfileRepository;
@@ -629,6 +638,84 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
         horseName: training.horseName,
         estimatedDurationMinutes: training.durationMinutes,
       );
+    }
+  }
+
+  /// Inicia o fluxo de execução do treino a partir do card da Home.
+  ///
+  /// Se um callback externo [onStartTraining] for fornecido, delega a ação. Caso
+  /// contrário, resolve o identificador do plano ([planId]) e a data correspondente
+  /// consultando a agenda antes de abrir a [TrainingExecutionScreen], evitando falhas
+  /// de contrato na busca da prescrição. Ao retornar da execução, recarrega os dados
+  /// da Home de forma síncrona.
+  Future<void> _handleStartTraining(GuardianTraining training) async {
+    if (widget.onStartTraining != null) {
+      widget.onStartTraining!(training);
+      return;
+    }
+    final loader = widget.trainingExecutionLoader;
+    final submitter = widget.trainingCompletionSubmitter;
+    final recordId = training.recordId?.trim();
+    if (_isStartingTraining ||
+        loader == null ||
+        submitter == null ||
+        recordId == null ||
+        recordId.isEmpty) {
+      return;
+    }
+    _isStartingTraining = true;
+    try {
+      var planId = '';
+      var trainingDate = DateTime.now();
+      final agendaLoader = widget.agendaLoader;
+      if (agendaLoader != null) {
+        try {
+          final agenda = await agendaLoader.fetchAgenda();
+          final normalizedPlan = training.planName.trim().toLowerCase();
+          final normalizedHorse = training.horseName.trim().toLowerCase();
+          for (final plan in agenda.plans) {
+            if (plan.planName.trim().toLowerCase() == normalizedPlan &&
+                plan.horseName.trim().toLowerCase() == normalizedHorse) {
+              planId = plan.id;
+              break;
+            }
+          }
+          trainingDate = agenda.today;
+          for (final entry in [
+            ...agenda.todayTrainings,
+            ...agenda.weekTrainings,
+          ]) {
+            if (entry.id == recordId) {
+              trainingDate = entry.date;
+              break;
+            }
+          }
+        } catch (_) {}
+      }
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (context) => TrainingExecutionScreen(
+            loader: loader,
+            completionSubmitter: submitter,
+            reference: TrainingExecutionReference(
+              recordId: recordId,
+              planId: planId,
+              title: training.title,
+              date: trainingDate,
+              durationMinutes: training.durationMinutes,
+              status: trainingAgendaStatusFromApi(training.status),
+            ),
+          ),
+        ),
+      );
+      if (!mounted) return;
+      final refreshedHome = _fetchHome();
+      setState(() {
+        _homeFuture = refreshedHome;
+      });
+    } finally {
+      _isStartingTraining = false;
     }
   }
 
@@ -977,6 +1064,12 @@ class _GuardianHomeScreenState extends State<GuardianHomeScreen> {
           onRegisterHorse: widget.onRegisterHorse ?? _openRegisterHorse,
           onSelectHorse: _openHorseProfile,
           onShowAllHorses: widget.onShowAllGuardianHorses ?? _openHorseList,
+          onStartTraining:
+              (widget.onStartTraining != null ||
+                  (widget.trainingExecutionLoader != null &&
+                      widget.trainingCompletionSubmitter != null))
+              ? _handleStartTraining
+              : null,
         ),
       },
       // Barra inferior de navegação.

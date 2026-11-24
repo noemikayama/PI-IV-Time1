@@ -3,6 +3,11 @@
 // HISTÓRICO DE ALTERAÇÕES
 //
 // Data: 23/11/2026
+// Autor: Enzo Olivato Pazian - RA: 25001654
+// Alteração: Conexão dos botões "Ver feedback" e "Mostrar tudo" da seção
+// Últimos Feedbacks à tela do registro de execução e à agenda de treinos.
+//
+// Data: 23/11/2026
 // Autor: Noemi Kayama - RA 25004140
 // Alteração: Integração do botão "Ver treino" dos registros recentes com a
 // tela de detalhes por meio do registro retornado pelo dashboard.
@@ -33,6 +38,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:horse_life/app/theme/app_colors.dart';
+import 'package:horse_life/features/feedback/presentation/routes/training_feedback_route.dart';
+import 'package:horse_life/features/training/data/models/training_agenda_data.dart';
 import 'package:horse_life/features/trainings/presentation/screens/training_detail_screen.dart';
 import '../../data/models/dashboard_response.dart';
 import '../../data/repositories/dashboard_repository.dart';
@@ -88,14 +95,32 @@ class _DashboardLiveTrainingContentState
     setState(_fetch);
   }
 
-  /// Abre o detalhe usando o identificador do registro, que será resolvido
-  /// pelo repositório de treinamento até o código cadastrado no backend.
+  /// Abre a tela de visualização do treinamento a partir do registro do backend.
+  ///
+  /// O identificador do registro é repassado para a [TrainingDetailScreen] e
+  /// resolvido pelo repositório até o código correspondente cadastrado.
   Future<void> _openTraining(Map<String, dynamic> training) async {
     final recordId = training['registroId']?.toString().trim() ?? '';
     if (recordId.isEmpty) return;
     await Navigator.of(context).push<dynamic>(
       MaterialPageRoute<dynamic>(
         builder: (_) => TrainingDetailScreen(trainingCode: recordId),
+      ),
+    );
+  }
+
+  /// Abre a tela de registro da execução e feedbacks associados ao treino.
+  ///
+  /// Utiliza a rota [TrainingFeedbackRoute.forRecord] para consultar os detalhes
+  /// do feedback persistido com o público de responsável ([TrainingAgendaAudience.guardian]).
+  Future<void> _openFeedback(Map<String, dynamic> feedback) async {
+    final recordId =
+        (feedback['registroId'] ?? feedback['id'])?.toString().trim() ?? '';
+    if (recordId.isEmpty) return;
+    await Navigator.of(context).push<dynamic>(
+      TrainingFeedbackRoute.forRecord(
+        recordId: recordId,
+        audience: TrainingAgendaAudience.guardian,
       ),
     );
   }
@@ -236,6 +261,8 @@ class _DashboardLiveTrainingContentState
                 title: 'Últimos Feedbacks',
                 feedback: true,
                 liveFeedbacks: data.feedbacks,
+                onShowAll: widget.onShowAllTrainings,
+                onItemTap: _openFeedback,
               ),
             ],
           ],
