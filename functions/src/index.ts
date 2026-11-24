@@ -1,32 +1,138 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+// RESPONSÁVEL: Miguel Afonso Castro de Almeida - 25016044
+// -----------------------------------------------------------------------------
+// HISTÓRICO DE ALTERAÇÕES
+//
+// Data: 20/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos detalhes e da edição do treinamento.
+//
+// Data: 19/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da agenda de treinos.
+//
+// Data: 19/11/2026
+// Autor: Davi Alves Froza - 25016900
+// Alteração: Exportação da conferência do microchip no servidor Java.
+//
+// Data: 18/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de planos, das avaliações do cavalo e
+// da galeria de treinamentos.
+//
+// Data: 14/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da galeria de exercícios, do tempo total dos
+// exercícios selecionados e do cadastro de treinamentos.
+//
+// Data: 10/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de exercícios e do envio, da confirmação
+// e da remoção de mídias do exercício.
+//
+// Data: 04/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do desvínculo de atleta ou treinador do cavalo.
+//
+// Data: 03/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: getHorseProfile (perfil completo do cavalo) no lugar de
+// getHorse, getHorseCurrentPlan e listHorseEvaluations.
+// Alteração: Exportação da inclusão de saúde, da exclusão e do plano atual
+// do cavalo, e da criação e do histórico de avaliações.
+//
+// Data: 02/11/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação dos vínculos e da lista de cavalos.
+//
+// Data: 28/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do dashboard de evolução.
+// Alteração: Exportação da edição do perfil do responsável.
+//
+// Data: 27/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do envio, da confirmação e da remoção de imagens
+// de cavalos.
+//
+// Data: 22/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro, da edição e da consulta de cavalos.
+//
+// Data: 21/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da edição de modalidades do responsável.
+// Alteração: Exportação da função de logout.
+//
+// Data: 20/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação da função de recuperação de senha.
+//
+// Data: 16/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Renomeação da nomenclatura para trainer.
+//
+// Data: 13/10/2026
+// Autor: Miguel Afonso Castro de Almeida - 25016044
+// Alteração: Exportação do cadastro de responsáveis e profissionais.
+// -----------------------------------------------------------------------------
 
-import {setGlobalOptions} from "firebase-functions";
-// import {onRequest} from "firebase-functions/https";
-// import * as logger from "firebase-functions/logger";
-
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
-
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({maxInstances: 10});
-
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+export {
+  registerGuardian,
+  registerTrainer,
+  getGuardianProfile,
+  updateGuardianModalities,
+  updateGuardianProfile,
+  getTrainerProfile,
+  login,
+  getHome,
+  confirmTrainerAttachment,
+  createTrainerAttachmentUpload,
+  removeTrainerAttachment,
+  updateTrainerProfile,
+  requestPasswordReset,
+  logout,
+} from "./features/authentication";
+export {
+  getModalities,
+} from "./features/modalities";
+export {
+  registerHorse,
+  validateMicrochip,
+  updateHorse,
+  getHorseProfile,
+  listHorses,
+  updateHorseLinks,
+  removeHorseLink,
+  addHorseHealthEntry,
+  deleteHorse,
+  createHorseImageUpload,
+  confirmHorseImage,
+  removeHorseImage,
+} from "./features/horses";
+export {
+  createHorseEvaluation,
+} from "./features/evaluations";
+export {
+  getDashboard,
+} from "./features/dashboard";
+export {
+  registerExercise,
+  createExerciseMediaUpload,
+  confirmExerciseMedia,
+  removeExerciseMedia,
+  listExerciseGallery,
+  sumExerciseDurations,
+} from "./features/exercises";
+export {
+  registerTraining,
+  getTrainingDetails,
+  updateTraining,
+} from "./features/training";
+export {
+  createTrainingPlan,
+  listHorseEvaluations,
+  listTrainingGallery,
+} from "./features/plans";
+export {
+  getTrainingAgenda,
+} from "./features/agenda";
